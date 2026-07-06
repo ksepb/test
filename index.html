@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>路線時間查詢</title>
+<style>
+  :root{
+    --bg:#161a13;
+    --panel:#212720;
+    --accent:#a8dc4a;
+    --accent-dim:#5d7a2c;
+    --text:#f3f5ed;
+    --text-dim:#9aa492;
+    --line:#383f33;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 20% 0%, #232a1c 0%, transparent 55%),
+      radial-gradient(circle at 90% 100%, #1d2417 0%, transparent 50%),
+      var(--bg);
+    color:var(--text);
+    font-family:"PingFang TC","Noto Sans TC",-apple-system,sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:36px 16px 100px;
+  }
+  h1{
+    font-size:23px;
+    letter-spacing:3px;
+    margin:0 0 6px;
+    color:var(--accent);
+    font-weight:800;
+    text-shadow:0 0 18px rgba(168,220,74,0.25);
+  }
+  .sub{
+    color:var(--text-dim);
+    font-size:13px;
+    margin-bottom:14px;
+    letter-spacing:1px;
+  }
+  .time-info{
+    display:none;
+  }
+  .tabs{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    width:100%;
+    max-width:none;
+    display:flex;
+    gap:0;
+    margin-bottom:0;
+    background:linear-gradient(180deg, #1b2017, #14180f);
+    border-top:1px solid var(--line);
+    padding:8px 10px calc(10px + env(safe-area-inset-bottom));
+    box-shadow:0 -6px 20px rgba(0,0,0,0.4);
+    z-index:40;
+  }
+  .tab-btn{
+    flex:1;
+    background:transparent;
+    border:none;
+    color:var(--text-dim);
+    border-radius:10px;
+    padding:10px 0 8px;
+    min-height:52px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all .18s ease;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:3px;
+  }
+  .tab-btn .tab-icon{
+    font-size:19px;
+    line-height:1;
+  }
+  .tab-btn:active{transform:scale(0.94);}
+  .tab-btn.active{
+    background:transparent;
+    color:var(--accent);
+    border-color:transparent;
+    box-shadow:none;
+  }
+  .picker{
+    width:100%;
+    max-width:420px;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:9px;
+    margin-bottom:24px;
+  }
+  .route-btn{
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--text);
+    border-radius:12px;
+    padding:14px 0;
+    font-size:18px;
+    font-weight:600;
+    cursor:pointer;
+    box-shadow:0 2px 6px rgba(0,0,0,0.2);
+    transition:all .15s ease;
+  }
+  .route-btn:active{transform:scale(0.94);}
+  .route-btn.active{
+    background:linear-gradient(135deg, var(--accent), #7cb52f);
+    color:#161a13;
+    border-color:var(--accent);
+    box-shadow:0 4px 16px rgba(168,220,74,0.35);
+  }
+  .card{
+    width:100%;
+    max-width:420px;
+    background:linear-gradient(180deg, rgba(33,39,32,0.9), rgba(27,32,23,0.95));
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:22px;
+    display:none;
+    box-shadow:0 10px 30px rgba(0,0,0,0.4), 0 0 0 1px rgba(168,220,74,0.06);
+  }
+  .card.show{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .card-title{
+    font-size:15px;
+    color:var(--accent);
+    letter-spacing:1px;
+    margin-bottom:16px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:12px;
+    font-weight:700;
+  }
+  .trip{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:flex-start;
+    gap:14px;
+    padding:14px 12px;
+    margin:0 0 10px;
+    background:rgba(255,255,255,0.02);
+    border:1px solid var(--line);
+    border-radius:12px;
+    transition:background .2s ease, opacity .2s ease;
+  }
+  .trip:last-child{margin-bottom:0;}
+  .trip.tp-past{opacity:0.4;}
+  .trip.tp-past .trip-label::after{content:' · 已過站'; font-size:10px;}
+  .trip.tp-active{
+    background:rgba(168,220,74,0.08);
+    border-color:rgba(168,220,74,0.5);
+  }
+  .trip.tp-active .trip-label{
+    color:var(--accent);
+    font-weight:700;
+    position:relative;
+    padding-left:12px;
+  }
+  .trip.tp-active .trip-label::before{
+    content:'';
+    position:absolute;
+    left:0;
+    top:50%;
+    width:7px;
+    height:7px;
+    margin-top:-3.5px;
+    border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 0 0 3px rgba(168,220,74,0.25);
+    animation:breathe 1.6s ease-in-out infinite;
+  }
+  .trip-label{
+    font-size:14px;
+    color:var(--text-dim);
+    width:60px;
+  }
+  .time-pair{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:22px;
+    font-weight:700;
+    font-variant-numeric:tabular-nums;
+  }
+  .arrow{color:var(--text-dim);font-size:16px;}
+  .depart{color:var(--text);}
+  .arrive{color:var(--accent);}
+  .note{
+    font-size:14px;
+    color:#e6a23c;
+    margin-top:4px;
+  }
+  .note-link{
+    cursor:pointer;
+    text-decoration:underline;
+  }
+  .shuttle-block{
+    flex-basis:100%;
+    width:100%;
+    order:99;
+    margin-top:8px;
+  }
+  .shuttle-summary{
+    display:flex;
+    align-items:center;
+    justify-content:flex-start;
+    gap:8px;
+    width:100%;
+    background:rgba(230,162,60,0.08);
+    border:1px solid rgba(230,162,60,0.25);
+    border-radius:10px;
+    color:#e6a23c;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    padding:10px 12px;
+  }
+  .shuttle-summary:active{opacity:0.6;}
+  .shuttle-arrow{font-size:13px;margin-left:auto;}
+  .shuttle-detail{
+    display:none;
+    flex-direction:column;
+    gap:14px;
+    margin-top:8px;
+    padding:14px;
+    background:rgba(230,162,60,0.08);
+    border:1px solid rgba(230,162,60,0.25);
+    border-radius:12px;
+  }
+  .shuttle-detail.show{display:flex;}
+  .shuttle-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding-bottom:12px;
+    border-bottom:1px dashed rgba(230,162,60,0.25);
+  }
+  .shuttle-item:last-child{padding-bottom:0;border-bottom:none;}
+  .shuttle-thumb{
+    width:76px;
+    height:76px;
+    object-fit:cover;
+    border-radius:10px;
+    cursor:pointer;
+    flex-shrink:0;
+    box-shadow:0 2px 6px rgba(0,0,0,0.3);
+  }
+  .shuttle-text{
+    font-size:16px;
+    color:var(--text);
+    line-height:1.4;
+    flex:1;
+  }
+  .buckets{
+    display:flex;
+    gap:6px;
+    margin-top:6px;
+  }
+  .bucket-chip{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    font-size:12px;
+    color:var(--text-dim);
+    background:#161a13;
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:4px 10px;
+  }
+  .bucket-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    display:inline-block;
+    box-shadow:0 0 4px rgba(0,0,0,0.4);
+  }
+  .location{
+    font-size:12px;
+    color:var(--text-dim);
+    margin-top:5px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    cursor:pointer;
+    transition:color .15s ease;
+  }
+  .location:hover{color:var(--text);}
+  .location:active{opacity:0.6;}
+  .loc-group{
+    margin-top:12px;
+    padding-top:10px;
+    border-top:1px dashed var(--line);
+  }
+  .loc-group-title{
+    font-size:11px;
+    color:var(--accent);
+    letter-spacing:1.5px;
+    margin-bottom:5px;
+    font-weight:700;
+  }
+  .modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.6);
+    align-items:center;
+    justify-content:center;
+    z-index:50;
+    padding:20px;
+  }
+  .modal-overlay.show{
+    display:flex;
+  }
+  .modal-box{
+    background:linear-gradient(180deg, var(--panel), #1b2017);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:18px;
+    max-width:360px;
+    width:100%;
+    box-shadow:0 16px 40px rgba(0,0,0,0.5);
+  }
+  .modal-title{
+    font-size:14px;
+    color:var(--accent);
+    margin-bottom:12px;
+    text-align:center;
+    font-weight:700;
+    letter-spacing:1px;
+  }
+  .modal-box img{
+    width:100%;
+    border-radius:12px;
+    display:block;
+    box-shadow:0 4px 16px rgba(0,0,0,0.3);
+  }
+  .modal-close{
+    width:100%;
+    margin-top:16px;
+    padding:11px 0;
+    background:linear-gradient(135deg, var(--accent-dim), #3f5621);
+    color:var(--text);
+    border:none;
+    border-radius:12px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .legend{
+    margin-top:14px;
+    font-size:11px;
+    color:var(--text-dim);
+    display:flex;
+    gap:16px;
+  }
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;}
+  .placeholder{
+    color:var(--text-dim);
+    font-size:13px;
+    margin-top:8px;
+  }
+  .addr-row{
+    display:flex;
+    align-items:flex-start;
+    gap:14px;
+    padding:16px 0;
+    border-bottom:1px solid var(--line);
+    font-size:18px;
+    cursor:pointer;
+    transition:opacity .15s ease;
+  }
+  .addr-row:last-child{border-bottom:none;}
+  .addr-row:active{opacity:0.6;}
+  .addr-check{
+    flex-shrink:0;
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    background:var(--accent-dim);
+    color:var(--text);
+    font-size:19px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:all .18s ease;
+    box-shadow:0 2px 6px rgba(0,0,0,0.25);
+  }
+  .addr-content{
+    flex:1;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    padding-top:6px;
+  }
+  .addr-line-main{color:var(--text);transition:all .15s ease;}
+  .addr-line-note{
+    color:var(--text-dim);
+    font-size:14px;
+    transition:all .15s ease;
+  }
+  .addr-hint{
+    font-size:15px;
+    color:var(--text-dim);
+    line-height:1.5;
+    margin-bottom:14px;
+    padding-bottom:12px;
+    border-bottom:1px dashed var(--line);
+  }
+  .reset-bar{
+    display:flex;
+    justify-content:flex-end;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .reset-btn{
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--text-dim);
+    border-radius:24px;
+    padding:9px 16px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .reset-btn:active{opacity:0.6;transform:scale(0.96);}
+  .addr-row.done .addr-check{
+    background:linear-gradient(135deg, var(--accent), #7cb52f);
+    color:#161a13;
+    box-shadow:0 0 10px rgba(168,220,74,0.4);
+  }
+  .addr-row.done .addr-line-main,
+  .addr-row.done .addr-line-note{
+    color:var(--text-dim);
+    text-decoration:line-through;
+  }
+  .addr-row.done .addr-time{
+    opacity:0.5;
+    text-decoration:line-through;
+  }
+  .addr-group-header{
+    font-size:14px;
+    font-weight:700;
+    color:var(--accent);
+    background:rgba(168,220,74,0.08);
+    border:1px solid rgba(168,220,74,0.25);
+    border-radius:10px;
+    padding:8px 12px;
+    margin:14px 0 8px;
+  }
+  .addr-time{
+    display:inline-block;
+    align-self:flex-start;
+    font-size:13px;
+    font-weight:600;
+    color:var(--accent);
+    background:rgba(168,220,74,0.1);
+    border-radius:8px;
+    padding:3px 8px;
+    white-space:nowrap;
+  }
+  .search-box{
+    width:100%;
+    max-width:420px;
+    margin-bottom:12px;
+    padding:11px 14px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:var(--panel);
+    color:var(--text);
+    font-size:14px;
+    outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .search-box:focus{
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(168,220,74,0.15);
+  }
+  .search-box::placeholder{color:var(--text-dim);}
+  .progress-wrap{margin-bottom:14px;}
+  .progress-labels{
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    color:var(--text-dim);
+    margin-bottom:6px;
+  }
+  .progress-labels b{color:var(--accent);}
+  .progress-track{
+    width:100%;
+    height:10px;
+    border-radius:6px;
+    background:#161a13;
+    border:1px solid var(--line);
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    border-radius:6px;
+    background:linear-gradient(90deg, var(--accent-dim), var(--accent));
+    transition:width .3s ease;
+  }
+  .nav-link{
+    font-size:13px;
+    color:var(--accent);
+    background:rgba(168,220,74,0.12);
+    border:1px solid rgba(168,220,74,0.35);
+    border-radius:20px;
+    padding:7px 12px;
+    margin-left:12px;
+    white-space:nowrap;
+    cursor:pointer;
+    transition:all .15s ease;
+    flex-shrink:0;
+  }
+  .nav-link:active{transform:scale(0.92);}
+  .shuttle-nav{margin-left:auto;}
+  .addr-row{justify-content:space-between;}
+  .order-btns{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+    flex-shrink:0;
+  }
+  .ord-btn{
+    background:rgba(168,220,74,0.08);
+    border:1px solid rgba(168,220,74,0.25);
+    color:var(--text-dim);
+    font-size:11px;
+    line-height:1;
+    padding:3px 6px;
+    border-radius:6px;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .ord-btn:active{transform:scale(0.9); background:rgba(168,220,74,0.2);}
+  .ord-btn:disabled{opacity:0.25; cursor:default;}
+  .ord-btn:disabled:active{transform:none; background:rgba(168,220,74,0.08);}
+  .timeline{margin-top:2px;}
+  .tl-item{
+    position:relative;
+    padding:10px 0 10px 26px;
+    border-left:2px solid var(--line);
+    margin-left:5px;
+  }
+  .tl-item:last-child{border-left:2px solid transparent;}
+  .tl-dot{
+    position:absolute;
+    left:-7px;
+    top:12px;
+    width:12px;
+    height:12px;
+    border-radius:50%;
+    background:var(--line);
+    border:2px solid var(--panel);
+  }
+  .tl-item.done .tl-dot{background:#5d6656;}
+  .tl-item.done{opacity:0.55;}
+  .tl-item.active .tl-dot{
+    background:var(--accent);
+    box-shadow:0 0 0 4px rgba(168,220,74,0.2);
+    animation:breathe 1.6s ease-in-out infinite;
+  }
+  @keyframes breathe{
+    0%,100%{box-shadow:0 0 0 4px rgba(168,220,74,0.2);}
+    50%{box-shadow:0 0 0 8px rgba(168,220,74,0.35);}
+  }
+  .tl-item.active{
+    background:rgba(168,220,74,0.06);
+    border-radius:10px;
+    margin-left:5px;
+  }
+</style>
+</head>
+<body>
+
+  <h1>路線時間查詢</h1>
+  <div class="sub">選擇車輛類型與編號 · 查看三趟時間</div>
+
+
+  <div class="tabs" id="tabs"></div>
+
+  <input type="text" class="search-box" id="searchBox" placeholder="🔍 搜尋路線編號 / 地址關鍵字...">
+
+  <div class="picker" id="picker"></div>
+
+  <div id="empty" class="placeholder">↑ 請選擇路線編號</div>
+
+  <div class="card" id="card">
+    <div class="card-title" id="cardTitle">路線</div>
+    <div class="progress-wrap" id="progressWrap" style="display:none;">
+      <div class="progress-labels">
+        <span id="progressText">已完成 0 / 0</span>
+        <b id="progressPct">0%</b>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+    <div class="time-info" id="timeInfo"></div>
+    <div id="trips"></div>
+    <div class="legend" id="legendBox">
+      <span><span class="dot" style="background:var(--text)"></span>出發</span>
+      <span><span class="dot" style="background:var(--accent)"></span>到達</span>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay" onclick="closeImg()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-title" id="modalTitle">位置</div>
+      <img id="modalImg" src="" alt="位置照片">
+      <button class="modal-close" onclick="closeImg()">關閉</button>
+    </div>
+  </div>
+
+<script>
+// 垃圾車 / 回收車共用: route -> [ [depart, arrive, note?], ... 三趟 ]
+const truckData = {
+  "1":  [["15:50","16:09"], ["18:15","18:37"], ["20:25","20:45"]],
+  "5":  [["15:35","15:50"], ["18:00","18:33"], ["20:35","20:50"]],
+  "2":  [["15:48","16:05"], ["18:10","18:31"], ["20:20","20:37"]],
+  "6":  [["15:35","15:55"], ["18:10","18:30"], ["20:30","20:48"]],
+  "3":  [["15:45","16:00"], ["18:15","18:35"], ["20:20","20:45"]],
+  "7":  [["15:35","15:54"], ["18:05","18:24"], ["20:35","20:53"]],
+  "4":  [["15:35","16:02"], ["18:23","18:39"], ["20:40","20:59"]],
+  "8":  [["15:35","16:00"], ["18:15","18:20"], ["20:25","20:44"]],
+  "9":  [["15:50","16:08"], ["17:55",""],      ["20:42","20:54"]],
+  "13": [["15:58","16:05"], ["18:23","18:30"], ["20:46","20:50","出發時跟車出門"]],
+  "10": [["15:45","16:05"], ["18:09","18:30"], ["20:44","20:55"]],
+  "14": [["15:38","15:55"], ["18:29","18:35"], ["20:45","20:53"]],
+  "11": [["15:41","16:05"], ["18:14","18:33"], ["20:43","21:00"]],
+  "15": [["15:45","15:55"], ["18:16","18:25"], ["20:34","20:45"]],
+  "12": [["15:35","15:53"], ["18:15","18:28"], ["20:33","20:40","出發時跟車出門"]],
+  "16": [["15:55","16:00"], ["18:27","18:35","出發時跟車出門"], ["20:40","20:50"]],
+};
+const truckOrder = ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16"];
+
+// 回收車: 與垃圾車相同時間但部分備註不同
+const recycleData = {
+  "1":  [["15:50","16:09"], ["18:15","18:37"], ["20:25","20:45"]],
+  "5":  [["15:35","15:50"], ["18:00","18:33"], ["20:35","20:50"]],
+  "2":  [["15:48","16:05", [{"text":"🚌  開始 復興三路與台鋁14巷口(老北京炸醬麵旁）"},{"text":"🚌  結束 復興三路155號前(八方雲集旁)"},{"text":"接駁車只收2點，還剩5個收運點"}]], ["18:10","18:31"], ["20:20","20:37"]],
+  "6":  [["15:35","15:55"], ["18:10","18:30"], ["20:30","20:48"]],
+  "3":  [["15:45","16:00"], ["18:15","18:35"], ["20:20","20:45"]],
+  "7":  [["15:35","15:54"], ["18:05","18:24"], ["20:35","20:53"]],
+  "4":  [["15:35","16:02"], ["18:23","18:39"], ["20:40","20:59"]],
+  "8":  [["15:35","16:00"], ["18:15","18:20"], ["20:25","20:44"]],
+  "9":  [["15:50","16:08"], ["17:55","18:00",[{"text":"🚌  開始 瑞北路120巷口(佳加藥局）","img":"img/photo-01.jpg"},{"text":"🚌 結束 武營路47巷尾(遠境馳名大樓)","img":"img/photo-02.jpg"},{"text":"接駁車結束剩餘6點"}]],      ["20:42","20:54",[{"text": "🚌  開始 永豐路126巷口(瑞豐復健診所）", "img": "img/photo-03.jpg"}, {"text": "🚌 結束 瑞北路與瑞泰街口(東方黎明）", "img": "img/photo-04.jpg"},{"text":"接駁車結束剩餘8點"}]]],
+  "13": [["15:58","16:05"], ["18:23","18:30"], ["20:46","20:50","出發時跟車出門"]],
+  "10": [["15:45","16:05"], ["18:09","18:30"], ["20:44","20:55"]],
+  "14": [["15:38","15:55"], ["18:29","18:35"], ["20:45","20:53"]],
+  "11": [["15:41","16:05"], ["18:14","18:33"], ["20:43","21:00"]],
+  "15": [["15:45","15:55"], ["18:16","18:25"], ["20:34","20:45"]],
+  "12": [["15:35","15:53"], ["18:15","18:28"], ["20:33","20:40","出發時跟車出門"]],
+  "16": [["15:55","16:00"], ["18:27","18:35","出發時跟車出門"], ["20:40","20:50"]],
+};
+const kitchenData = {
+  "草衙": ["16:15","19:00","21:15"],
+  "籬仔內": ["16:20","19:00","21:15"],
+  "西甲": ["15:15","19:00","21:15"],
+};
+const kitchenOrder = ["西甲","籬仔內","草衙"];
+
+// 配套路線: 路線名稱 -> 地址陣列(順序清單,非時間)
+const addressData = {
+  "回1": [],
+  "回2": [],
+  "輪1": [],
+  "輪2": [
+    "籬仔內路166號(電動車)","和平二路84號(光陽)","英明一路48號(山葉)","英明一路79號(光陽)","英明一路129號(光陽)",
+    "英德街100號(山葉)","廣西路47號(三陽)","廣西路31號(山葉)","和平二路281號(台鈴)","二聖一路13號(三陽)",
+    "二聖路299號(天之道)","瑞祥街138號(山葉)","瑞恩街130號(光陽)","精忠街149號(民將)","精忠街29號(光陽)",
+    "瑞北路191號(興華)","武慶二路41號(山葉)","武慶二路31號(光陽)","瑞和街220號(甲駿)","瑞隆路545號(光陽)",
+    "瑞隆路435號(Gogoro)","崗山西街48號(三陽)","公正路28號(山葉)","武慶一路60號(光陽)","瑞隆路210號(光陽)",
+    "永豐路136號(山葉)","永豐路182號(光陽)","武營路47巷46號(光陽)","瑞福路148號(山葉)","瑞福路170號(宏佳騰)",
+    "瑞北路82號(光陽)","公正路241號(光陽)","公正路169號(山葉)","瑞隆路412號(山葉)","瑞隆路408號(光陽)","瑞春街71號(山葉)",
+  ],
+  "1999": [],
+  "西配": {
+    "定點收運": [
+      { addr: "二聖一路與英明一路(全家冷氣機旁)", time: "07:30-07:40" },
+      { addr: "光華二路與英德街(公園旁)", time: "07:45-07:55" },
+      { addr: "南寧街與長江街", time: "08:00-08:10" },
+      { addr: "一心二路與修文街(中華電信旁)", time: "08:15-08:25" },
+      { addr: "正勤路39號(獅甲社區前)", time: "08:30-08:34" },
+      { addr: "正勤社區內(路段1)", time: "08:35-08:39" },
+      { addr: "正勤社區內(路段2)", time: "08:40-08:45" },
+      { addr: "修成街與修成南街口(第一公有市場)", time: "", group: "下午的車趟　11:45 打卡後出車" },
+      { addr: "復興三路與中山二路口(中山市場)", time: "" },
+      { addr: "聖德二街與台鋁五街口(民興市場)", time: "" },
+    ],
+    "髒亂點": [
+      "二聖二路與桔林街(53號對面)",
+      "一心二路32巷口(福綺樂旁)",
+      "一心二路54巷口(順發鎖匙行)",
+      "修文街146巷口",
+      "中山二路55巷口",
+      "民權二路麗車坊後面藍色箱子處",
+      "民權二路622巷內(水塔圍牆邊)",
+      "三多三路21號(富山香檀地下道旁)",
+      "廣西路151巷口",
+      "林森三路192巷與修文街口",
+      "復興三路3號(啟智學校) 09:30才可離開",
+    ],
+  },
+  "籬配": [],
+  "草配": [],
+};
+const wedOrder = ["回1","回2","輪1","輪2"];
+const sunOrder = ["1999","西配","籬配","草配"];
+
+const categories = {
+  "垃圾車": { type:"truck", data: truckData, order: truckOrder },
+  "回收車": { type:"truck", data: recycleData, order: truckOrder },
+  "廚餘車": { type:"kitchen", data: kitchenData, order: kitchenOrder },
+  "星期三配套": { type:"address", data: addressData, order: wedOrder },
+  "星期日配套": { type:"address", data: addressData, order: sunOrder },
+};
+
+let currentCategory = localStorage.getItem('lastCategory') || "垃圾車";
+if(!categories[currentCategory]) currentCategory = "垃圾車";
+
+let currentSelectedKey = null;
+let countdownTimer = null;
+
+const categoryIcons = {
+  "垃圾車": "🚛",
+  "回收車": "♻️",
+  "廚餘車": "🍃",
+  "星期三配套": "🟦",
+  "星期日配套": "🟧",
+};
+
+const tabsEl = document.getElementById('tabs');
+Object.keys(categories).forEach(cat=>{
+  const tab = document.createElement('button');
+  tab.className = 'tab-btn';
+  tab.innerHTML = `<span class="tab-icon">${categoryIcons[cat] || '📍'}</span><span>${cat}</span>`;
+  tab.onclick = ()=> selectCategory(cat, tab);
+  if(cat === currentCategory) tab.classList.add('active');
+  tabsEl.appendChild(tab);
+});
+
+function selectCategory(cat, btn){
+  currentCategory = cat;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('card').classList.remove('show');
+  document.getElementById('empty').style.display = 'block';
+  localStorage.setItem('lastCategory', cat);
+  localStorage.removeItem('lastItem');
+  currentSelectedKey = null;
+  stopCountdown();
+  const searchEl = document.getElementById('searchBox');
+  if(searchEl) searchEl.value = '';
+  updateSearchVisibility();
+  document.getElementById('progressWrap').style.display = 'none';
+  renderPicker();
+}
+
+// 搜尋框只在地址類分頁顯示(垃圾車/回收車/廚餘車編號少,不需要搜尋)
+function updateSearchVisibility(){
+  const searchEl = document.getElementById('searchBox');
+  if(!searchEl) return;
+  const cfg = categories[currentCategory];
+  searchEl.style.display = (cfg && cfg.type === 'address') ? '' : 'none';
+}
+
+function renderPicker(){
+  const cfg = categories[currentCategory];
+  const picker = document.getElementById('picker');
+  picker.innerHTML = '';
+  const searchEl = document.getElementById('searchBox');
+  const q = (searchEl && searchEl.value || '').trim();
+  const fullOrder = cfg.order;
+  const list = q ? fullOrder.filter(r => r.includes(q)) : fullOrder;
+
+  if(list.length === 0){
+    const none = document.createElement('div');
+    none.className = 'placeholder';
+    none.style.margin = '0 0 12px';
+    none.textContent = '找不到符合的路線';
+    picker.appendChild(none);
+    return;
+  }
+
+  list.forEach(r=>{
+    const btn = document.createElement('button');
+    btn.className = 'route-btn';
+    btn.textContent = r;
+    btn.onclick = ()=> selectItem(r, btn);
+    picker.appendChild(btn);
+  });
+
+  if(!q){
+    const lastItem = localStorage.getItem('lastItem');
+    if(lastItem && fullOrder.includes(lastItem)){
+      const idx = fullOrder.indexOf(lastItem);
+      const btnIdx = list.indexOf(lastItem);
+      if(btnIdx > -1) selectItem(lastItem, picker.children[btnIdx]);
+    }
+  } else if(currentSelectedKey && list.includes(currentSelectedKey)){
+    const btnIdx = list.indexOf(currentSelectedKey);
+    picker.children[btnIdx].classList.add('active');
+  }
+}
+
+function filterAddressRows(){
+  const q = (document.getElementById('searchBox').value || '').trim();
+  document.querySelectorAll('.addr-row').forEach(row=>{
+    const text = row.querySelector('.addr-content').textContent;
+    row.style.display = (!q || text.includes(q)) ? 'flex' : 'none';
+  });
+}
+
+document.getElementById('searchBox').addEventListener('input', ()=>{
+  const cfg = categories[currentCategory];
+  if(cfg.type === 'address' && currentSelectedKey){
+    filterAddressRows();
+  } else {
+    renderPicker();
+  }
+});
+
+// 顯示某路線底下的「任務」選單(例如 西配 → 定點收運 / 髒亂點)
+function renderTaskPicker(routeKey, taskGroup){
+  const tripsEl = document.getElementById('trips');
+  document.getElementById('progressWrap').style.display = 'none';
+  tripsEl.innerHTML = '';
+
+  const hint = document.createElement('div');
+  hint.className = 'addr-hint';
+  hint.textContent = '請選擇任務項目';
+  tripsEl.appendChild(hint);
+
+  Object.keys(taskGroup).forEach(taskName=>{
+    const btn = document.createElement('button');
+    btn.className = 'route-btn';
+    btn.style.width = '100%';
+    btn.style.marginBottom = '8px';
+    btn.textContent = taskName;
+    btn.onclick = ()=> selectTask(routeKey, taskName);
+    tripsEl.appendChild(btn);
+  });
+}
+
+// 選擇某個任務(定點收運 / 髒亂點),顯示該任務底下的地址清單
+function selectTask(routeKey, taskName){
+  const cfg = categories[currentCategory];
+  const masterList = cfg.data[routeKey][taskName];
+  document.getElementById('cardTitle').textContent =
+    `路線 ${routeKey}　·　${taskName}　·　${currentCategory}`;
+  renderAddressList(masterList, `${currentCategory}:${routeKey}:${taskName}`, ()=>{
+    document.getElementById('cardTitle').textContent =
+      `路線 ${routeKey}　·　${currentCategory}`;
+    renderTaskPicker(routeKey, cfg.data[routeKey]);
+  });
+}
+
+// 顯示地址清單(可勾選完成、拖曳排序);onBack 不為 null 時會顯示「返回任務選單」按鈕
+function renderAddressList(masterList, storageKeyBase, onBack){
+  const tripsEl = document.getElementById('trips');
+  const progressWrap = document.getElementById('progressWrap');
+  tripsEl.innerHTML = '';
+
+  if(onBack){
+    const backBtn = document.createElement('button');
+    backBtn.className = 'reset-btn';
+    backBtn.style.marginBottom = '10px';
+    backBtn.textContent = '← 返回任務選單';
+    backBtn.onclick = onBack;
+    tripsEl.appendChild(backBtn);
+  }
+
+  if(!masterList || masterList.length === 0){
+    progressWrap.style.display = 'none';
+    const empty = document.createElement('div');
+    empty.className = 'placeholder';
+    empty.style.margin = '0';
+    empty.textContent = '尚無地址資料';
+    tripsEl.appendChild(empty);
+    return;
+  }
+
+  // 將資料統一整理成 {addr, time, groupIndex, groupLabel} 格式
+  // 支援兩種寫法:純字串(舊格式,無時間/無分段)、或 {addr, time, group} 物件(可標時間、可標分段標題)
+  let groupIdx = 0;
+  const normalized = masterList.map(item=>{
+    let addr, time = '', group = null;
+    if(typeof item === 'string'){ addr = item; }
+    else { addr = item.addr; time = item.time || ''; group = item.group || null; }
+    if(group) groupIdx++;
+    return { addr, time, groupIndex: groupIdx, groupLabel: group };
+  });
+  const itemsByAddr = new Map(normalized.map(it=>[it.addr, it]));
+  const addrList = normalized.map(it=>it.addr);
+
+  progressWrap.style.display = 'block';
+  const orderKey = `addrOrder:${storageKeyBase}`;
+  const doneKey = `addrDone:${storageKeyBase}`;
+
+  // 讀取自訂順序;若儲存的順序與目前資料不吻合(筆數/內容不同)則退回原始順序
+  let order;
+  try{
+    const savedOrder = JSON.parse(localStorage.getItem(orderKey) || 'null');
+    const sameSet = Array.isArray(savedOrder) && savedOrder.length === addrList.length &&
+      savedOrder.slice().sort().join('\n') === addrList.slice().sort().join('\n');
+    order = sameSet ? savedOrder.slice() : addrList.slice();
+  }catch(e){ order = addrList.slice(); }
+
+  // 讀取完成狀態(以地址文字為鍵,不受順序調整影響)
+  let doneMap;
+  try{
+    doneMap = JSON.parse(localStorage.getItem(doneKey) || '{}');
+    if(typeof doneMap !== 'object' || doneMap === null) doneMap = {};
+  }catch(e){ doneMap = {}; }
+
+  function saveOrder(){ localStorage.setItem(orderKey, JSON.stringify(order)); }
+  function saveDone(){ localStorage.setItem(doneKey, JSON.stringify(doneMap)); }
+
+  function updateProgress(){
+    const doneCount = order.filter(a => doneMap[a]).length;
+    const pct = Math.round((doneCount / order.length) * 100);
+    document.getElementById('progressText').textContent = `已完成 ${doneCount} / ${order.length}`;
+    document.getElementById('progressPct').textContent = `${pct}%`;
+    document.getElementById('progressFill').style.width = `${pct}%`;
+  }
+
+  // 依分段重新編號(遇到分段標題就重新從 1 開始數)
+  function renumber(){
+    let counter = 0;
+    Array.from(tripsEl.children).forEach(el=>{
+      if(el.classList.contains('addr-group-header')){ counter = 0; return; }
+      if(!el.classList.contains('addr-row')) return;
+      counter++;
+      const addr = el.getAttribute('data-addr');
+      if(!doneMap[addr]) el.querySelector('.addr-check').textContent = String(counter);
+    });
+  }
+
+  // 計算某一列在「同分段內」的顯示序號(勾選時用來還原數字)
+  function displayIndexOf(row){
+    let count = 0;
+    let el = row.previousElementSibling;
+    while(el){
+      if(el.classList.contains('addr-group-header')) break;
+      if(el.classList.contains('addr-row')) count++;
+      el = el.previousElementSibling;
+    }
+    return count + 1;
+  }
+
+  const hint = document.createElement('div');
+  hint.className = 'addr-hint';
+  hint.textContent = '點一下標記已收取；點 ▲▼ 可調整順序(順序與進度都會自動保存)';
+  tripsEl.appendChild(hint);
+
+  const resetBar = document.createElement('div');
+  resetBar.className = 'reset-bar';
+  resetBar.innerHTML = `<button class="reset-btn order-btn">↕ 還原順序</button><button class="reset-btn">↺ 一鍵全恢復</button>`;
+  const btns = resetBar.querySelectorAll('.reset-btn');
+  btns[0].onclick = ()=>{
+    order = addrList.slice();
+    saveOrder();
+    renderAddressList(masterList, storageKeyBase, onBack);
+  };
+  btns[1].onclick = ()=>{
+    doneMap = {};
+    saveDone();
+    tripsEl.querySelectorAll('.addr-row').forEach(row=>{
+      row.classList.remove('done');
+    });
+    renumber();
+    updateProgress();
+  };
+  tripsEl.appendChild(resetBar);
+
+  let lastGroupIndex = null;
+  let groupCounter = 0;
+
+  order.forEach((addr, i)=>{
+    const info = itemsByAddr.get(addr) || { addr, time:'', groupIndex:0, groupLabel:null };
+
+    if(info.groupIndex !== lastGroupIndex){
+      if(info.groupLabel){
+        const divider = document.createElement('div');
+        divider.className = 'addr-group-header';
+        divider.textContent = info.groupLabel;
+        tripsEl.appendChild(divider);
+      }
+      lastGroupIndex = info.groupIndex;
+      groupCounter = 0;
+    }
+    groupCounter++;
+    const displayNum = groupCounter;
+
+    const prevInfo = i > 0 ? itemsByAddr.get(order[i-1]) : null;
+    const nextInfo = i < order.length-1 ? itemsByAddr.get(order[i+1]) : null;
+    const isFirstInGroup = !prevInfo || prevInfo.groupIndex !== info.groupIndex;
+    const isLastInGroup = !nextInfo || nextInfo.groupIndex !== info.groupIndex;
+
+    const row = document.createElement('div');
+    row.className = 'addr-row' + (doneMap[addr] ? ' done' : '');
+    row.setAttribute('data-addr', addr);
+    const addrParts = info.addr.match(/^(.*?)\s*(\(.*\))\s*$/);
+    const mainText = addrParts ? addrParts[1] : info.addr;
+    const noteText = addrParts ? addrParts[2] : '';
+    const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(mainText);
+    row.innerHTML = `<span class="order-btns"><button class="ord-btn ord-up" ${isFirstInGroup ? 'disabled' : ''}>▲</button><button class="ord-btn ord-down" ${isLastInGroup ? 'disabled' : ''}>▼</button></span><span class="addr-check">${doneMap[addr] ? '✓' : displayNum}</span><div class="addr-content"><div class="addr-line-main">${mainText}</div>${noteText ? `<div class="addr-line-note">${noteText}</div>` : ''}${info.time ? `<div class="addr-time">${info.time}</div>` : ''}</div><span class="nav-link">🗺️ 導航</span>`;
+    const checkEl = row.querySelector('.addr-check');
+    const navEl = row.querySelector('.nav-link');
+    const upBtn = row.querySelector('.ord-up');
+    const downBtn = row.querySelector('.ord-down');
+
+    navEl.onclick = (e)=>{
+      e.stopPropagation();
+      window.open(mapUrl, '_blank');
+    };
+
+    upBtn.onclick = (e)=>{
+      e.stopPropagation();
+      if(isFirstInGroup) return;
+      [order[i-1], order[i]] = [order[i], order[i-1]];
+      saveOrder();
+      renderAddressList(masterList, storageKeyBase, onBack);
+    };
+
+    downBtn.onclick = (e)=>{
+      e.stopPropagation();
+      if(isLastInGroup) return;
+      [order[i], order[i+1]] = [order[i+1], order[i]];
+      saveOrder();
+      renderAddressList(masterList, storageKeyBase, onBack);
+    };
+
+    row.onclick = ()=>{
+      const isDone = !row.classList.contains('done');
+      row.classList.toggle('done');
+      checkEl.textContent = isDone ? '✓' : String(displayIndexOf(row));
+      doneMap[addr] = isDone;
+      saveDone();
+      updateProgress();
+    };
+
+    tripsEl.appendChild(row);
+  });
+
+  updateProgress();
+  filterAddressRows();
+}
+
+function selectItem(key, btn){
+  document.querySelectorAll('.route-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('empty').style.display = 'none';
+  localStorage.setItem('lastItem', key);
+
+  const card = document.getElementById('card');
+  card.classList.add('show');
+
+  const cfg = categories[currentCategory];
+  const isRoute = cfg.order === truckOrder;
+  const titlePrefix = cfg.type === 'address' ? '路線 ' : (isRoute ? '路線 ' : '區域 ');
+  document.getElementById('cardTitle').textContent =
+    titlePrefix + key + '　·　' + currentCategory;
+
+  currentSelectedKey = key;
+  startCountdown();
+
+  const tripsEl = document.getElementById('trips');
+  tripsEl.innerHTML = '';
+  const labels = ['第一趟','第二趟','第三趟'];
+  const legend = document.getElementById('legendBox');
+  document.getElementById('progressWrap').style.display = 'none';
+
+  if(cfg.type === 'address'){
+    legend.style.display = 'none';
+    const rawData = cfg.data[key];
+    const isTaskGroup = rawData && !Array.isArray(rawData) && typeof rawData === 'object';
+
+    if(isTaskGroup){
+      // 這個路線底下是「任務」(例如 西配 → 定點收運 / 髒亂點),尚未挑選任務前不是地址清單
+      renderTaskPicker(key, rawData);
+    } else {
+      renderAddressList(rawData, `${currentCategory}:${key}`, null);
+    }
+  } else if(cfg.type === 'truck'){
+    legend.style.display = 'flex';
+    cfg.data[key].forEach((t, i)=>{
+      const [dep, arr, note, img] = Array.isArray(t[2]) ? [t[0],t[1],t[2],null] : t;
+      const row = document.createElement('div');
+      row.className = 'trip';
+      row.setAttribute('data-trip-idx', i);
+      row.innerHTML = `
+        <div class="trip-label">${labels[i] || '第' + (i + 1) + '趟'}</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;">
+          <div class="time-pair">
+            <span class="depart">${dep || '—'}</span>
+            <span class="arrow">→</span>
+            <span class="arrive">${arr || '—'}</span>
+          </div>
+          ${(!Array.isArray(note) && note) ? `<div class="note ${img ? 'note-link' : ''}">${note}</div>` : ''}
+        </div>
+        ${Array.isArray(note) ? `
+        <div class="shuttle-block">
+          <button class="shuttle-summary" type="button">
+            <span>🚌 本趟有接駁記錄(${note.length})</span>
+            <span class="shuttle-arrow">▸</span>
+          </button>
+          <div class="shuttle-detail">
+            ${note.map((n, idx) => `
+              <div class="shuttle-item">
+                <div class="shuttle-text">${n.text}</div>
+                ${/[路街巷弄號]/.test(n.text) ? `<button class="nav-link shuttle-nav" type="button" data-note-idx="${idx}">🧭 導航</button>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>` : ''}
+      `;
+
+      // 單一備註(非陣列)若有圖片,點擊開啟大圖
+      if(!Array.isArray(note) && note && img){
+        const noteEl = row.querySelector('.note');
+        if(noteEl) noteEl.onclick = ()=> showImg(note, img);
+      }
+
+      // 接駁記錄:預設收合,點擊展開;導航按鈕開啟 Google 地圖
+      if(Array.isArray(note)){
+        row.querySelectorAll('.shuttle-nav').forEach(btn=>{
+          const idx = parseInt(btn.getAttribute('data-note-idx'), 10);
+          const n = note[idx];
+          btn.onclick = (e)=>{
+            e.stopPropagation();
+            // 優先用資料裡的 nav 欄位,否則從文字自動抽地址
+            const q = n.nav || n.text
+              .replace(/🚌/g, '')
+              .replace(/^\s*(開始|結束)\s*/, '')
+              .trim();
+            window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q), '_blank');
+          };
+        });
+        const summaryBtn = row.querySelector('.shuttle-summary');
+        const detailEl = row.querySelector('.shuttle-detail');
+        summaryBtn.onclick = ()=>{
+          const isOpen = detailEl.classList.toggle('show');
+          summaryBtn.querySelector('.shuttle-arrow').textContent = isOpen ? '▾' : '▸';
+        };
+      }
+
+      tripsEl.appendChild(row);
+    });
+  } else {
+    legend.style.display = 'none';
+    cfg.data[key].forEach((time, i)=>{
+      const row = document.createElement('div');
+      row.className = 'trip';
+      row.setAttribute('data-trip-idx', i);
+      row.innerHTML = `
+        <div class="trip-label">${labels[i] || '第' + (i + 1) + '趟'}</div>
+        <div class="time-pair"><span class="depart">${time || '—'}</span></div>
+      `;
+      tripsEl.appendChild(row);
+    });
+  }
+}
+
+updateSearchVisibility();
+renderPicker();
+
+
+
+
+// 取出目前選取項目的「出發時間」陣列,供倒數計算使用
+function getDepartTimes(cfg, key){
+  if(!key || !cfg.data[key]) return null;
+  if(cfg.type === 'truck'){
+    return cfg.data[key].map(t => Array.isArray(t) ? t[0] : t);
+  }
+  if(cfg.type === 'kitchen'){
+    return cfg.data[key].slice();
+  }
+  return null; // 配套路線沒有時間可倒數
+}
+
+function parseTimeToday(hhmm, baseDate){
+  if(!hhmm) return null;
+  const parts = hhmm.split(':');
+  if(parts.length < 2) return null;
+  const d = new Date(baseDate);
+  d.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+  return d;
+}
+
+function formatDiff(ms){
+  const totalMin = Math.max(0, Math.floor(ms / 60000));
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if(h > 0) return `${h} 小時 ${m} 分`;
+  return `${m} 分鐘`;
+}
+
+function updateCountdown(){
+  const el = document.getElementById('timeInfo');
+  if(!el) return;
+  const cfg = categories[currentCategory];
+  const times = getDepartTimes(cfg, currentSelectedKey);
+  if(!times || times.length === 0){
+    el.classList.remove('show');
+    document.body.classList.remove('has-timeinfo');
+    el.innerHTML = '';
+    return;
+  }
+
+  const tripLabels = ['第一趟','第二趟','第三趟'];
+  const now = new Date();
+  let nextIdx = -1;
+  let nextDate = null;
+  for(let i = 0; i < times.length; i++){
+    const t = parseTimeToday(times[i], now);
+    if(t && t.getTime() > now.getTime()){
+      nextIdx = i;
+      nextDate = t;
+      break;
+    }
+  }
+
+  let label, diffMs;
+  if(nextIdx === -1){
+    // 今日已無班次,顯示明天第一趟
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    nextDate = parseTimeToday(times[0], tomorrow);
+    label = `明天 ${tripLabels[0]}`;
+  } else {
+    label = tripLabels[nextIdx] || `第${nextIdx+1}趟`;
+  }
+  diffMs = nextDate - now;
+
+  document.querySelectorAll('.trip[data-trip-idx]').forEach(row=>{
+    const idx = parseInt(row.getAttribute('data-trip-idx'), 10);
+    row.classList.remove('tp-past', 'tp-active');
+    if(nextIdx === -1){
+      row.classList.add('tp-past');
+    } else if(idx < nextIdx){
+      row.classList.add('tp-past');
+    } else if(idx === nextIdx){
+      row.classList.add('tp-active');
+    }
+  });
+
+  // 倒數橫幅已移除,僅保留下一趟高亮與 5 分鐘提醒邏輯
+
+}
+
+function startCountdown(){
+  stopCountdown();
+  updateCountdown();
+  countdownTimer = setInterval(updateCountdown, 1000);
+}
+
+function stopCountdown(){
+  if(countdownTimer){
+    clearInterval(countdownTimer);
+    countdownTimer = null;
+  }
+  const el = document.getElementById('timeInfo');
+  if(el){
+    el.classList.remove('show');
+    document.body.classList.remove('has-timeinfo');
+    el.innerHTML = '';
+  }
+}
+
+function showImg(title, url){
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalImg').src = url;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function closeImg(){
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+</script>
+</body>
+</html>
