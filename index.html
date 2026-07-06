@@ -131,14 +131,62 @@
   }
   .card.show{display:block;animation:fade .25s ease;}
   @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .card-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:16px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:12px;
+  }
   .card-title{
     font-size:15px;
     color:var(--accent);
     letter-spacing:1px;
-    margin-bottom:16px;
-    border-bottom:1px solid var(--line);
-    padding-bottom:12px;
     font-weight:700;
+  }
+  .edit-btn{
+    font-size:13px;
+    color:var(--text-dim);
+    background:rgba(255,255,255,0.05);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:7px 12px;
+    white-space:nowrap;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .edit-btn.on{
+    color:#161a13;
+    background:var(--accent);
+    border-color:var(--accent);
+    font-weight:700;
+  }
+  .time-edit{
+    font-size:20px;
+    font-weight:700;
+    font-variant-numeric:tabular-nums;
+    background:#11150e;
+    color:var(--text);
+    border:1px solid var(--accent);
+    border-radius:8px;
+    padding:4px 6px;
+    width:108px;
+  }
+  .depart.edited, .arrive.edited{
+    border-bottom:2px dashed #e6a23c;
+  }
+  .reset-times{
+    font-size:13px;
+    color:#e6a23c;
+    background:rgba(230,162,60,0.1);
+    border:1px solid rgba(230,162,60,0.35);
+    border-radius:20px;
+    padding:8px 14px;
+    cursor:pointer;
+    display:block;
+    margin:4px auto 0;
   }
   .trip{
     display:flex;
@@ -600,7 +648,10 @@
   <div id="empty" class="placeholder">↑ 請選擇路線編號</div>
 
   <div class="card" id="card">
-    <div class="card-title" id="cardTitle">路線</div>
+    <div class="card-head">
+      <div class="card-title" id="cardTitle">路線</div>
+      <button class="edit-btn" id="editBtn" type="button" style="display:none;">✏️ 編輯時間</button>
+    </div>
     <div class="progress-wrap" id="progressWrap" style="display:none;">
       <div class="progress-labels">
         <span id="progressText">已完成 0 / 0</span>
@@ -1060,9 +1111,37 @@ function renderAddressList(masterList, storageKeyBase, onBack){
   filterAddressRows();
 }
 
+// ===== 時間編輯:修改存在手機(localStorage),原始資料不動 =====
+let editMode = false;
+let suppressTimeSave = false; // 還原過程中封鎖儲存,避免補發的事件把舊值寫回
+
+function ovStoreKey(cat, key){ return `timeOverride:${cat}|${key}`; }
+
+function getOverrides(cat, key){
+  try{ return JSON.parse(localStorage.getItem(ovStoreKey(cat, key))) || {}; }
+  catch(e){ return {}; }
+}
+
+function setOverride(cat, key, tripIdx, which, value){
+  const ov = getOverrides(cat, key);
+  if(!ov[tripIdx]) ov[tripIdx] = {};
+  ov[tripIdx][which] = value;
+  localStorage.setItem(ovStoreKey(cat, key), JSON.stringify(ov));
+}
+
+function clearOverrides(cat, key){
+  localStorage.removeItem(ovStoreKey(cat, key));
+}
+
+// 取得套用修改後的時間;original 為原始資料的值
+function effTime(ov, tripIdx, which, original){
+  return (ov[tripIdx] && ov[tripIdx][which]) ? ov[tripIdx][which] : original;
+}
+
 function selectItem(key, btn){
-  document.querySelectorAll('.route-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
+  // 高亮直接依路線名稱比對,即使沒有傳入按鈕也能正確重繪
+  document.querySelectorAll('.route-btn').forEach(b=>
+    b.classList.toggle('active', b.textContent === key));
   document.getElementById('empty').style.display = 'none';
   localStorage.setItem('lastItem', key);
 
@@ -1097,19 +1176,27 @@ function selectItem(key, btn){
     }
   } else if(cfg.type === 'truck'){
     legend.style.display = 'flex';
+    const ov = getOverrides(currentCategory, key);
     cfg.data[key].forEach((t, i)=>{
-      const [dep, arr, note, img] = Array.isArray(t[2]) ? [t[0],t[1],t[2],null] : t;
+      const [rawDep, rawArr, note, img] = Array.isArray(t[2]) ? [t[0],t[1],t[2],null] : t;
+      const dep = effTime(ov, i, 'dep', rawDep);
+      const arr = effTime(ov, i, 'arr', rawArr);
+      const depEdited = dep !== rawDep;
+      const arrEdited = arr !== rawArr;
       const row = document.createElement('div');
       row.className = 'trip';
       row.setAttribute('data-trip-idx', i);
+      const timeHTML = editMode
+        ? `<input type="time" class="time-edit" value="${dep || ''}" data-idx="${i}" data-which="dep">
+           <span class="arrow">→</span>
+           <input type="time" class="time-edit" value="${arr || ''}" data-idx="${i}" data-which="arr">`
+        : `<span class="depart ${depEdited ? 'edited' : ''}">${dep || '—'}</span>
+           <span class="arrow">→</span>
+           <span class="arrive ${arrEdited ? 'edited' : ''}">${arr || '—'}</span>`;
       row.innerHTML = `
         <div class="trip-label">${labels[i] || '第' + (i + 1) + '趟'}</div>
         <div style="display:flex;flex-direction:column;align-items:flex-start;">
-          <div class="time-pair">
-            <span class="depart">${dep || '—'}</span>
-            <span class="arrow">→</span>
-            <span class="arrive">${arr || '—'}</span>
-          </div>
+          <div class="time-pair">${timeHTML}</div>
           ${(!Array.isArray(note) && note) ? `<div class="note ${img ? 'note-link' : ''}">${note}</div>` : ''}
         </div>
         ${Array.isArray(note) ? `
@@ -1162,18 +1249,77 @@ function selectItem(key, btn){
     });
   } else {
     legend.style.display = 'none';
+    const ovK = getOverrides(currentCategory, key);
     cfg.data[key].forEach((time, i)=>{
+      const eff = effTime(ovK, i, 'dep', time);
       const row = document.createElement('div');
       row.className = 'trip';
       row.setAttribute('data-trip-idx', i);
-      row.innerHTML = `
-        <div class="trip-label">${labels[i] || '第' + (i + 1) + '趟'}</div>
-        <div class="time-pair"><span class="depart">${time || '—'}</span></div>
-      `;
+      row.innerHTML = editMode
+        ? `<div class="trip-label">${labels[i] || '第' + (i + 1) + '趟'}</div>
+           <div class="time-pair"><input type="time" class="time-edit" value="${eff || ''}" data-idx="${i}" data-which="dep"></div>`
+        : `<div class="trip-label">${labels[i] || '第' + (i + 1) + '趟'}</div>
+           <div class="time-pair"><span class="depart ${eff !== time ? 'edited' : ''}">${eff || '—'}</span></div>`;
       tripsEl.appendChild(row);
     });
   }
+
+  // 編輯按鈕:只在有時間可編輯的分頁顯示
+  const editBtn = document.getElementById('editBtn');
+  const editable = cfg.type === 'truck' || cfg.type === 'kitchen';
+  editBtn.style.display = editable ? '' : 'none';
+  editBtn.classList.toggle('on', editMode);
+  editBtn.textContent = editMode ? '✔ 完成' : '✏️ 編輯時間';
+
+  if(editable && editMode){
+    // 輸入框變更即儲存,並更新倒數與高亮
+    tripsEl.querySelectorAll('.time-edit').forEach(inp=>{
+      inp.onchange = ()=>{
+        // 還原進行中或輸入框已被移出畫面時,一律不儲存
+        if(suppressTimeSave || !inp.isConnected) return;
+        setOverride(currentCategory, key, parseInt(inp.dataset.idx,10), inp.dataset.which, inp.value);
+        updateCountdown();
+      };
+    });
+    // 有修改過才顯示還原按鈕
+    if(Object.keys(getOverrides(currentCategory, key)).length){
+      const resetBtn = document.createElement('button');
+      resetBtn.className = 'reset-times';
+      resetBtn.type = 'button';
+      resetBtn.textContent = '↩ 還原此路線為預設時間';
+      resetBtn.onclick = ()=>{
+        // 不用系統彈窗(LINE 內建瀏覽器會忽略),改為按兩次確認
+        if(!resetBtn.dataset.armed){
+          resetBtn.dataset.armed = '1';
+          resetBtn.textContent = '⚠ 再按一次確認還原';
+          setTimeout(()=>{
+            if(resetBtn.isConnected){
+              resetBtn.dataset.armed = '';
+              resetBtn.textContent = '↩ 還原此路線為預設時間';
+            }
+          }, 3000);
+          return;
+        }
+        suppressTimeSave = true; // 封鎖期間任何時間儲存都被忽略
+        if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+        setTimeout(()=>{
+          clearOverrides(currentCategory, key);
+          selectItem(key);
+          suppressTimeSave = false;
+        }, 80);
+      };
+      tripsEl.appendChild(resetBtn);
+    }
+  }
+  updateCountdown();
 }
+
+
+// 編輯時間開關
+document.getElementById('editBtn').onclick = ()=>{
+  editMode = !editMode;
+  if(currentSelectedKey) selectItem(currentSelectedKey);
+};
 
 updateSearchVisibility();
 renderPicker();
@@ -1181,14 +1327,16 @@ renderPicker();
 
 
 
+
 // 取出目前選取項目的「出發時間」陣列,供倒數計算使用
 function getDepartTimes(cfg, key){
   if(!key || !cfg.data[key]) return null;
+  const ov = getOverrides(currentCategory, key);
   if(cfg.type === 'truck'){
-    return cfg.data[key].map(t => Array.isArray(t) ? t[0] : t);
+    return cfg.data[key].map((t, i) => effTime(ov, i, 'dep', Array.isArray(t) ? t[0] : t));
   }
   if(cfg.type === 'kitchen'){
-    return cfg.data[key].slice();
+    return cfg.data[key].map((t, i) => effTime(ov, i, 'dep', t));
   }
   return null; // 配套路線沒有時間可倒數
 }
