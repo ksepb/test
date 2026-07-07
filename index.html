@@ -482,10 +482,16 @@
   }
   .reset-bar{
     display:flex;
-    justify-content:flex-end;
-    flex-wrap:wrap;
-    gap:8px;
-    margin-bottom:8px;
+    flex-direction:column;
+    gap:10px;
+    margin-top:22px;
+    padding-top:14px;
+    border-top:1px dashed var(--line);
+  }
+  .reset-bar .reset-btn{
+    width:100%;
+    padding:12px;
+    text-align:center;
   }
   .reset-btn{
     background:var(--panel);
@@ -1249,8 +1255,6 @@ function renderAddressList(masterList, storageKeyBase, onBack){
     renumber();
     updateProgress();
   });
-  tripsEl.appendChild(resetBar);
-
   let lastGroupIndex = null;
   let groupCounter = 0;
 
@@ -1320,6 +1324,8 @@ function renderAddressList(masterList, storageKeyBase, onBack){
 
     tripsEl.appendChild(row);
   });
+
+  tripsEl.appendChild(resetBar);
 
   updateProgress();
   filterAddressRows();
