@@ -490,6 +490,36 @@
     padding-bottom:12px;
     border-bottom:1px dashed var(--line);
   }
+  .list-topbar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:13px;
+    padding-bottom:11px;
+    border-bottom:1px dashed var(--line);
+  }
+  .list-topbar:empty{display:none;}
+  .back-btn{
+    flex:none;
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--line);
+    border-radius:9px;
+    color:var(--text);
+    font-size:14px;
+    font-weight:600;
+    padding:7px 13px;
+    cursor:pointer;
+  }
+  .back-btn:active{opacity:.55;}
+  .list-hint{
+    flex:1;
+    font-size:13px;
+    color:var(--text-dim);
+    line-height:1.65;
+    text-align:right;
+    letter-spacing:0.3px;
+  }
+  .list-hint.no-back{text-align:left;}
   .reset-bar{
     display:flex;
     flex-direction:column;
@@ -530,14 +560,45 @@
     text-decoration:line-through;
   }
   .addr-group-header{
-    font-size:14px;
-    font-weight:700;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:4px 10px;
+    font-size:15px;
+    font-weight:800;
+    letter-spacing:0.5px;
+    line-height:1.5;
     color:var(--accent);
-    background:rgba(168,220,74,0.08);
-    border:1px solid rgba(168,220,74,0.25);
+    background:#232b1c;
+    border:1px solid rgba(168,220,74,0.35);
     border-radius:10px;
-    padding:8px 12px;
+    padding:9px 13px;
     margin:14px 0 8px;
+    position:sticky;
+    top:6px;
+    z-index:5;
+    box-shadow:0 3px 10px rgba(0,0,0,0.35);
+  }
+  .addr-group-note{
+    font-size:13.5px;
+    font-weight:600;
+    line-height:1.65;
+    letter-spacing:0.3px;
+    color:#e6a23c;
+    background:rgba(230,162,60,0.08);
+    border:1px solid rgba(230,162,60,0.3);
+    border-radius:10px;
+    padding:10px 13px;
+    margin:14px 0 8px;
+  }
+  .group-meta{
+    font-size:12px;
+    font-weight:600;
+    color:var(--text-dim);
+    letter-spacing:0.5px;
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
   }
   .addr-time{
     display:inline-block;
@@ -691,10 +752,50 @@
     padding-bottom:6px;
     border-bottom:1px dashed var(--line);
   }
-  .zone-col-nums{
+  .zone-chips{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:6px;
+  }
+  .zone-chip{
+    height:34px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(255,255,255,0.05);
+    border:1px solid var(--line);
+    border-radius:9px;
+    font-weight:700;
     font-size:16px;
-    font-weight:600;
     font-variant-numeric:tabular-nums;
+    color:var(--text);
+  }
+  .zone-chip.dim{
+    opacity:0.45;
+    border-style:dashed;
+    font-size:13px;
+  }
+  .zone-col.today{
+    border-color:rgba(168,220,74,0.55);
+    background:rgba(168,220,74,0.07);
+  }
+  .zone-col.today .zone-chip{
+    background:rgba(168,220,74,0.12);
+    border-color:rgba(168,220,74,0.35);
+    color:var(--accent);
+  }
+  .zone-col.off{opacity:0.55;}
+  .today-tag{
+    display:inline-block;
+    margin-left:6px;
+    padding:1px 7px;
+    background:var(--accent);
+    color:#141810;
+    border-radius:7px;
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:1px;
+    vertical-align:1px;
   }
   .cat-note-line{margin:3px 0;}
   .cat-note-star{
@@ -1297,11 +1398,28 @@ const categories = {
     { label:"星期一、四", items:[ {key:"一四1台",label:"1台"}, {key:"一四2台",label:"2台"}, {key:"一四3台",label:"3台"} ] },
     { label:"星期二、五", items:[ {key:"二五1台",label:"1台"}, {key:"二五2台",label:"2台"} ] },
   ] },
-  "星期三配套": { type:"address", data: addressData, order: wedOrder },
-  "星期日配套": { type:"address", data: addressData, order: sunOrder },
+  "三配套": { type:"address", data: addressData, order: wedOrder },
+  "日配套": { type:"address", data: addressData, order: sunOrder },
 };
 
+// 分類改名轉移:星期三配套→三配套、星期日配套→日配套(保留舊勾選紀錄)
+(function migrateRename(){
+  const map = { '星期三配套': '三配套', '星期日配套': '日配套' };
+  Object.keys(localStorage).forEach(k=>{
+    for(const oldName in map){
+      if(k.startsWith(oldName + ':')){
+        const newKey = map[oldName] + k.slice(oldName.length);
+        if(localStorage.getItem(newKey) === null) localStorage.setItem(newKey, localStorage.getItem(k));
+        localStorage.removeItem(k);
+      }
+    }
+  });
+  const last = localStorage.getItem('lastCategory');
+  if(last && map[last]) localStorage.setItem('lastCategory', map[last]);
+})();
+
 let currentCategory = localStorage.getItem('lastCategory') || "垃圾車";
+if(!categories[currentCategory]) currentCategory = "垃圾車";
 if(!categories[currentCategory]) currentCategory = "垃圾車";
 
 let currentSelectedKey = null;
@@ -1312,27 +1430,37 @@ const categoryIcons = {
   "回收車": "♻️",
   "廚餘車": "🍃",
   "接駁車": "🚌",
-  "星期三配套": "🟦",
-  "星期日配套": "🟧",
+  "三配套": "🟦",
+  "日配套": "🟧",
 };
+
+// 責任區順序表:依今天星期幾自動高亮適用欄位
+function buildZoneTable(){
+  const day = new Date().getDay();        // 0日 1一 ... 6六
+  const isMonThu = (day === 1 || day === 4);
+  const isTueFri = (day === 2 || day === 5);
+  const chips = (nums, extra) =>
+    nums.map(n => `<div class="zone-chip">${n}</div>`).join('') +
+    (extra ? `<div class="zone-chip dim">${extra}</div>` : '');
+  const col = (title, active, other, chipsHtml) => `
+    <div class="zone-col ${active ? 'today' : ''} ${other ? 'off' : ''}">
+      <div class="zone-col-title">${title}${active ? '<span class="today-tag">今天</span>' : ''}</div>
+      <div class="zone-chips">${chipsHtml}</div>
+    </div>`;
+  return `
+    <div class="zone-table">
+      ${col('星期一、四', isMonThu, isTueFri, chips([1,2,3,4,9,10,11,12]))}
+      ${col('星期二、五', isTueFri, isMonThu, chips([5,6,7,8,13,14,15,16], '17'))}
+    </div>`;
+}
 
 // 各分頁頂部的注意事項(收合式提示列)
 const categoryNotes = {
   "回收車": {
     title: "📌 責任區順序",
-    html: `
-      <div class="zone-table">
-        <div class="zone-col">
-          <div class="zone-col-title">星期一、四</div>
-          <div class="zone-col-nums">1 · 2 · 3 · 4 區<br>9 · 10 · 11 · 12 區</div>
-        </div>
-        <div class="zone-col">
-          <div class="zone-col-title">星期二、五</div>
-          <div class="zone-col-nums">5 · 6 · 7 · 8 區<br>13 · 14 · 15 · 16 區<br><span style="font-size:13px;color:var(--text-dim);">(17 區)</span></div>
-        </div>
-      </div>`
+    html: buildZoneTable
   },
-  "星期三配套": {
+  "三配套": {
     title: "📌 星期三配套注意事項",
     html: `
       <div class="cat-note-line">成員：回1、回2、輪1、輪2</div>
@@ -1340,7 +1468,7 @@ const categoryNotes = {
       <div class="cat-note-line cat-note-star">★ 輪1人員 16:00 要接守衛</div>
       <div class="cat-note-seq">順序：<b>回1 → 回2 → 輪1 → 輪2</b></div>`
   },
-  "星期日配套": {
+  "日配套": {
     title: "📌 星期日配套注意事項",
     html: `
       <div class="cat-note-line">1999：打 2 次卡（10:00-18:00）</div>
@@ -1360,12 +1488,13 @@ function renderCategoryNote(){
     return;
   }
   wrap.style.display = '';
+  const bodyHtml = (typeof note.html === 'function') ? note.html() : note.html;
   wrap.innerHTML = `
     <button class="cat-note-summary" type="button">
       <span>${note.title}</span>
       <span class="shuttle-arrow">▸</span>
     </button>
-    <div class="cat-note-body">${note.html}</div>`;
+    <div class="cat-note-body">${bodyHtml}</div>`;
   const btn = wrap.querySelector('.cat-note-summary');
   const body = wrap.querySelector('.cat-note-body');
   btn.onclick = ()=>{
@@ -1504,13 +1633,16 @@ function renderTaskPicker(routeKey, taskGroup){
 function selectTask(routeKey, taskName){
   const cfg = categories[currentCategory];
   const masterList = cfg.data[routeKey][taskName];
+  // 唯讀清單:時間固定的路線不提供勾選與調整順序
+  const readOnly = (currentCategory === '接駁車') ||
+    (currentCategory === '日配套' && taskName.startsWith('定點'));
   document.getElementById('cardTitle').textContent =
     `路線 ${routeKey}　·　${taskName}　·　${currentCategory}`;
   renderAddressList(masterList, `${currentCategory}:${routeKey}:${taskName}`, ()=>{
     document.getElementById('cardTitle').textContent =
       `路線 ${routeKey}　·　${currentCategory}`;
     renderTaskPicker(routeKey, cfg.data[routeKey]);
-  });
+  }, readOnly);
 }
 
 // 顯示地址清單(可勾選完成、拖曳排序);onBack 不為 null 時會顯示「返回任務選單」按鈕
@@ -1543,18 +1675,20 @@ function armConfirm(btn, normalLabel, confirmLabel, action){
   };
 }
 
-function renderAddressList(masterList, storageKeyBase, onBack){
+function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
   const tripsEl = document.getElementById('trips');
   tripsEl.innerHTML = '';
 
+  const topbar = document.createElement('div');
+  topbar.className = 'list-topbar';
   if(onBack){
     const backBtn = document.createElement('button');
-    backBtn.className = 'reset-btn';
-    backBtn.style.marginBottom = '10px';
-    backBtn.textContent = '← 返回任務選單';
+    backBtn.className = 'back-btn';
+    backBtn.textContent = '← 返回';
     backBtn.onclick = onBack;
-    tripsEl.appendChild(backBtn);
+    topbar.appendChild(backBtn);
   }
+  tripsEl.appendChild(topbar);
 
   if(!masterList || masterList.length === 0){
     const empty = document.createElement('div');
@@ -1597,6 +1731,8 @@ function renderAddressList(masterList, storageKeyBase, onBack){
     if(typeof doneMap !== 'object' || doneMap === null) doneMap = {};
   }catch(e){ doneMap = {}; }
 
+  if(readOnly){ order = addrList.slice(); doneMap = {}; }
+
   function saveOrder(){ localStorage.setItem(orderKey, JSON.stringify(order)); }
   function saveDone(){ localStorage.setItem(doneKey, JSON.stringify(doneMap)); }
 
@@ -1626,10 +1762,12 @@ function renderAddressList(masterList, storageKeyBase, onBack){
     return count + 1;
   }
 
-  const hint = document.createElement('div');
-  hint.className = 'addr-hint';
-  hint.textContent = '點一下標記已收取；點 ▲▼ 可調整順序(順序與進度都會自動保存)';
-  tripsEl.appendChild(hint);
+  if(!readOnly){
+    const hint = document.createElement('div');
+    hint.className = 'list-hint' + (onBack ? '' : ' no-back');
+    hint.innerHTML = '<div>點一下可標記已收取</div><div>點 ▲▼ 可調整順序</div>';
+    topbar.appendChild(hint);
+  }
 
   const resetBar = document.createElement('div');
   resetBar.className = 'reset-bar';
@@ -1638,7 +1776,7 @@ function renderAddressList(masterList, storageKeyBase, onBack){
   armConfirm(btns[0], '↕ 還原順序', '⚠ 再按一次確認還原順序', ()=>{
     order = addrList.slice();
     saveOrder();
-    renderAddressList(masterList, storageKeyBase, onBack);
+    renderAddressList(masterList, storageKeyBase, onBack, readOnly);
   });
   armConfirm(btns[1], '↺ 一鍵全恢復', '⚠ 再按一次清除全部勾選', ()=>{
     doneMap = {};
@@ -1658,8 +1796,22 @@ function renderAddressList(masterList, storageKeyBase, onBack){
     if(info.groupIndex !== lastGroupIndex){
       if(info.groupLabel){
         const divider = document.createElement('div');
-        divider.className = 'addr-group-header';
-        divider.textContent = info.groupLabel;
+        if(info.groupLabel.startsWith('※')){
+          // 提醒文字:一般區塊,不吸附置頂
+          divider.className = 'addr-group-note';
+          divider.textContent = info.groupLabel;
+        } else {
+          divider.className = 'addr-group-header';
+          const groupItems = normalized.filter(n => n.groupIndex === info.groupIndex);
+          const times = groupItems.map(n => n.time).filter(Boolean);
+          const allTimed = times.length === groupItems.length &&
+            times.every(t => /^\d{1,2}:\d{2}$/.test(t));
+          const meta = allTimed
+            ? `${times[0]}–${times[times.length-1]}　·　${groupItems.length}站`
+            : '';
+          divider.innerHTML = `<span>${info.groupLabel}</span>` +
+            (meta ? `<span class="group-meta">${meta}</span>` : '');
+        }
         tripsEl.appendChild(divider);
       }
       lastGroupIndex = info.groupIndex;
@@ -1680,46 +1832,48 @@ function renderAddressList(masterList, storageKeyBase, onBack){
     const mainText = addrParts ? addrParts[1] : info.addr;
     const noteText = addrParts ? addrParts[2] : '';
     const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(mainText);
-    row.innerHTML = `<span class="order-btns"><button class="ord-btn ord-up" ${isFirstInGroup ? 'disabled' : ''}>▲</button><button class="ord-btn ord-down" ${isLastInGroup ? 'disabled' : ''}>▼</button></span><span class="addr-check">${doneMap[addr] ? '✓' : displayNum}</span><div class="addr-content"><div class="addr-line-main">${mainText}</div>${noteText ? `<div class="addr-line-note">${noteText}</div>` : ''}${info.time ? `<div class="addr-time">${info.time}</div>` : ''}</div><span class="nav-link">🗺️ 導航</span>`;
+    const orderBtnsHtml = readOnly ? '' : `<span class="order-btns"><button class="ord-btn ord-up" ${isFirstInGroup ? 'disabled' : ''}>▲</button><button class="ord-btn ord-down" ${isLastInGroup ? 'disabled' : ''}>▼</button></span>`;
+    row.innerHTML = `${orderBtnsHtml}<span class="addr-check">${doneMap[addr] ? '✓' : displayNum}</span><div class="addr-content"><div class="addr-line-main">${mainText}</div>${noteText ? `<div class="addr-line-note">${noteText}</div>` : ''}${info.time ? `<div class="addr-time">${info.time}</div>` : ''}</div><span class="nav-link">🗺️ 導航</span>`;
     const checkEl = row.querySelector('.addr-check');
     const navEl = row.querySelector('.nav-link');
-    const upBtn = row.querySelector('.ord-up');
-    const downBtn = row.querySelector('.ord-down');
 
     navEl.onclick = (e)=>{
       e.stopPropagation();
       window.open(mapUrl, '_blank');
     };
 
-    upBtn.onclick = (e)=>{
-      e.stopPropagation();
-      if(isFirstInGroup) return;
-      [order[i-1], order[i]] = [order[i], order[i-1]];
-      saveOrder();
-      renderAddressList(masterList, storageKeyBase, onBack);
-    };
+    if(!readOnly){
+      row.querySelector('.ord-up').onclick = (e)=>{
+        e.stopPropagation();
+        if(isFirstInGroup) return;
+        [order[i-1], order[i]] = [order[i], order[i-1]];
+        saveOrder();
+        renderAddressList(masterList, storageKeyBase, onBack, readOnly);
+      };
 
-    downBtn.onclick = (e)=>{
-      e.stopPropagation();
-      if(isLastInGroup) return;
-      [order[i], order[i+1]] = [order[i+1], order[i]];
-      saveOrder();
-      renderAddressList(masterList, storageKeyBase, onBack);
-    };
+      row.querySelector('.ord-down').onclick = (e)=>{
+        e.stopPropagation();
+        if(isLastInGroup) return;
+        [order[i], order[i+1]] = [order[i+1], order[i]];
+        saveOrder();
+        renderAddressList(masterList, storageKeyBase, onBack, readOnly);
+      };
 
-    row.onclick = ()=>{
-      const isDone = !row.classList.contains('done');
-      row.classList.toggle('done');
-      checkEl.textContent = isDone ? '✓' : String(displayIndexOf(row));
-      doneMap[addr] = isDone;
-      saveDone();
-      updateProgress();
-    };
+      row.onclick = ()=>{
+        const isDone = !row.classList.contains('done');
+        row.classList.toggle('done');
+        checkEl.textContent = isDone ? '✓' : String(displayIndexOf(row));
+        doneMap[addr] = isDone;
+        saveDone();
+        updateProgress();
+      };
+      row.style.cursor = 'pointer';
+    }
 
     tripsEl.appendChild(row);
   });
 
-  tripsEl.appendChild(resetBar);
+  if(!readOnly) tripsEl.appendChild(resetBar);
 
   updateProgress();
   filterAddressRows();
@@ -1785,7 +1939,7 @@ function selectItem(key, btn){
       // 這個路線底下是「任務」(例如 西配 → 定點收運 / 髒亂點),尚未挑選任務前不是地址清單
       renderTaskPicker(key, rawData);
     } else {
-      renderAddressList(rawData, `${currentCategory}:${key}`, null);
+      renderAddressList(rawData, `${currentCategory}:${key}`, null, currentCategory === '接駁車');
     }
   } else if(cfg.type === 'truck'){
     legend.style.display = 'flex';
