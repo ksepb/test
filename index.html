@@ -412,6 +412,20 @@
     gap:16px;
   }
   .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;}
+  .reset-btn.armed{
+    color:#e6a23c;
+    border-color:rgba(230,162,60,0.5);
+    background:rgba(230,162,60,0.12);
+    font-weight:700;
+  }
+  .site-footer{
+    text-align:center;
+    font-size:12px;
+    color:var(--text-dim);
+    opacity:0.7;
+    margin-top:28px;
+    padding-bottom:4px;
+  }
   .placeholder{
     color:var(--text-dim);
     font-size:13px;
@@ -666,6 +680,8 @@
       <span><span class="dot" style="background:var(--accent)"></span>到達</span>
     </div>
   </div>
+
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ 更新日期：2026.07.07</div>
 
   <div class="modal-overlay" id="modalOverlay" onclick="closeImg()">
     <div class="modal-box" onclick="event.stopPropagation()">
@@ -1089,6 +1105,35 @@ function selectTask(routeKey, taskName){
 }
 
 // 顯示地址清單(可勾選完成、拖曳排序);onBack 不為 null 時會顯示「返回任務選單」按鈕
+
+// 按兩次確認:第一次按變成警示文字,3秒內再按才執行(不用系統彈窗,LINE內建瀏覽器也能用)
+function armConfirm(btn, normalLabel, confirmLabel, action){
+  // 確認狀態時隱藏同一列的其他按鈕,避免誤觸
+  const siblings = ()=> btn.parentElement
+    ? Array.from(btn.parentElement.querySelectorAll('.reset-btn')).filter(b=>b!==btn)
+    : [];
+  const disarm = ()=>{
+    btn.dataset.armed = '';
+    btn.textContent = normalLabel;
+    btn.classList.remove('armed');
+    siblings().forEach(b=>{ b.style.display = ''; });
+  };
+  btn.onclick = ()=>{
+    if(!btn.dataset.armed){
+      btn.dataset.armed = '1';
+      btn.textContent = confirmLabel;
+      btn.classList.add('armed');
+      siblings().forEach(b=>{ b.style.display = 'none'; });
+      setTimeout(()=>{
+        if(btn.isConnected && btn.dataset.armed) disarm();
+      }, 3000);
+      return;
+    }
+    disarm();
+    action();
+  };
+}
+
 function renderAddressList(masterList, storageKeyBase, onBack){
   const tripsEl = document.getElementById('trips');
   const progressWrap = document.getElementById('progressWrap');
@@ -1190,12 +1235,12 @@ function renderAddressList(masterList, storageKeyBase, onBack){
   resetBar.className = 'reset-bar';
   resetBar.innerHTML = `<button class="reset-btn order-btn">↕ 還原順序</button><button class="reset-btn">↺ 一鍵全恢復</button>`;
   const btns = resetBar.querySelectorAll('.reset-btn');
-  btns[0].onclick = ()=>{
+  armConfirm(btns[0], '↕ 還原順序', '⚠ 再按一次確認還原順序', ()=>{
     order = addrList.slice();
     saveOrder();
     renderAddressList(masterList, storageKeyBase, onBack);
-  };
-  btns[1].onclick = ()=>{
+  });
+  armConfirm(btns[1], '↺ 一鍵全恢復', '⚠ 再按一次清除全部勾選', ()=>{
     doneMap = {};
     saveDone();
     tripsEl.querySelectorAll('.addr-row').forEach(row=>{
@@ -1203,7 +1248,7 @@ function renderAddressList(masterList, storageKeyBase, onBack){
     });
     renumber();
     updateProgress();
-  };
+  });
   tripsEl.appendChild(resetBar);
 
   let lastGroupIndex = null;
