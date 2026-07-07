@@ -70,7 +70,9 @@
     border-radius:10px;
     padding:10px 0 8px;
     min-height:52px;
-    font-size:13px;
+    font-size:11.5px;
+    letter-spacing:0;
+    white-space:nowrap;
     font-weight:600;
     cursor:pointer;
     transition:all .18s ease;
@@ -89,6 +91,14 @@
     color:var(--accent);
     border-color:transparent;
     box-shadow:none;
+  }
+  .picker-group-label{
+    grid-column:1 / -1;
+    font-size:13px;
+    font-weight:700;
+    color:var(--accent);
+    letter-spacing:1.5px;
+    padding:6px 2px 0;
   }
   .picker{
     width:100%;
@@ -558,29 +568,6 @@
     box-shadow:0 0 0 3px rgba(168,220,74,0.15);
   }
   .search-box::placeholder{color:var(--text-dim);}
-  .progress-wrap{margin-bottom:14px;}
-  .progress-labels{
-    display:flex;
-    justify-content:space-between;
-    font-size:12px;
-    color:var(--text-dim);
-    margin-bottom:6px;
-  }
-  .progress-labels b{color:var(--accent);}
-  .progress-track{
-    width:100%;
-    height:10px;
-    border-radius:6px;
-    background:#161a13;
-    border:1px solid var(--line);
-    overflow:hidden;
-  }
-  .progress-fill{
-    height:100%;
-    border-radius:6px;
-    background:linear-gradient(90deg, var(--accent-dim), var(--accent));
-    transition:width .3s ease;
-  }
   .nav-link{
     font-size:13px;
     color:var(--accent);
@@ -651,6 +638,77 @@
     border-radius:10px;
     margin-left:5px;
   }
+  .cat-note{
+    width:100%;
+    max-width:420px;
+    margin-bottom:12px;
+  }
+  .cat-note-summary{
+    display:flex;
+    align-items:center;
+    justify-content:flex-start;
+    gap:8px;
+    width:100%;
+    background:rgba(168,220,74,0.08);
+    border:1px solid rgba(168,220,74,0.3);
+    border-radius:10px;
+    color:var(--accent);
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    padding:10px 12px;
+  }
+  .cat-note-summary:active{opacity:0.6;}
+  .cat-note-body{
+    display:none;
+    margin-top:8px;
+    padding:14px;
+    background:linear-gradient(180deg, rgba(33,39,32,0.9), rgba(27,32,23,0.95));
+    border:1px solid var(--line);
+    border-radius:12px;
+    font-size:15px;
+    line-height:1.7;
+    color:var(--text);
+  }
+  .cat-note-body.show{display:block;animation:fade .25s ease;}
+  .zone-table{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+  .zone-col{
+    background:rgba(255,255,255,0.03);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 12px;
+  }
+  .zone-col-title{
+    color:var(--accent);
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:1px;
+    margin-bottom:6px;
+    padding-bottom:6px;
+    border-bottom:1px dashed var(--line);
+  }
+  .zone-col-nums{
+    font-size:16px;
+    font-weight:600;
+    font-variant-numeric:tabular-nums;
+  }
+  .cat-note-line{margin:3px 0;}
+  .cat-note-star{
+    color:#e6a23c;
+    font-weight:700;
+  }
+  .cat-note-seq{
+    margin-top:10px;
+    padding-top:9px;
+    border-top:1px dashed var(--line);
+    color:var(--text-dim);
+    font-size:14px;
+  }
+  .cat-note-seq b{color:var(--accent);}
 </style>
 </head>
 <body>
@@ -663,6 +721,8 @@
 
   <input type="text" class="search-box" id="searchBox" placeholder="🔍 搜尋路線編號 / 地址關鍵字...">
 
+  <div class="cat-note" id="categoryNote" style="display:none;"></div>
+
   <div class="picker" id="picker"></div>
 
   <div id="empty" class="placeholder">↑ 請選擇路線編號</div>
@@ -671,13 +731,6 @@
     <div class="card-head">
       <div class="card-title" id="cardTitle">路線</div>
       <button class="edit-btn" id="editBtn" type="button" style="display:none;">✏️ 編輯時間</button>
-    </div>
-    <div class="progress-wrap" id="progressWrap" style="display:none;">
-      <div class="progress-labels">
-        <span id="progressText">已完成 0 / 0</span>
-        <b id="progressPct">0%</b>
-      </div>
-      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
     </div>
     <div class="time-info" id="timeInfo"></div>
     <div id="trips"></div>
@@ -721,21 +774,21 @@ const truckOrder = ["1","2","3","4","5","6","7","8","9","10","11","12","13","14"
 
 // 回收車: 與垃圾車相同時間但部分備註不同
 const recycleData = {
-  "1":  [["15:50","16:09"], ["18:15","18:37"], ["20:25","20:45"]],
-  "5":  [["15:35","15:50"], ["18:00","18:33"], ["20:35","20:50"]],
-  "2":  [["15:48","16:05", [{"text":"🚌  開始 復興三路與台鋁14巷口(老北京炸醬麵旁）"},{"text":"🚌  結束 復興三路155號前(八方雲集旁)"},{"text":"接駁車只收2點，還剩5個收運點"}]], ["18:10","18:31"], ["20:20","20:37"]],
-  "6":  [["15:35","15:55"], ["18:10","18:30"], ["20:30","20:48"]],
-  "3":  [["15:45","16:00"], ["18:15","18:35"], ["20:20","20:45"]],
-  "7":  [["15:35","15:54"], ["18:05","18:24"], ["20:35","20:53"]],
-  "4":  [["15:35","16:02"], ["18:23","18:39"], ["20:40","20:59"]],
-  "8":  [["15:35","16:00"], ["18:15","18:20"], ["20:25","20:44"]],
-  "9":  [["15:50","16:08"], ["17:55","18:00",[{"text":"🚌  開始 瑞北路120巷口(佳加藥局）","img":"img/photo-01.jpg"},{"text":"🚌 結束 武營路47巷尾(遠境馳名大樓)","img":"img/photo-02.jpg"},{"text":"接駁車結束剩餘6點"}]],      ["20:42","20:54",[{"text": "🚌  開始 永豐路126巷口(瑞豐復健診所）", "img": "img/photo-03.jpg"}, {"text": "🚌 結束 瑞北路與瑞泰街口(東方黎明）", "img": "img/photo-04.jpg"},{"text":"接駁車結束剩餘8點"}]]],
+  "1":  [["15:50","16:09",[{"text":"🚌 16:14 開始 復興三路146號"},{"text":"🚌 16:37 續收 一心二路2巷口(先跑2區後回頭)"},{"text":"🚌 16:43 結束 一心二路54巷"},{"text":"接駁車共收6點"}]], ["18:15","18:37",[{"text":"🚌 18:37 開始 聖德二街與台鋁7巷口"},{"text":"🚌 18:44 結束 聖德二街與台鋁1巷口"},{"text":"接駁車共收4點"}]], ["20:25","20:45",[{"text":"🚌 20:45 開始 中華五路969巷10號(南側門)"},{"text":"🚌 21:24 續收 一心二路2巷口(先跑3區後回頭)"},{"text":"🚌 21:35 結束 復興三路192號"},{"text":"接駁車共收9點"}]]],
+  "5":  [["15:35","15:50",[{"text":"🚌 15:50 開始 凱得街174號"},{"text":"🚌 16:10 結束 育樂路154-1號邊"},{"text":"接駁車共收5點"}]], ["18:00","18:33",[{"text":"🚌 18:33 開始 廣西路1巷口"},{"text":"🚌 18:54 結束 和平二路123號前"},{"text":"接駁車共收8點"}]], ["20:35","20:50",[{"text":"🚌 21:15 開始 英明路19巷與英義街口"},{"text":"🚌 21:29 結束 英明路145巷口"},{"text":"接駁車共收2點"}]]],
+  "2":  [["15:48","16:05", [{"text":"🚌 16:28 開始 復興三路與台鋁14巷口(老北京炸醬麵旁）"},{"text":"🚌 16:30 結束 復興三路155號前(八方雲集旁)"},{"text":"接駁車只收2點，還剩5個收運點"}]], ["18:10","18:31",[{"text":"🚌 18:30 開始 復興三路155號"},{"text":"🚌 18:50 結束 修文街79號"},{"text":"接駁車共收8點"}]], ["20:20","20:37",[{"text":"🚌 20:37 開始 成功二路70號(7-11門口)"},{"text":"🚌 20:52 結束 正勤路41號(獅甲國宅大門口)"},{"text":"接駁車共收3點"}]]],
+  "6":  [["15:35","15:55",[{"text":"🚌 16:12 開始 濂江街與一心一路306巷"},{"text":"🚌 16:48 結束 汕頭街81號"},{"text":"接駁車共收9點"}]], ["18:10","18:30",[{"text":"🚌 18:58 開始 廣東三街與和平二路227巷口"},{"text":"🚌 19:36 結束 一心一路與天山路"},{"text":"接駁車共收14點"}]], ["20:30","20:48",[{"text":"🚌 21:07 開始 長江街與天山路口"},{"text":"🚌 21:17 結束 嘉陵街與天山路口"},{"text":"接駁車共收3點"}]]],
+  "3":  [["15:45","16:00",[{"text":"🚌 16:00 開始 中華五路1332巷口"},{"text":"🚌 16:23 結束 三多三路155號"},{"text":"接駁車共收7點"},{"text":"🚌 第2台 16:46 開始 修文街239巷口"},{"text":"🚌 第2台 16:53 結束 修文街與林森三路112巷口"},{"text":"第2台接駁共收3點"}]], ["18:15","18:35",[{"text":"🚌 18:55 開始 林森三路112巷口"},{"text":"🚌 18:59 結束 大禹街1號旁"},{"text":"接駁車共收2點"}]], ["20:20","20:45",[{"text":"🚌 21:01 開始 復興三路417巷(蔡皮膚科)"},{"text":"🚌 21:17 結束 修文街194巷口"},{"text":"接駁車共收6點"}]]],
+  "7":  [["15:35","15:54",[{"text":"🚌 16:20 開始 公正路253號"},{"text":"🚌 16:45 結束 瑞發街37號"},{"text":"接駁車共收12點"}]], ["18:05","18:24",[{"text":"🚌 18:24 開始 瑞西街20巷"},{"text":"🚌 18:43 結束 瑞祥街與武德街口"},{"text":"接駁車共收12點"}]], ["20:35","20:53",[{"text":"🚌 20:53 開始 二聖路207號"},{"text":"🚌 21:13 結束 瑞興街與瑞恩街口"},{"text":"接駁車共收9點"}]]],
+  "4":  [["15:35","16:02",[{"text":"🚌 15:55 開始 中華五路965號(正勤社區)"},{"text":"🚌 16:25 續收 三多二路與桂林街口(先跑3區後回頭)"},{"text":"🚌 16:43 結束 二聖二路梧州街口"},{"text":"接駁車共收9點"}]], ["18:23","18:39",[{"text":"🚌 19:06 開始 民權二路622巷底"},{"text":"🚌 19:28 結束 育德路16巷"},{"text":"接駁車共收7點"}]], ["20:40","20:59",[{"text":"🚌 21:13 開始 二聖二路6巷口"},{"text":"🚌 21:32 結束 桂林街134巷口"},{"text":"接駁車共收9點"}]]],
+  "8":  [["15:35","16:00",[{"text":"🚌 16:00 開始 二聖一路166號"},{"text":"🚌 16:09 結束 英明路5巷口"},{"text":"接駁車共收9點"}]], ["18:15","18:20",[{"text":"🚌 18:20 開始 英德街與建華街口"},{"text":"🚌 19:10 續收 武慶一路44號(先跑5區後回頭)"},{"text":"🚌 19:21 結束 公正路11號"},{"text":"接駁車共收10點"}]], ["20:25","20:44",[{"text":"🚌 20:44 開始 英明一路43巷口"},{"text":"🚌 20:51 結束 英明一路131巷口"},{"text":"接駁車共收5點"}]]],
+  "9":  [["15:50","16:08"], ["17:55","18:00",[{"text":"🚌 18:26 開始 瑞北路120巷口(佳加藥局）","img":"img/photo-01.jpg"},{"text":"🚌 18:55 結束 武營路47巷尾(遠境馳名大樓)","img":"img/photo-02.jpg"},{"text":"接駁車結束剩餘6點"}]],      ["20:42","20:54",[{"text": "🚌 20:59 開始 永豐路126巷口(瑞豐復健診所）", "img": "img/photo-03.jpg"}, {"text": "🚌 21:12 結束 瑞北路與瑞泰街口(東方黎明）", "img": "img/photo-04.jpg"},{"text":"接駁車結束剩餘8點"}]]],
   "13": [["15:58","16:05"], ["18:23","18:30"], ["20:46","20:50","出發時跟車出門"]],
-  "10": [["15:45","16:05",[{"text":"🚌 開始 忠誠路與瑞田街口(瑞祥高中附近)","nav":"https://maps.app.goo.gl/ST9N8jAtxNBxEA897"},{"text":"🚌 結束 瑞賢街與忠誠路329巷尾","nav":"https://maps.app.goo.gl/J73yz59q1P62am2E7"},{"text":"接駁車結束剩餘1點"}]], ["18:09","18:30",[{"text":"🚌 開始 瑞日街20巷口(舊金銀島後方)"},{"text":"🚌 結束 瑞吉街83號"},{"text":"接駁車結束剩餘1點"}]], ["20:44","20:55"]],
+  "10": [["15:45","16:05",[{"text":"🚌 16:33 開始 忠誠路與瑞田街口(瑞祥高中附近)","nav":"https://maps.app.goo.gl/ST9N8jAtxNBxEA897"},{"text":"🚌 16:53 結束 瑞賢街與忠誠路329巷尾","nav":"https://maps.app.goo.gl/J73yz59q1P62am2E7"},{"text":"接駁車結束剩餘1點"}]], ["18:09","18:30",[{"text":"🚌 19:09 開始 瑞賢街與瑞田街口"},{"text":"🚌 19:36 結束 瑞南街162號"},{"text":"接駁車共收10點"}]], ["20:44","20:55"]],
   "14": [["15:38","15:55"], ["18:29","18:35"], ["20:45","20:53"]],
-  "11": [["15:41","16:05"], ["18:14","18:33"], ["20:43","21:00"]],
+  "11": [["15:41","16:05",[{"text":"🚌 16:05 開始 崗山中街160巷口"},{"text":"🚌 16:25 結束 崗山南街445巷口"},{"text":"接駁車共收7點"}]], ["18:14","18:33",[{"text":"🚌 19:02 開始 公正路與武慶一路公園"},{"text":"🚌 19:21 結束 班超路18巷口"},{"text":"接駁車共收8點"}]], ["20:43","21:00",[{"text":"🚌 21:23 開始 崗山南街與福祥街"},{"text":"🚌 21:35 結束 福祥街瑞祥國小前"},{"text":"接駁車共收5點"}]]],
   "15": [["15:45","15:55"], ["18:16","18:25"], ["20:34","20:45"]],
-  "12": [["15:35","15:53"], ["18:15","18:28"], ["20:33","20:40","出發時跟車出門"]],
+  "12": [["15:35","15:53","🚌 15:52 接駁收 翠亨北路399巷(僅1點)"], ["18:15","18:28"], ["20:33","20:40","出發時跟車出門｜🚌 21:06 接駁收 翠亨北路399巷(僅1點)"]],
   "16": [["15:55","16:00"], ["18:27","18:35","出發時跟車出門"], ["20:40","20:50"]],
 };
 const kitchenData = {
@@ -744,6 +797,280 @@ const kitchenData = {
   "西甲": ["15:15","19:00","21:15"],
 };
 const kitchenOrder = ["西甲","籬仔內","草衙"];
+
+// 接駁車路線: 台別 -> 車次 -> 站點(時間+區域分段)
+const shuttleBusData = {
+  "一四1台": {
+    "第一車次（出車 15:45）": [
+      { addr: "中華五路965號(正勤社區)", time: "15:55", group: "4區" },
+      { addr: "中華五路1332巷口", time: "16:00", group: "3區" },
+      { addr: "修文街16巷口", time: "16:04" },
+      { addr: "一心二路192號", time: "16:10" },
+      { addr: "一心二路206號", time: "16:13" },
+      { addr: "一心二路252號", time: "16:16" },
+      { addr: "三多三路197號", time: "16:20" },
+      { addr: "三多三路155號", time: "16:23" },
+      { addr: "三多二路與桂林街口", time: "16:25", group: "4區" },
+      { addr: "桂林街與忠民街口", time: "16:27" },
+      { addr: "桂林街72巷口", time: "16:30" },
+      { addr: "廣西路151巷", time: "16:32" },
+      { addr: "光華二路265號(臨時點)", time: "16:33" },
+      { addr: "二聖二路6巷口", time: "16:37" },
+      { addr: "二聖二路桂林街口", time: "16:40" },
+      { addr: "二聖二路梧州街口", time: "16:43" },
+    ],
+    "第二車次": [
+      { addr: "聖德二街與台鋁7巷口", time: "18:37", group: "1區" },
+      { addr: "聖德二街與台鋁4巷口", time: "18:40" },
+      { addr: "聖德二街與台鋁2巷口", time: "18:43" },
+      { addr: "聖德二街與台鋁1巷口", time: "18:44" },
+      { addr: "林森三路112巷口", time: "18:55", group: "3區" },
+      { addr: "大禹街1號旁", time: "18:59" },
+      { addr: "民權二路622巷底", time: "19:06", group: "4區" },
+      { addr: "民權二路603巷口", time: "19:15" },
+      { addr: "廣西路296巷口", time: "19:17" },
+      { addr: "廣西路與育德路", time: "19:19" },
+      { addr: "復興三路256巷口", time: "19:23" },
+      { addr: "三多三路與育德路口", time: "19:26" },
+      { addr: "育德路16巷", time: "19:28" },
+    ],
+    "第三車次（出車 20:25）": [
+      { addr: "中華五路969巷10號(南側門)", time: "20:45", group: "1區" },
+      { addr: "中華五路969巷7號(北側門)", time: "20:51" },
+      { addr: "中華五路969巷3號(東側門)", time: "20:55" },
+      { addr: "復興三路417巷(蔡皮膚科)", time: "21:01", group: "3區" },
+      { addr: "復興三路與修文街194巷口", time: "21:04" },
+      { addr: "復興三路與修文街154巷口", time: "21:07" },
+      { addr: "一心二路84巷口", time: "21:11" },
+      { addr: "修文街146巷口", time: "21:14" },
+      { addr: "修文街194巷口", time: "21:17" },
+      { addr: "一心二路2巷口", time: "21:24", group: "1區" },
+      { addr: "一心二路32巷口", time: "21:26" },
+      { addr: "一心二路54巷口", time: "21:29" },
+      { addr: "復興三路146號", time: "21:31" },
+      { addr: "復興三路160號", time: "21:33" },
+      { addr: "復興三路192號", time: "21:35" },
+    ],
+  },
+  "一四2台": {
+    "第一車次（出車 15:40）": [
+      { addr: "翠亨北路399巷", time: "15:52", group: "12區" },
+      { addr: "復興三路146號", time: "16:14", group: "1區" },
+      { addr: "復興三路160號", time: "16:17" },
+      { addr: "復興三路192號", time: "16:20" },
+      { addr: "復興三路與台鋁14巷口", time: "16:28", group: "2區" },
+      { addr: "復興三路155號前", time: "16:30" },
+      { addr: "一心二路2巷口", time: "16:37", group: "1區" },
+      { addr: "一心二路32巷口", time: "16:40" },
+      { addr: "一心二路54巷", time: "16:43" },
+      { addr: "修文街239巷口", time: "16:46", group: "3區" },
+      { addr: "修文街194巷口", time: "16:51" },
+      { addr: "修文街與林森三路112巷口", time: "16:53" },
+    ],
+    "第二車次（出車 18:18）": [
+      { addr: "復興三路155號", time: "18:30", group: "2區" },
+      { addr: "一德路與台鋁北巷口", time: "18:33" },
+      { addr: "一德路與修文一街口", time: "18:35" },
+      { addr: "林森三路49巷口", time: "18:37" },
+      { addr: "林森三路82巷口", time: "18:40" },
+      { addr: "台鋁13巷口", time: "18:44" },
+      { addr: "修文街81號", time: "18:47" },
+      { addr: "修文街79號", time: "18:50" },
+      { addr: "瑞賢街與瑞田街口", time: "19:09", group: "10區" },
+      { addr: "瑞政街與忠誠路329巷", time: "19:14" },
+      { addr: "瑞政街與崗山街口", time: "19:16" },
+      { addr: "瑞政街與瑞田街", time: "19:19" },
+      { addr: "瑞田街與瑞聖街", time: "19:22" },
+      { addr: "瑞田街72巷口", time: "19:24" },
+      { addr: "瑞南街56-1號", time: "19:27" },
+      { addr: "瑞南街62號", time: "19:28" },
+      { addr: "瑞吉街83號", time: "19:31" },
+      { addr: "瑞南街162號", time: "19:36" },
+    ],
+    "第三車次": [
+      { addr: "成功二路70號(7-11門口)", time: "20:37", group: "2區" },
+      { addr: "中華五路1007巷口", time: "20:47" },
+      { addr: "正勤路41號(獅甲國宅大門口)", time: "20:52" },
+      { addr: "翠亨北路399巷", time: "21:06", group: "12區" },
+      { addr: "二聖二路6巷口", time: "21:13", group: "4區" },
+      { addr: "二聖二路與桂林街口", time: "21:16" },
+      { addr: "二聖二路與梧州街口", time: "21:19" },
+      { addr: "民權二路與英德街口", time: "21:22" },
+      { addr: "廣西路與桂林街口", time: "21:24" },
+      { addr: "桂林街72巷口", time: "21:27" },
+      { addr: "桂林街與忠民街口", time: "21:29" },
+      { addr: "桂林街120巷口", time: "21:31" },
+      { addr: "桂林街134巷口", time: "21:32" },
+    ],
+  },
+  "一四3台": {
+    "第一車次（出車 15:45）": [
+      { addr: "崗山中街160巷口", time: "16:05", group: "11區" },
+      { addr: "崗山中街102巷口", time: "16:11" },
+      { addr: "崗山中街68巷口", time: "16:14" },
+      { addr: "公正路與武慶一路", time: "16:17" },
+      { addr: "崗山南街343巷口", time: "16:21" },
+      { addr: "崗山南街413巷口", time: "16:23" },
+      { addr: "崗山南街445巷口", time: "16:25" },
+      { addr: "忠誠路與瑞田街口", time: "16:33", group: "10區" },
+      { addr: "瑞春街與瑞政街", time: "16:36" },
+      { addr: "瑞春街與瑞賢街", time: "16:44" },
+      { addr: "瑞賢街與瑞田街", time: "16:49" },
+      { addr: "瑞賢街120巷口", time: "16:51" },
+      { addr: "瑞賢街與忠誠路329巷尾", time: "16:53" },
+    ],
+    "第二車次（出車 18:10）": [
+      { addr: "瑞北路120巷口", time: "18:26", group: "9區" },
+      { addr: "康寧街36號", time: "18:28" },
+      { addr: "瑞興街31巷口", time: "18:31" },
+      { addr: "武慶二路31號", time: "18:33" },
+      { addr: "武慶二路與崗山北街口", time: "18:35" },
+      { addr: "崗山北街351巷口", time: "18:38" },
+      { addr: "崗山北街283街口", time: "18:40" },
+      { addr: "崗山北街與瑞華街口", time: "18:42" },
+      { addr: "崗山北街221巷口", time: "18:44" },
+      { addr: "武營路165巷口", time: "18:47" },
+      { addr: "武營路47巷", time: "18:50" },
+      { addr: "武營路47巷36號", time: "18:53" },
+      { addr: "武營路47巷尾", time: "18:55" },
+      { addr: "公正路與武慶一路公園", time: "19:02", group: "11區" },
+      { addr: "公正路與崗山南街口", time: "19:07" },
+      { addr: "崗山南街343巷口", time: "19:08" },
+      { addr: "崗山南街413巷口", time: "19:10" },
+      { addr: "崗山南街445巷口", time: "19:13" },
+      { addr: "保泰路55巷口", time: "19:17" },
+      { addr: "保泰路15巷口", time: "19:19" },
+      { addr: "班超路18巷口", time: "19:21" },
+    ],
+    "第三車次（出車 20:40）": [
+      { addr: "永豐路126巷口", time: "20:59", group: "9區" },
+      { addr: "瑞泰街與瑞隆路194巷", time: "21:02" },
+      { addr: "瑞泰街71巷口", time: "21:05" },
+      { addr: "瑞泰街140巷", time: "21:08" },
+      { addr: "瑞北路與瑞泰街口", time: "21:12" },
+      { addr: "崗山南街與福祥街", time: "21:23", group: "11區" },
+      { addr: "福祥街10巷38號", time: "21:26" },
+      { addr: "福祥街10巷與瑞誠街41巷", time: "21:29" },
+      { addr: "福祥街56巷", time: "21:32" },
+      { addr: "福祥街瑞祥國小前", time: "21:35" },
+    ],
+  },
+  "二五1台": {
+    "第一車次（出車 15:30）": [
+      { addr: "凱得街174號", time: "15:50", group: "5區" },
+      { addr: "育群街與憲德街", time: "16:00" },
+      { addr: "育群街239巷", time: "16:03" },
+      { addr: "育群街273巷", time: "16:06" },
+      { addr: "育樂路154-1號邊", time: "16:10" },
+      { addr: "濂江街與一心一路306巷", time: "16:12", group: "6區" },
+      { addr: "一心一路與南寧街口", time: "16:20" },
+      { addr: "長江街與天山路", time: "16:23" },
+      { addr: "民權二路與景德路", time: "16:30" },
+      { addr: "二聖二路與天山路口", time: "16:34" },
+      { addr: "天山路與衡陽街", time: "16:37" },
+      { addr: "光華二路與二聖三巷口", time: "16:41" },
+      { addr: "南寧街與黃埔街口", time: "16:44" },
+      { addr: "汕頭街81號", time: "16:48" },
+    ],
+    "第二車次（出車 18:05）": [
+      { addr: "英德街與建華街口", time: "18:20", group: "8區" },
+      { addr: "英德街106號與廣西路1巷口", time: "18:23" },
+      { addr: "英德街717巷前", time: "18:25" },
+      { addr: "英德街737巷前", time: "18:27" },
+      { addr: "英德街757巷前", time: "18:29" },
+      { addr: "廣西路1巷口", time: "18:33", group: "5區" },
+      { addr: "和平二路與廣東三街420巷", time: "18:36" },
+      { addr: "和平二路280號", time: "18:43" },
+      { addr: "和平二路300巷前", time: "18:46" },
+      { addr: "建華街32巷", time: "18:49" },
+      { addr: "和平二路與二聖一路", time: "18:52" },
+      { addr: "和平二路131號前", time: "18:53" },
+      { addr: "和平二路123號前", time: "18:54" },
+      { addr: "武慶一路44號", time: "19:10", group: "8區" },
+      { addr: "武慶一路與瑞隆路327巷尾", time: "19:13" },
+      { addr: "崗山橫街40號前", time: "19:16" },
+      { addr: "崗山橫街與崗山南街口", time: "19:18" },
+      { addr: "公正路11號", time: "19:21" },
+    ],
+    "第三車次（出車 20:30）": [
+      { addr: "英明一路43巷口", time: "20:44", group: "8區" },
+      { addr: "英明一路73巷口", time: "20:46" },
+      { addr: "英明一路95巷口", time: "20:48" },
+      { addr: "英明一路111號", time: "20:50" },
+      { addr: "英明一路131巷口", time: "20:51" },
+      { addr: "長江街與天山路口", time: "21:07", group: "6區" },
+      { addr: "嘉陵街40號", time: "21:14" },
+      { addr: "嘉陵街與天山路口", time: "21:17" },
+    ],
+  },
+  "二五2台": {
+    "第一車次（出車 15:45）": [
+      { addr: "二聖一路166號", time: "16:00", group: "8區" },
+      { addr: "二聖一路與和平二路口", time: "16:01" },
+      { addr: "和平二路220號", time: "16:02" },
+      { addr: "英德街101號", time: "16:03" },
+      { addr: "英德街與建華街", time: "16:04" },
+      { addr: "英德街19巷", time: "16:06" },
+      { addr: "英德街91巷", time: "16:07" },
+      { addr: "英明路與英義街", time: "16:08" },
+      { addr: "英明路5巷口", time: "16:09" },
+      { addr: "公正路253號", time: "16:20", group: "7區" },
+      { addr: "公正路與瑞和街", time: "16:21" },
+      { addr: "瑞愛街14巷口", time: "16:25" },
+      { addr: "瑞祥街與瑞孝街", time: "16:30" },
+      { addr: "瑞祥街與瑞文街", time: "16:31" },
+      { addr: "瑞祥街與瑞忠街", time: "16:32" },
+      { addr: "精忠街162巷口", time: "16:34" },
+      { addr: "精忠街113巷口", time: "16:37" },
+      { addr: "瑞北路與精忠街", time: "16:38" },
+      { addr: "精忠街與武德街口", time: "16:42" },
+      { addr: "精忠街與瑞祥街1巷口", time: "16:44" },
+      { addr: "瑞發街37號", time: "16:45" },
+    ],
+    "第二車次（出車 18:10）": [
+      { addr: "瑞西街20巷", time: "18:24", group: "7區" },
+      { addr: "瑞西街與瑞發街口", time: "18:25" },
+      { addr: "瑞西街與武德街口", time: "18:27" },
+      { addr: "瑞西街與瑞北路口", time: "18:29" },
+      { addr: "瑞西街與精忠街145巷", time: "18:30" },
+      { addr: "精忠街162巷口對面", time: "18:33" },
+      { addr: "精忠街133巷口", time: "18:34" },
+      { addr: "精忠街113巷口", time: "18:35" },
+      { addr: "瑞北路271號", time: "18:37" },
+      { addr: "瑞北路與瑞祥街口", time: "18:40" },
+      { addr: "瑞北路與瑞恩街口", time: "18:41" },
+      { addr: "瑞祥街與武德街口", time: "18:43" },
+      { addr: "廣東三街與和平二路227巷口", time: "18:58", group: "6區" },
+      { addr: "廣州三街與英德街口", time: "19:01" },
+      { addr: "英德街784巷口", time: "19:03" },
+      { addr: "光華二路290號", time: "19:06" },
+      { addr: "廣西路與英德街784巷口", time: "19:08" },
+      { addr: "廣西路與廣州三街口", time: "19:10" },
+      { addr: "廣東三街420巷口", time: "19:12" },
+      { addr: "汕頭街與一心一路202巷口", time: "19:17" },
+      { addr: "汕頭街與粵江街口", time: "19:20" },
+      { addr: "濂江街與一心一路360巷口", time: "19:23" },
+      { addr: "濂江街47號", time: "19:26" },
+      { addr: "汕頭街81號", time: "19:29" },
+      { addr: "一心一路與南寧街口", time: "19:33" },
+      { addr: "一心一路與天山路", time: "19:36" },
+    ],
+    "第三車次（出車 20:35）": [
+      { addr: "二聖路207號", time: "20:53", group: "7區" },
+      { addr: "公正路與二聖路口", time: "20:55" },
+      { addr: "二聖路63號", time: "20:58" },
+      { addr: "二聖路與瑞興街18巷", time: "21:00" },
+      { addr: "武慶二路77號", time: "21:03" },
+      { addr: "瑞興街7巷口", time: "21:07" },
+      { addr: "瑞興街80號", time: "21:09" },
+      { addr: "瑞興街102巷口", time: "21:11" },
+      { addr: "瑞興街與瑞恩街口", time: "21:13" },
+      { addr: "英明路19巷與英義街口", time: "21:15", group: "5區" },
+      { addr: "英明路145巷口", time: "21:29" },
+    ],
+  },
+};
+const shuttleBusOrder = ["一四1台","一四2台","一四3台","二五1台","二五2台"];
 
 // 配套路線: 路線名稱 -> 地址陣列(順序清單,非時間)
 const addressData = {
@@ -966,6 +1293,10 @@ const categories = {
   "垃圾車": { type:"truck", data: truckData, order: truckOrder },
   "回收車": { type:"truck", data: recycleData, order: truckOrder },
   "廚餘車": { type:"kitchen", data: kitchenData, order: kitchenOrder },
+  "接駁車": { type:"address", data: shuttleBusData, order: shuttleBusOrder, groups: [
+    { label:"星期一、四", items:[ {key:"一四1台",label:"1台"}, {key:"一四2台",label:"2台"}, {key:"一四3台",label:"3台"} ] },
+    { label:"星期二、五", items:[ {key:"二五1台",label:"1台"}, {key:"二五2台",label:"2台"} ] },
+  ] },
   "星期三配套": { type:"address", data: addressData, order: wedOrder },
   "星期日配套": { type:"address", data: addressData, order: sunOrder },
 };
@@ -980,9 +1311,68 @@ const categoryIcons = {
   "垃圾車": "🚛",
   "回收車": "♻️",
   "廚餘車": "🍃",
+  "接駁車": "🚌",
   "星期三配套": "🟦",
   "星期日配套": "🟧",
 };
+
+// 各分頁頂部的注意事項(收合式提示列)
+const categoryNotes = {
+  "回收車": {
+    title: "📌 責任區順序",
+    html: `
+      <div class="zone-table">
+        <div class="zone-col">
+          <div class="zone-col-title">星期一、四</div>
+          <div class="zone-col-nums">1 · 2 · 3 · 4 區<br>9 · 10 · 11 · 12 區</div>
+        </div>
+        <div class="zone-col">
+          <div class="zone-col-title">星期二、五</div>
+          <div class="zone-col-nums">5 · 6 · 7 · 8 區<br>13 · 14 · 15 · 16 區<br><span style="font-size:13px;color:var(--text-dim);">(17 區)</span></div>
+        </div>
+      </div>`
+  },
+  "星期三配套": {
+    title: "📌 星期三配套注意事項",
+    html: `
+      <div class="cat-note-line">成員：回1、回2、輪1、輪2</div>
+      <div class="cat-note-line">上班時間：10:00-18:00</div>
+      <div class="cat-note-line cat-note-star">★ 輪1人員 16:00 要接守衛</div>
+      <div class="cat-note-seq">順序：<b>回1 → 回2 → 輪1 → 輪2</b></div>`
+  },
+  "星期日配套": {
+    title: "📌 星期日配套注意事項",
+    html: `
+      <div class="cat-note-line">1999：打 2 次卡（10:00-18:00）</div>
+      <div class="cat-note-line">守衛：打 2 次卡（06:30-15:00）</div>
+      <div class="cat-note-line">西配、籬配、草配：打 4 次卡<br>（06:45、11:00、11:45、16:00）</div>
+      <div class="cat-note-seq">順序：<b>1999 → 西配 → 籬配 → 草配</b></div>`
+  },
+};
+
+function renderCategoryNote(){
+  const wrap = document.getElementById('categoryNote');
+  if(!wrap) return;
+  const note = categoryNotes[currentCategory];
+  if(!note){
+    wrap.style.display = 'none';
+    wrap.innerHTML = '';
+    return;
+  }
+  wrap.style.display = '';
+  wrap.innerHTML = `
+    <button class="cat-note-summary" type="button">
+      <span>${note.title}</span>
+      <span class="shuttle-arrow">▸</span>
+    </button>
+    <div class="cat-note-body">${note.html}</div>`;
+  const btn = wrap.querySelector('.cat-note-summary');
+  const body = wrap.querySelector('.cat-note-body');
+  btn.onclick = ()=>{
+    const isOpen = body.classList.toggle('show');
+    btn.querySelector('.shuttle-arrow').textContent = isOpen ? '▾' : '▸';
+  };
+}
 
 const tabsEl = document.getElementById('tabs');
 Object.keys(categories).forEach(cat=>{
@@ -1007,7 +1397,7 @@ function selectCategory(cat, btn){
   const searchEl = document.getElementById('searchBox');
   if(searchEl) searchEl.value = '';
   updateSearchVisibility();
-  document.getElementById('progressWrap').style.display = 'none';
+  renderCategoryNote();
   renderPicker();
 }
 
@@ -1037,24 +1427,38 @@ function renderPicker(){
     return;
   }
 
-  list.forEach(r=>{
+  const makeBtn = (key, label)=>{
     const btn = document.createElement('button');
     btn.className = 'route-btn';
-    btn.textContent = r;
-    btn.onclick = ()=> selectItem(r, btn);
+    btn.textContent = label || key;
+    btn.dataset.key = key;
+    btn.onclick = ()=> selectItem(key, btn);
     picker.appendChild(btn);
-  });
+  };
 
-  if(!q){
-    const lastItem = localStorage.getItem('lastItem');
-    if(lastItem && fullOrder.includes(lastItem)){
-      const idx = fullOrder.indexOf(lastItem);
-      const btnIdx = list.indexOf(lastItem);
-      if(btnIdx > -1) selectItem(lastItem, picker.children[btnIdx]);
+  if(cfg.groups){
+    // 分組顯示:每組一個標題列(佔滿整行),同組按鈕排在同一行
+    cfg.groups.forEach(g=>{
+      const items = g.items.filter(it => list.includes(it.key));
+      if(items.length === 0) return;
+      const head = document.createElement('div');
+      head.className = 'picker-group-label';
+      head.textContent = g.label;
+      picker.appendChild(head);
+      items.forEach(it => makeBtn(it.key, it.label));
+    });
+  } else {
+    list.forEach(r => makeBtn(r));
+  }
+
+  // 還原上次選取(依 data-key 找按鈕,不受分組標題影響)
+  const targetKey = !q ? localStorage.getItem('lastItem') : currentSelectedKey;
+  if(targetKey && list.includes(targetKey)){
+    const btn = Array.from(picker.querySelectorAll('.route-btn')).find(b => b.dataset.key === targetKey);
+    if(btn){
+      if(!q) selectItem(targetKey, btn);
+      else btn.classList.add('active');
     }
-  } else if(currentSelectedKey && list.includes(currentSelectedKey)){
-    const btnIdx = list.indexOf(currentSelectedKey);
-    picker.children[btnIdx].classList.add('active');
   }
 }
 
@@ -1078,7 +1482,6 @@ document.getElementById('searchBox').addEventListener('input', ()=>{
 // 顯示某路線底下的「任務」選單(例如 西配 → 定點收運 / 髒亂點)
 function renderTaskPicker(routeKey, taskGroup){
   const tripsEl = document.getElementById('trips');
-  document.getElementById('progressWrap').style.display = 'none';
   tripsEl.innerHTML = '';
 
   const hint = document.createElement('div');
@@ -1142,7 +1545,6 @@ function armConfirm(btn, normalLabel, confirmLabel, action){
 
 function renderAddressList(masterList, storageKeyBase, onBack){
   const tripsEl = document.getElementById('trips');
-  const progressWrap = document.getElementById('progressWrap');
   tripsEl.innerHTML = '';
 
   if(onBack){
@@ -1155,7 +1557,6 @@ function renderAddressList(masterList, storageKeyBase, onBack){
   }
 
   if(!masterList || masterList.length === 0){
-    progressWrap.style.display = 'none';
     const empty = document.createElement('div');
     empty.className = 'placeholder';
     empty.style.margin = '0';
@@ -1177,7 +1578,6 @@ function renderAddressList(masterList, storageKeyBase, onBack){
   const itemsByAddr = new Map(normalized.map(it=>[it.addr, it]));
   const addrList = normalized.map(it=>it.addr);
 
-  progressWrap.style.display = 'block';
   const orderKey = `addrOrder:${storageKeyBase}`;
   const doneKey = `addrDone:${storageKeyBase}`;
 
@@ -1200,13 +1600,7 @@ function renderAddressList(masterList, storageKeyBase, onBack){
   function saveOrder(){ localStorage.setItem(orderKey, JSON.stringify(order)); }
   function saveDone(){ localStorage.setItem(doneKey, JSON.stringify(doneMap)); }
 
-  function updateProgress(){
-    const doneCount = order.filter(a => doneMap[a]).length;
-    const pct = Math.round((doneCount / order.length) * 100);
-    document.getElementById('progressText').textContent = `已完成 ${doneCount} / ${order.length}`;
-    document.getElementById('progressPct').textContent = `${pct}%`;
-    document.getElementById('progressFill').style.width = `${pct}%`;
-  }
+  function updateProgress(){ /* 進度表已移除 */ }
 
   // 依分段重新編號(遇到分段標題就重新從 1 開始數)
   function renumber(){
@@ -1361,7 +1755,7 @@ function effTime(ov, tripIdx, which, original){
 function selectItem(key, btn){
   // 高亮直接依路線名稱比對,即使沒有傳入按鈕也能正確重繪
   document.querySelectorAll('.route-btn').forEach(b=>
-    b.classList.toggle('active', b.textContent === key));
+    b.classList.toggle('active', (b.dataset.key || b.textContent) === key));
   document.getElementById('empty').style.display = 'none';
   localStorage.setItem('lastItem', key);
 
@@ -1370,7 +1764,7 @@ function selectItem(key, btn){
 
   const cfg = categories[currentCategory];
   const isRoute = cfg.order === truckOrder;
-  const titlePrefix = cfg.type === 'address' ? '路線 ' : (isRoute ? '路線 ' : '區域 ');
+  const titlePrefix = currentCategory === '接駁車' ? '' : (cfg.type === 'address' ? '路線 ' : (isRoute ? '路線 ' : '區域 '));
   document.getElementById('cardTitle').textContent =
     titlePrefix + key + '　·　' + currentCategory;
 
@@ -1381,7 +1775,6 @@ function selectItem(key, btn){
   tripsEl.innerHTML = '';
   const labels = ['第一趟','第二趟','第三趟'];
   const legend = document.getElementById('legendBox');
-  document.getElementById('progressWrap').style.display = 'none';
 
   if(cfg.type === 'address'){
     legend.style.display = 'none';
@@ -1452,7 +1845,8 @@ function selectItem(key, btn){
             // nav 欄位若是完整網址(例如 Google Maps 分享連結)就直接開啟
             const q = n.nav || n.text
               .replace(/🚌/g, '')
-              .replace(/^\s*(開始|結束)\s*/, '')
+              .replace(/\d{1,2}:\d{2}/g, '')
+              .replace(/^\s*(第\d+台)?\s*(開始|結束|續收)\s*/, '')
               .trim();
             const url = /^https?:\/\//.test(q)
               ? q
@@ -1578,6 +1972,7 @@ document.getElementById('editBtn').onclick = ()=>{
 };
 
 updateSearchVisibility();
+renderCategoryNote();
 renderPicker();
 
 
