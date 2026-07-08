@@ -44,7 +44,42 @@
     letter-spacing:1px;
   }
   .time-info{
-    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    z-index:60;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:4px 12px;
+    padding:9px 14px;
+    background:rgba(18,22,14,0.96);
+    border-bottom:1px solid rgba(168,220,74,0.3);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    font-size:14px;
+    box-shadow:0 3px 14px rgba(0,0,0,0.45);
+    transform:translateY(-110%);
+    transition:transform .28s ease;
+    pointer-events:none;
+  }
+  .time-info.show{transform:translateY(0);}
+  .ti-key{
+    font-weight:800;
+    color:var(--accent);
+    letter-spacing:0.5px;
+  }
+  .ti-next{
+    color:var(--text);
+    font-weight:600;
+    font-variant-numeric:tabular-nums;
+  }
+  .ti-remain{
+    color:#e6a23c;
+    font-weight:700;
+    font-variant-numeric:tabular-nums;
   }
   .tabs{
     position:fixed;
@@ -834,6 +869,8 @@
 </head>
 <body>
 
+  <div class="time-info" id="timeInfo"></div>
+
   <h1>前鎮區清運時間查詢</h1>
   <div class="sub">選擇車輛與區域 · 查看三趟時間</div>
 
@@ -853,7 +890,6 @@
       <div class="card-title" id="cardTitle">路線</div>
       <button class="edit-btn" id="editBtn" type="button" style="display:none;">✏️ 編輯時間</button>
     </div>
-    <div class="time-info" id="timeInfo"></div>
     <div id="trips"></div>
     <div class="legend" id="legendBox">
       <span><span class="dot" style="background:var(--text)"></span>出發</span>
@@ -1440,6 +1476,7 @@ const categories = {
   if(last && map[last]) localStorage.setItem('lastCategory', map[last]);
 })();
 
+let autoScrollOnOpen = true; // 開啟網頁時若有上次選取,自動捲到時間卡片(僅一次)
 let currentCategory = localStorage.getItem('lastCategory') || "垃圾車";
 if(!categories[currentCategory]) currentCategory = "垃圾車";
 if(!categories[currentCategory]) currentCategory = "垃圾車";
@@ -1609,8 +1646,17 @@ function renderPicker(){
     if(btn){
       if(!q) selectItem(targetKey, btn);
       else btn.classList.add('active');
+      // 剛開啟網頁時自動捲到時間卡片(僅一次),之後手動點選不會捲動
+      if(autoScrollOnOpen){
+        autoScrollOnOpen = false;
+        setTimeout(()=>{
+          const card = document.getElementById('cardTitle');
+          if(card) card.scrollIntoView({ behavior:'smooth', block:'start' });
+        }, 250);
+      }
     }
   }
+  autoScrollOnOpen = false;
 }
 
 function filterAddressRows(){
@@ -2157,6 +2203,35 @@ document.getElementById('editBtn').onclick = ()=>{
   if(currentSelectedKey) selectItem(currentSelectedKey);
 };
 
+// ===== 迷你時間列顯示控制:卡片時間在畫面上時隱藏,避免資訊重複雜亂 =====
+let miniBarHasContent = false;
+let miniBarTripsVisible = true;
+let miniBarObserver = null;
+let observedTripEl = null;
+
+function applyMiniBar(){
+  const el = document.getElementById('timeInfo');
+  if(!el) return;
+  el.classList.toggle('show', miniBarHasContent && !miniBarTripsVisible);
+}
+
+function ensureTripObserver(){
+  const first = document.querySelector('.trip[data-trip-idx="0"]');
+  if(first === observedTripEl) return;
+  observedTripEl = first;
+  if(miniBarObserver){ miniBarObserver.disconnect(); miniBarObserver = null; }
+  if(!first || !('IntersectionObserver' in window)){
+    miniBarTripsVisible = false;
+    return;
+  }
+  miniBarTripsVisible = true;
+  miniBarObserver = new IntersectionObserver(entries=>{
+    miniBarTripsVisible = entries[0].isIntersecting;
+    applyMiniBar();
+  }, { rootMargin:'-40px 0px 0px 0px', threshold:0 });
+  miniBarObserver.observe(first);
+}
+
 updateSearchVisibility();
 renderCategoryNote();
 renderPicker();
@@ -2201,8 +2276,8 @@ function updateCountdown(){
   const cfg = categories[currentCategory];
   const times = getDepartTimes(cfg, currentSelectedKey);
   if(!times || times.length === 0 || times.every(t => !t)){
+    miniBarHasContent = false;
     el.classList.remove('show');
-    document.body.classList.remove('has-timeinfo');
     el.innerHTML = '';
     return;
   }
@@ -2244,9 +2319,22 @@ function updateCountdown(){
     }
   });
 
-  // 倒數橫幅已移除,僅保留下一趟高亮與 5 分鐘提醒邏輯
-
+  // 置頂迷你時間列:顯示目前選取的區與下一趟時間
+  const icon = (categoryIcons && categoryIcons[currentCategory]) || '';
+  const keyName = cfg.type === 'truck' ? `${currentSelectedKey}區` : currentSelectedKey;
+  const nextTime = times[nextIdx === -1 ? 0 : nextIdx] || '';
+  const mins = Math.max(0, Math.round(diffMs / 60000));
+  const remain = isNaN(mins) ? '' :
+    (mins >= 60 ? `${Math.floor(mins/60)}時${String(mins%60).padStart(2,'0')}分` : `${mins}分`);
+  el.innerHTML =
+    `<span class="ti-key">${icon} ${keyName}</span>` +
+    `<span class="ti-next">下一趟｜${label} ${nextTime}</span>` +
+    (remain ? `<span class="ti-remain">還有 ${remain}</span>` : '');
+  miniBarHasContent = true;
+  ensureTripObserver();
+  applyMiniBar();
 }
+
 
 function startCountdown(){
   stopCountdown();
@@ -2261,8 +2349,8 @@ function stopCountdown(){
   }
   const el = document.getElementById('timeInfo');
   if(el){
+    miniBarHasContent = false;
     el.classList.remove('show');
-    document.body.classList.remove('has-timeinfo');
     el.innerHTML = '';
   }
 }
