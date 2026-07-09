@@ -232,7 +232,7 @@
 <footer>
   資料來源：高雄市政府「Open1999 派工受理案件」開放資料。
   若需完整介面仍可前往 <a href="https://soweb.kcg.gov.tw/#/work" target="_blank" rel="noopener">官方查詢頁</a>。
-  <span class="ver">｜版本 v9</span>
+  <span class="ver">｜版本 v10</span>
 </footer>
 
 <script>
@@ -277,8 +277,8 @@ function validateRange(){
 // ---- 顯示工具 ----
 function badgeClass(status){
   const s = String(status || "");
-  if (/結案|完成|已辦結|已完成/.test(s)) return "ok";
-  if (/處理|辦理|派工|received/.test(s)) return "doing";
+  if (/結案|完成|已辦結|已完成|解除管制/.test(s)) return "ok";
+  if (/處理|辦理|派工|列管|管制中|received/.test(s)) return "doing";
   return "other";
 }
 function esc(s){
@@ -438,9 +438,6 @@ function render(rows, useDist, useUnit){
     const category = pick(r,["InformDesc"]);            // 通報事項（分類）
     const content  = pick(r,["BeforeDesc"]);            // 反應內容（民眾陳情原文）
     const memo = pick(r,["Memo"]);
-    let result = pick(r,["AfterDesc"]);                 // 處理結果
-    let memoUsedAsResult = false;
-    if (!result && memo){ result = memo; memoUsedAsResult = true; }
     const desc = content || category;                    // 卡片標題優先顯示陳情內容
     const addr = pick(r,["address","Address"]);
     const unit = pick(r,["UnitName","ReplyUnit"]);
@@ -478,7 +475,6 @@ function render(rows, useDist, useUnit){
         '<span class="expand-hint">明細 <span class="arrow">▾</span></span>' +
       '</div>' +
       (desc ? '<div class="desc">' + esc(desc) + '</div>' : '') +
-      (result ? '<div class="result-preview"><b>處理結果</b>｜' + esc(result) + '</div>' : '') +
       '<div class="tags">' +
         (zip  ? '<span class="tag">' + esc(zip) + '</span>' : '') +
         (unit ? '<span class="tag">' + esc(unit) + '</span>' : '') +
@@ -493,9 +489,7 @@ function render(rows, useDist, useUnit){
         kv("通報日期", date) +
         kv("結案日期", closeDate) +
         kv("反應內容", content) +
-        kv("處理結果", result ||
-          '開放資料尚未提供此欄位，可至<a href="https://soweb.kcg.gov.tw/#/work" target="_blank" rel="noopener">官方查詢頁</a>以案號查看', !result) +
-        (memo && !memoUsedAsResult ? kv("備註", memo) : "") +
+        kv("備註", memo) +
       '</div>' +
     '</div>';
   }).join("");
