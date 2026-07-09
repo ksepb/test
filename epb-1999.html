@@ -123,6 +123,21 @@
     font-size:13px;font-weight:700;color:var(--harbor);
     font-variant-numeric:tabular-nums;letter-spacing:.02em;flex:1;min-width:0;
   }
+  .cno-pre{font-size:12px;color:var(--ink-soft);font-weight:600}
+  .cno-tail{
+    font-size:19px;font-weight:800;color:var(--harbor-deep);
+    background:#FDEEBF;padding:1px 8px;border-radius:7px;
+    font-variant-numeric:tabular-nums;letter-spacing:.03em;cursor:pointer;
+  }
+  .cno-tail.copied{background:var(--ok-bg);color:var(--ok)}
+  .kv-v .cno-tail{font-size:23px;padding:2px 10px}
+  .copy-all{
+    display:block;width:100%;margin:12px 0 2px;
+    background:#FDEEBF;color:#7A5A00;border:1.5px solid #EED27E;
+    border-radius:10px;padding:11px 0;font-size:15px;font-weight:800;
+    cursor:pointer;text-align:center;font-family:inherit;
+  }
+  .copy-all.copied{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
   .badge{font-size:12px;font-weight:700;border-radius:6px;padding:3px 9px;white-space:nowrap}
   .badge.doing{background:var(--doing-bg);color:var(--doing)}
   .badge.ok{background:var(--ok-bg);color:var(--ok)}
@@ -232,7 +247,7 @@
 <footer>
   資料來源：高雄市政府「Open1999 派工受理案件」開放資料。
   若需完整介面仍可前往 <a href="https://soweb.kcg.gov.tw/#/work" target="_blank" rel="noopener">官方查詢頁</a>。
-  <span class="ver">｜版本 v10</span>
+  <span class="ver">｜版本 v12</span>
 </footer>
 
 <script>
@@ -302,6 +317,15 @@ function pick(row, keys){
   return "";
 }
 function rowText(r){ return Object.values(r).map(v=>String(v??"")).join("｜"); }
+
+// 案件編號：A-IN-2026-145350 → 前段縮小、末段數字放大（登記常只用末段）
+function fmtCaseNo(no){
+  const s = String(no || "");
+  const m = s.match(/^(.*[-–—])(\d+)\s*$/);
+  if (!m) return esc(s);
+  return '<span class="cno-pre">' + esc(m[1]) + '</span>' +
+         '<span class="cno-tail" data-copy="' + esc(m[2]) + '" title="點一下複製">' + esc(m[2]) + '</span>';
+}
 
 // ---- 回傳解析：支援 JSON / {d:...} / XML 包 JSON / 純 XML ----
 function parseResponse(text){
@@ -470,7 +494,7 @@ function render(rows, useDist, useUnit){
 
     return '<div class="case" data-idx="' + i + '">' +
       '<div class="case-head">' +
-        '<div class="case-no">' + esc(no || "（無案號）") + '</div>' +
+        '<div class="case-no">' + (no ? fmtCaseNo(no) : "（無案號）") + '</div>' +
         '<span class="badge ' + cls + '">' + esc(status || "狀態不明") + '</span>' +
         '<span class="expand-hint">明細 <span class="arrow">▾</span></span>' +
       '</div>' +
@@ -481,7 +505,14 @@ function render(rows, useDist, useUnit){
         (addr ? '<span class="tag">' + esc(addr) + '</span>' : '') +
       '</div>' +
       '<div class="case-detail">' +
-        kv("案件編號", no) +
+        (function(){
+          const numOnly = (String(no||"").match(/(\d+)\s*$/) || [,""])[1];
+          const payload = [numOnly, addr, content].filter(Boolean).join("\n");
+          return payload
+            ? '<button class="copy-all" data-copy="' + esc(payload) + '">📋 一鍵複製（案號＋地址＋內容）</button>'
+            : "";
+        })() +
+        kv("案件編號", fmtCaseNo(no), true) +
         kv("權責單位", unit) +
         kv("通報事項", category) +
         kv("行政區域", zip) +
@@ -494,11 +525,43 @@ function render(rows, useDist, useUnit){
     '</div>';
   }).join("");
 
-  // 點卡片展開／收合明細（點到連結時不觸發）
+  // 點卡片展開／收合明細（點到連結或編號時不觸發）
   listEl.querySelectorAll(".case").forEach(el=>{
     el.addEventListener("click", (ev)=>{
-      if (ev.target.closest("a")) return;
+      if (ev.target.closest("a") || ev.target.closest(".cno-tail") || ev.target.closest(".copy-all")) return;
       el.classList.toggle("open");
+    });
+  });
+
+  // 共用複製函式
+  async function copyText(txt){
+    try{
+      await navigator.clipboard.writeText(txt);
+    }catch(e){
+      const ta = document.createElement("textarea");
+      ta.value = txt; document.body.appendChild(ta);
+      ta.select(); document.execCommand("copy"); ta.remove();
+    }
+  }
+
+  // 點案號末段數字 → 複製到剪貼簿（登記用）
+  listEl.querySelectorAll(".cno-tail").forEach(el=>{
+    el.addEventListener("click", async ()=>{
+      await copyText(el.getAttribute("data-copy"));
+      const orig = el.textContent;
+      el.textContent = "已複製"; el.classList.add("copied");
+      setTimeout(()=>{ el.textContent = orig; el.classList.remove("copied"); }, 1200);
+    });
+  });
+
+  // 一鍵複製：案號數字＋維修地址＋反應內容
+  listEl.querySelectorAll(".copy-all").forEach(el=>{
+    el.addEventListener("click", async (ev)=>{
+      ev.stopPropagation();
+      await copyText(el.getAttribute("data-copy"));
+      const orig = el.textContent;
+      el.textContent = "✅ 已複製，可直接貼上"; el.classList.add("copied");
+      setTimeout(()=>{ el.textContent = orig; el.classList.remove("copied"); }, 1500);
     });
   });
 }
