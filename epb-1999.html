@@ -132,6 +132,24 @@
   }
   .case a{color:var(--harbor);text-decoration:none;font-weight:600}
   .case a:hover{text-decoration:underline}
+  .case{cursor:pointer}
+  .case .expand-hint{font-size:12px;color:var(--harbor);white-space:nowrap}
+  .case-detail{display:none;margin-top:12px;border-top:1px solid var(--line);padding-top:4px}
+  .case.open .case-detail{display:block}
+  .case.open .expand-hint .arrow{display:inline-block;transform:rotate(180deg)}
+  .kv-k{
+    background:#E4EEEC;color:var(--harbor-deep);font-weight:700;font-size:13px;
+    padding:4px 10px;border-radius:6px;margin-top:12px;display:inline-block;
+  }
+  .kv-v{padding:6px 2px 0;font-size:14px;overflow-wrap:anywhere}
+  .nav-btns{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+  .nav-btns a{
+    flex:1;min-width:120px;text-align:center;
+    background:var(--harbor);color:#fff;border-radius:10px;
+    padding:10px 0;font-size:14px;font-weight:700;text-decoration:none;
+  }
+  .nav-btns a.alt{background:#F4F8F7;color:var(--harbor);border:1px solid var(--line)}
+  .nav-btns a:hover{text-decoration:none;opacity:.92}
 
   .state{
     background:var(--card);border:1px dashed var(--line);border-radius:var(--radius);
@@ -203,7 +221,7 @@
 <footer>
   資料來源：高雄市政府「Open1999 派工受理案件」開放資料。
   若需完整介面仍可前往 <a href="https://soweb.kcg.gov.tw/#/work" target="_blank" rel="noopener">官方查詢頁</a>。
-  <span class="ver">｜版本 v5</span>
+  <span class="ver">｜版本 v6</span>
 </footer>
 
 <script>
@@ -402,12 +420,14 @@ function render(rows, useDist, useUnit){
     return;
   }
 
-  listEl.innerHTML = rows.map(r=>{
+  listEl.innerHTML = rows.map((r, i)=>{
     const status = pick(r,["StatusName","Status"]);
     const cls = badgeClass(status);
     const no   = pick(r,["FileNo","Seq","CaseNo"]);
     const desc = pick(r,["InformDesc","Description","Content","Subject"]);
+    const before = pick(r,["BeforeDesc"]);
     const after = pick(r,["AfterDesc"]);
+    const memo = pick(r,["Memo"]);
     const addr = pick(r,["address","Address"]);
     const unit = pick(r,["UnitName","ReplyUnit"]);
     const zip  = pick(r,["ZipName","DistName"]);
@@ -415,31 +435,65 @@ function render(rows, useDist, useUnit){
     const closeDate = fmtDate(pick(r,["CloseDate","Close_Date"]));
     const lat = parseFloat(pick(r,["Lat"]));
     const lng = parseFloat(pick(r,["Lng"]));
-    let mapUrl = "";
-    if (isFinite(lat) && isFinite(lng) && lat > 20 && lat < 26){
-      mapUrl = "https://www.google.com/maps/search/?api=1&query=" + lat + "," + lng;
-    } else if (addr){
-      mapUrl = "https://www.google.com/maps/search/?api=1&query=" +
-        encodeURIComponent("高雄市" + (zip||"") + addr);
+    const hasGeo = isFinite(lat) && isFinite(lng) && lat > 20 && lat < 26;
+    const destEnc = hasGeo ? (lat + "," + lng)
+      : encodeURIComponent("高雄市" + (zip||"") + (addr||""));
+    const gNav = "https://www.google.com/maps/dir/?api=1&destination=" + destEnc + "&travelmode=driving";
+    const aNav = hasGeo
+      ? "https://maps.apple.com/?daddr=" + lat + "," + lng
+      : "https://maps.apple.com/?daddr=" + destEnc;
+
+    function kv(label, val, isHtml){
+      if (!val) return "";
+      return '<div class="kv-k">' + label + '</div>' +
+             '<div class="kv-v">' + (isHtml ? val : esc(val)) + '</div>';
     }
-    return '<div class="case">' +
+    const navHtml = addr || hasGeo
+      ? kv("維修地點",
+          esc(addr || (lat + ", " + lng)) +
+          '<div class="nav-btns">' +
+            '<a href="' + gNav + '" target="_blank" rel="noopener">🧭 Google 導航</a>' +
+            '<a class="alt" href="' + aNav + '" target="_blank" rel="noopener">🍎 Apple 地圖</a>' +
+          '</div>', true)
+      : "";
+
+    return '<div class="case" data-idx="' + i + '">' +
       '<div class="case-head">' +
         '<div class="case-no">' + esc(no || "（無案號）") + '</div>' +
         '<span class="badge ' + cls + '">' + esc(status || "狀態不明") + '</span>' +
+        '<span class="expand-hint">明細 <span class="arrow">▾</span></span>' +
       '</div>' +
       (desc ? '<div class="desc">' + esc(desc) + '</div>' : '') +
-      (after ? '<details class="diag" style="margin-top:8px"><summary>處理情形</summary><div style="margin-top:4px;font-size:13px;color:var(--ink)">' + esc(after) + '</div></details>' : '') +
       '<div class="tags">' +
         (zip  ? '<span class="tag">' + esc(zip) + '</span>' : '') +
         (unit ? '<span class="tag">' + esc(unit) + '</span>' : '') +
         (addr ? '<span class="tag">' + esc(addr) + '</span>' : '') +
       '</div>' +
+      '<div class="case-detail">' +
+        kv("案件編號", no) +
+        kv("權責單位", unit) +
+        kv("行政區域", zip) +
+        navHtml +
+        kv("通報日期", date) +
+        kv("結案日期", closeDate) +
+        kv("反應內容", desc) +
+        kv("處理前說明", before) +
+        kv("處理結果", after) +
+        kv("備註", memo) +
+      '</div>' +
       '<div class="foot">' +
         '<span>受理：' + esc(date) + (closeDate ? '　結案：' + esc(closeDate) : '') + '</span>' +
-        (mapUrl ? '<a href="' + mapUrl + '" target="_blank" rel="noopener">地圖</a>' : '') +
       '</div>' +
     '</div>';
   }).join("");
+
+  // 點卡片展開／收合明細（點到連結時不觸發）
+  listEl.querySelectorAll(".case").forEach(el=>{
+    el.addEventListener("click", (ev)=>{
+      if (ev.target.closest("a")) return;
+      el.classList.toggle("open");
+    });
+  });
 }
 
 // ---- 載入 ----
