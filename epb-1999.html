@@ -13,6 +13,7 @@
     --line:#D8E2E0;
     --harbor:#0E6E8C;
     --harbor-deep:#0A4A5E;
+    --gold:#C77E1E;
     --ok:#1E8A5A;
     --ok-bg:#E2F3EA;
     --doing:#B3720A;
@@ -36,10 +37,7 @@
     padding:22px 20px 26px;
   }
   .wrap{max-width:720px;margin:0 auto}
-  .eyebrow{
-    font-size:11px;letter-spacing:.18em;opacity:.72;
-    text-transform:uppercase;margin-bottom:4px;
-  }
+  .eyebrow{font-size:11px;letter-spacing:.18em;opacity:.72;text-transform:uppercase;margin-bottom:4px}
   h1{font-size:21px;font-weight:700;letter-spacing:.02em}
   h1 .x{opacity:.55;font-weight:400;margin:0 6px}
   .sub{font-size:13px;opacity:.82;margin-top:4px}
@@ -49,26 +47,20 @@
     background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
     padding:14px;box-shadow:0 6px 18px rgba(10,74,94,.08);
   }
+  .filter-label{font-size:12px;color:var(--ink-soft);margin-bottom:6px}
   .filter-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
   .chip{
-    border:1px solid var(--line);background:#F4F8F7;color:var(--ink-soft);
+    border:1.5px dashed var(--line);background:#FAFCFB;color:var(--ink-soft);
     border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;
   }
+  .chip::before{content:"○ ";opacity:.7}
   .chip[aria-pressed="true"]{
-    background:var(--harbor);border-color:var(--harbor);color:#fff;font-weight:600;
+    background:#EAF3F0;border:1.5px solid var(--ok);color:var(--ok);font-weight:700;
   }
-  .spacer{flex:1}
-  .btn{
-    background:var(--harbor);color:#fff;border:none;border-radius:10px;
-    padding:9px 18px;font-size:14px;font-weight:600;cursor:pointer;
-  }
-  .btn:disabled{opacity:.5;cursor:default}
-  .btn.ghost{
-    background:#F4F8F7;color:var(--harbor);border:1px solid var(--line);font-weight:600;
-  }
+  .chip[aria-pressed="true"]::before{content:"✓ "}
   .date-row{
     display:flex;flex-wrap:wrap;gap:8px;align-items:center;
-    margin-top:12px;padding-top:12px;border-top:1px solid var(--line);
+    margin-top:14px;padding-top:14px;border-top:1px solid var(--line);
   }
   .date-row input[type="date"]{
     border:1px solid var(--line);border-radius:8px;padding:7px 8px;
@@ -82,7 +74,21 @@
     border-radius:8px;padding:7px 0;font-size:13px;cursor:pointer;text-align:center;
   }
   .quick:hover{background:#E9F1EF}
-  .chip:focus-visible,.btn:focus-visible,.quick:focus-visible,
+  .btn-search{
+    display:block;width:100%;margin-top:14px;
+    background:linear-gradient(160deg,var(--harbor) 0%,var(--harbor-deep) 100%);
+    color:#fff;border:none;border-radius:12px;
+    padding:14px 0;font-size:17px;font-weight:800;letter-spacing:.35em;text-indent:.35em;
+    cursor:pointer;box-shadow:0 4px 12px rgba(10,74,94,.25);
+  }
+  .btn-search:active{transform:translateY(1px)}
+  .btn-search:disabled{opacity:.5;cursor:default}
+  .btn{
+    background:var(--harbor);color:#fff;border:none;border-radius:10px;
+    padding:9px 18px;font-size:14px;font-weight:600;cursor:pointer;
+  }
+  .btn.ghost{background:#F4F8F7;color:var(--harbor);border:1px solid var(--line)}
+  .chip:focus-visible,.btn:focus-visible,.quick:focus-visible,.btn-search:focus-visible,
   .date-row input:focus-visible{outline:3px solid #7FC3D8;outline-offset:2px}
   .hint{font-size:12px;color:var(--ink-soft);margin-top:10px}
   .hint.err{color:#B3400A;font-weight:600}
@@ -107,28 +113,18 @@
     background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
     padding:14px 16px;margin-bottom:10px;
   }
-  .case-head{
-    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-  }
+  .case-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .case-no{
     font-size:13px;font-weight:700;color:var(--harbor);
     font-variant-numeric:tabular-nums;letter-spacing:.02em;flex:1;min-width:0;
   }
-  .badge{
-    font-size:12px;font-weight:700;border-radius:6px;padding:3px 9px;white-space:nowrap;
-  }
+  .badge{font-size:12px;font-weight:700;border-radius:6px;padding:3px 9px;white-space:nowrap}
   .badge.doing{background:var(--doing-bg);color:var(--doing)}
   .badge.ok{background:var(--ok-bg);color:var(--ok)}
   .badge.other{background:var(--other-bg);color:var(--other)}
-  .case .desc{
-    font-size:15px;font-weight:600;margin-top:8px;
-    overflow-wrap:anywhere;
-  }
+  .case .desc{font-size:15px;font-weight:600;margin-top:8px;overflow-wrap:anywhere}
   .case .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-  .tag{
-    font-size:12px;color:var(--ink-soft);background:#F1F5F4;
-    border-radius:6px;padding:3px 9px;
-  }
+  .tag{font-size:12px;color:var(--ink-soft);background:#F1F5F4;border-radius:6px;padding:3px 9px}
   .case .foot{
     display:flex;align-items:center;justify-content:space-between;gap:8px;
     margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);
@@ -144,7 +140,7 @@
   .state code,.state pre{
     display:block;background:#F0F4F3;border-radius:8px;text-align:left;
     padding:8px 10px;font-size:11px;word-break:break-all;white-space:pre-wrap;
-    margin-top:10px;max-height:160px;overflow:auto;
+    margin-top:10px;max-height:220px;overflow:auto;
   }
   .state .btn,.state .btn.ghost{margin:12px 4px 0}
   details.diag{margin-top:12px;text-align:left;font-size:12px}
@@ -155,6 +151,7 @@
     font-size:12px;color:var(--ink-soft);
   }
   footer a{color:var(--harbor)}
+  .ver{opacity:.6}
   @media (max-width:400px){.stat b{font-size:20px}}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -171,11 +168,10 @@
 
 <div class="toolbar">
   <div class="toolbar-card">
+    <div class="filter-label">篩選條件（點一下可開關）</div>
     <div class="filter-row">
       <button class="chip" id="chipDist" aria-pressed="true">前鎮區</button>
       <button class="chip" id="chipUnit" aria-pressed="true">環保局</button>
-      <div class="spacer"></div>
-      <button class="btn" id="btnQuery">查詢</button>
     </div>
     <div class="date-row">
       <input type="date" id="dateStart" aria-label="起始日期">
@@ -188,6 +184,7 @@
       <button class="quick" id="q7">近 7 天</button>
       <button class="quick" id="q30">近 30 天</button>
     </div>
+    <button class="btn-search" id="btnQuery">查詢</button>
     <div class="hint" id="hint">預設查詢當天；日期區間最長一年（資料來源限制）。</div>
   </div>
 </div>
@@ -206,6 +203,7 @@
 <footer>
   資料來源：高雄市政府「Open1999 派工受理案件」開放資料。
   若需完整介面仍可前往 <a href="https://soweb.kcg.gov.tw/#/work" target="_blank" rel="noopener">官方查詢頁</a>。
+  <span class="ver">｜版本 v5</span>
 </footer>
 
 <script>
@@ -264,24 +262,25 @@ function fmtDate(v){
   if (m) return new Date(Number(m[1])).toLocaleString("zh-TW",{hour12:false});
   return String(v);
 }
+function normKey(k){ return String(k).toLowerCase().replace(/[^a-z0-9]/g,""); }
 function pick(row, keys){
   for (const k of keys){
     if (row[k] != null && String(row[k]) !== "") return row[k];
-    const found = Object.keys(row).find(x => x.toLowerCase() === k.toLowerCase());
-    if (found && String(row[found]) !== "") return row[found];
+    const nk = normKey(k);
+    const found = Object.keys(row).find(x => normKey(x) === nk);
+    if (found && row[found] != null && String(row[found]) !== "") return row[found];
   }
   return "";
 }
+function rowText(r){ return Object.values(r).map(v=>String(v??"")).join("｜"); }
 
-// ---- 回傳解析：支援 JSON / {d:...} / XML 包 JSON / 純 XML 三種格式 ----
+// ---- 回傳解析：支援 JSON / {d:...} / XML 包 JSON / 純 XML ----
 function parseResponse(text){
-  // 1) 直接是 JSON
   try{
     let data = JSON.parse(text);
     if (data && data.d) data = typeof data.d === "string" ? JSON.parse(data.d) : data.d;
     if (Array.isArray(data)) return data;
   }catch(e){}
-  // 2) XML 裡包 JSON 字串（.asmx 常見：<string>[...]</string>）
   const m = text.match(/\[[\s\S]*\]/);
   if (m){
     try{
@@ -292,11 +291,9 @@ function parseResponse(text){
       if (Array.isArray(data)) return data;
     }catch(e){}
   }
-  // 3) 純 XML：每筆案件是一個重複的子節點
   try{
     const doc = new DOMParser().parseFromString(text, "text/xml");
     if (!doc.querySelector("parsererror")){
-      // 找出「出現次數最多、且有子欄位」的節點名稱，視為資料列
       const counts = {};
       doc.querySelectorAll("*").forEach(n=>{
         if (n.children.length > 0 && [...n.children].every(c=>c.children.length===0)){
@@ -317,19 +314,29 @@ function parseResponse(text){
   return null;
 }
 
-// ---- 篩選與渲染 ----
+// ---- 篩選：欄位優先，欄位空白時退回整列文字搜尋 ----
+// 前鎮區郵遞區號 806
+function matchDist(r){
+  const zip = String(pick(r,["ZipName","DistName"]));
+  if (zip) return zip.includes("前鎮");
+  const code = String(pick(r,["zipcode"]));
+  if (code) return code.startsWith("806");
+  return rowText(r).includes("前鎮");
+}
+function matchUnit(r){
+  const unit = String(pick(r,["UnitName","ReplyUnit"]));
+  if (unit) return unit.includes("環保") || unit.includes("環境保護");
+  return rowText(r).includes("環保");
+}
+
 function applyFilters(){
   const useDist = chips.dist.getAttribute("aria-pressed") === "true";
   const useUnit = chips.unit.getAttribute("aria-pressed") === "true";
-
   const rows = allRows.filter(r=>{
-    const zip  = String(pick(r,["ZipName","zipname","DistName"]));
-    const unit = String(pick(r,["UnitName","ReplyUnit","unitname"]));
-    if (useDist && !zip.includes("前鎮")) return false;
-    if (useUnit && !unit.includes("環保") && !unit.includes("環境保護")) return false;
+    if (useDist && !matchDist(r)) return false;
+    if (useUnit && !matchUnit(r)) return false;
     return true;
   });
-
   render(rows, useDist, useUnit);
 }
 
@@ -368,10 +375,13 @@ function render(rows, useDist, useUnit){
   if (!rows.length){
     let diag = "";
     if (allRows.length){
+      let firstRow = "";
+      try{ firstRow = JSON.stringify(allRows[0], null, 1).slice(0, 800); }catch(e){}
       diag = '<details class="diag"><summary>看看來源資料長怎樣（除錯用）</summary>' +
-        '<div style="margin-top:6px">行政區欄位值：' + esc(distinctSummary(["ZipName","zipname","DistName"], 8)) + '</div>' +
+        '<div style="margin-top:6px">行政區欄位值：' + esc(distinctSummary(["ZipName","DistName"], 8)) + '</div>' +
+        '<div style="margin-top:4px">郵遞區號欄位值：' + esc(distinctSummary(["zipcode"], 8)) + '</div>' +
         '<div style="margin-top:4px">機關欄位值：' + esc(distinctSummary(["UnitName","ReplyUnit"], 8)) + '</div>' +
-        '<div style="margin-top:4px">第一筆欄位名稱：' + esc(allRows[0] ? Object.keys(allRows[0]).join(", ") : "") + '</div>' +
+        '<div style="margin-top:6px">第一筆完整內容：</div><pre>' + esc(firstRow) + '</pre>' +
         '</details>';
     }
     listEl.innerHTML = '<div class="state">' +
@@ -396,26 +406,37 @@ function render(rows, useDist, useUnit){
     const status = pick(r,["StatusName","Status"]);
     const cls = badgeClass(status);
     const no   = pick(r,["FileNo","Seq","CaseNo"]);
-    const desc = pick(r,["Description","description","SairContent","Content","Subject","CaseContent"]);
+    const desc = pick(r,["InformDesc","Description","Content","Subject"]);
+    const after = pick(r,["AfterDesc"]);
     const addr = pick(r,["address","Address"]);
     const unit = pick(r,["UnitName","ReplyUnit"]);
     const zip  = pick(r,["ZipName","DistName"]);
-    const date = fmtDate(pick(r,["CreDate","credate"]));
-    const mapQ = encodeURIComponent("高雄市" + (zip||"") + (addr||""));
+    const date = fmtDate(pick(r,["CreDate","Cre_Date"]));
+    const closeDate = fmtDate(pick(r,["CloseDate","Close_Date"]));
+    const lat = parseFloat(pick(r,["Lat"]));
+    const lng = parseFloat(pick(r,["Lng"]));
+    let mapUrl = "";
+    if (isFinite(lat) && isFinite(lng) && lat > 20 && lat < 26){
+      mapUrl = "https://www.google.com/maps/search/?api=1&query=" + lat + "," + lng;
+    } else if (addr){
+      mapUrl = "https://www.google.com/maps/search/?api=1&query=" +
+        encodeURIComponent("高雄市" + (zip||"") + addr);
+    }
     return '<div class="case">' +
       '<div class="case-head">' +
         '<div class="case-no">' + esc(no || "（無案號）") + '</div>' +
         '<span class="badge ' + cls + '">' + esc(status || "狀態不明") + '</span>' +
       '</div>' +
       (desc ? '<div class="desc">' + esc(desc) + '</div>' : '') +
+      (after ? '<details class="diag" style="margin-top:8px"><summary>處理情形</summary><div style="margin-top:4px;font-size:13px;color:var(--ink)">' + esc(after) + '</div></details>' : '') +
       '<div class="tags">' +
         (zip  ? '<span class="tag">' + esc(zip) + '</span>' : '') +
         (unit ? '<span class="tag">' + esc(unit) + '</span>' : '') +
         (addr ? '<span class="tag">' + esc(addr) + '</span>' : '') +
       '</div>' +
       '<div class="foot">' +
-        '<span>受理：' + esc(date) + '</span>' +
-        (addr ? '<a href="https://www.google.com/maps/search/?api=1&query=' + mapQ + '" target="_blank" rel="noopener">地圖</a>' : '') +
+        '<span>受理：' + esc(date) + (closeDate ? '　結案：' + esc(closeDate) : '') + '</span>' +
+        (mapUrl ? '<a href="' + mapUrl + '" target="_blank" rel="noopener">地圖</a>' : '') +
       '</div>' +
     '</div>';
   }).join("");
@@ -442,7 +463,7 @@ async function load(){
   listEl.innerHTML = '<div class="state">資料載入中…</div>';
   document.getElementById("btnQuery").disabled = true;
   try{
-    const res = await fetch(url, {headers:{"Accept":"application/json"}});
+    const res = await fetch(url, {headers:{"Accept":"application/json"}, cache:"no-store"});
     const text = await res.text();
     lastRawPreview = text.slice(0, 400);
     if (!res.ok) throw new Error("HTTP " + res.status);
@@ -451,7 +472,7 @@ async function load(){
     if (!data) throw new Error("無法解析回傳格式");
 
     allRows = data.sort((a,b)=>{
-      const ta = String(pick(a,["CreDate"])), tb = String(pick(b,["CreDate"]));
+      const ta = String(pick(a,["CreDate","Cre_Date"])), tb = String(pick(b,["CreDate","Cre_Date"]));
       return tb.localeCompare(ta);
     });
     applyFilters();
