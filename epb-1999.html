@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>前鎮區 × 環保局｜1999 派工案件</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<meta name="apple-mobile-web-app-title" content="前鎮1999">
+<meta name="application-name" content="前鎮1999">
+<meta name="theme-color" content="#0A4A5E">
 <style>
   :root{
     --bg:#EDF2F1;
@@ -123,6 +128,12 @@
   .badge.ok{background:var(--ok-bg);color:var(--ok)}
   .badge.other{background:var(--other-bg);color:var(--other)}
   .case .desc{font-size:15px;font-weight:600;margin-top:8px;overflow-wrap:anywhere}
+  .case .result-preview{
+    margin-top:8px;padding:8px 10px;border-radius:8px;
+    background:var(--ok-bg);color:#14563B;font-size:13px;overflow-wrap:anywhere;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .case .result-preview b{color:var(--ok)}
   .case .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
   .tag{font-size:12px;color:var(--ink-soft);background:#F1F5F4;border-radius:6px;padding:3px 9px}
   .case .foot{
@@ -221,7 +232,7 @@
 <footer>
   資料來源：高雄市政府「Open1999 派工受理案件」開放資料。
   若需完整介面仍可前往 <a href="https://soweb.kcg.gov.tw/#/work" target="_blank" rel="noopener">官方查詢頁</a>。
-  <span class="ver">｜版本 v6</span>
+  <span class="ver">｜版本 v8</span>
 </footer>
 
 <script>
@@ -464,6 +475,7 @@ function render(rows, useDist, useUnit){
         '<span class="expand-hint">明細 <span class="arrow">▾</span></span>' +
       '</div>' +
       (desc ? '<div class="desc">' + esc(desc) + '</div>' : '') +
+      (after ? '<div class="result-preview"><b>處理結果</b>｜' + esc(after) + '</div>' : '') +
       '<div class="tags">' +
         (zip  ? '<span class="tag">' + esc(zip) + '</span>' : '') +
         (unit ? '<span class="tag">' + esc(unit) + '</span>' : '') +
