@@ -232,7 +232,7 @@
 <footer>
   資料來源：高雄市政府「Open1999 派工受理案件」開放資料。
   若需完整介面仍可前往 <a href="https://soweb.kcg.gov.tw/#/work" target="_blank" rel="noopener">官方查詢頁</a>。
-  <span class="ver">｜版本 v8</span>
+  <span class="ver">｜版本 v9</span>
 </footer>
 
 <script>
@@ -435,10 +435,13 @@ function render(rows, useDist, useUnit){
     const status = pick(r,["StatusName","Status"]);
     const cls = badgeClass(status);
     const no   = pick(r,["FileNo","Seq","CaseNo"]);
-    const desc = pick(r,["InformDesc","Description","Content","Subject"]);
-    const before = pick(r,["BeforeDesc"]);
-    const after = pick(r,["AfterDesc"]);
+    const category = pick(r,["InformDesc"]);            // 通報事項（分類）
+    const content  = pick(r,["BeforeDesc"]);            // 反應內容（民眾陳情原文）
     const memo = pick(r,["Memo"]);
+    let result = pick(r,["AfterDesc"]);                 // 處理結果
+    let memoUsedAsResult = false;
+    if (!result && memo){ result = memo; memoUsedAsResult = true; }
+    const desc = content || category;                    // 卡片標題優先顯示陳情內容
     const addr = pick(r,["address","Address"]);
     const unit = pick(r,["UnitName","ReplyUnit"]);
     const zip  = pick(r,["ZipName","DistName"]);
@@ -475,7 +478,7 @@ function render(rows, useDist, useUnit){
         '<span class="expand-hint">明細 <span class="arrow">▾</span></span>' +
       '</div>' +
       (desc ? '<div class="desc">' + esc(desc) + '</div>' : '') +
-      (after ? '<div class="result-preview"><b>處理結果</b>｜' + esc(after) + '</div>' : '') +
+      (result ? '<div class="result-preview"><b>處理結果</b>｜' + esc(result) + '</div>' : '') +
       '<div class="tags">' +
         (zip  ? '<span class="tag">' + esc(zip) + '</span>' : '') +
         (unit ? '<span class="tag">' + esc(unit) + '</span>' : '') +
@@ -484,17 +487,15 @@ function render(rows, useDist, useUnit){
       '<div class="case-detail">' +
         kv("案件編號", no) +
         kv("權責單位", unit) +
+        kv("通報事項", category) +
         kv("行政區域", zip) +
         navHtml +
         kv("通報日期", date) +
         kv("結案日期", closeDate) +
-        kv("反應內容", desc) +
-        kv("處理前說明", before) +
-        kv("處理結果", after) +
-        kv("備註", memo) +
-      '</div>' +
-      '<div class="foot">' +
-        '<span>受理：' + esc(date) + (closeDate ? '　結案：' + esc(closeDate) : '') + '</span>' +
+        kv("反應內容", content) +
+        kv("處理結果", result ||
+          '開放資料尚未提供此欄位，可至<a href="https://soweb.kcg.gov.tw/#/work" target="_blank" rel="noopener">官方查詢頁</a>以案號查看', !result) +
+        (memo && !memoUsedAsResult ? kv("備註", memo) : "") +
       '</div>' +
     '</div>';
   }).join("");
