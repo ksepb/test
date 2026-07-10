@@ -990,6 +990,21 @@
     cursor:pointer;
   }
   .day-switch-link:active{opacity:0.7;}
+  .shuttle-tail{
+    display:flex;
+    flex-direction:column;
+  }
+  .stat-group + .shuttle-tail,
+  .shuttle-item + .shuttle-tail,
+  .shuttle-free + .shuttle-tail{
+    margin-top:2px;
+    padding-top:12px;
+    border-top:1px dashed rgba(230,162,60,0.25);
+  }
+  .shuttle-tail .shuttle-item + .shuttle-item{
+    padding-top:12px;
+    border-top:1px dashed rgba(230,162,60,0.25);
+  }
   .zone-chip.dim{
     opacity:0.45;
     border-style:dashed;
@@ -2179,7 +2194,7 @@ const recycleData = {
   "14": [["15:38","15:55"], ["18:29","18:35"], ["20:45","20:53"]],
   "11": [["15:41","16:05",[{"text":"🚌 16:05 開始 崗山中街160巷口"},{"text":"🚌 16:25 結束 崗山南街445巷口"},{"text":"共收7點"}]], ["18:14","18:33",[{"text":"🚌 19:02 開始 公正路與武慶一路公園"},{"text":"🚌 19:21 結束 班超路18巷口"},{"text":"共收8點"}]], ["20:43","21:00",[{"text":"🚌 21:23 開始 崗山南街與福祥街"},{"text":"🚌 21:35 結束 福祥街瑞祥國小前"},{"text":"共收5點"}]]],
   "15": [["15:45","15:55",[{"text":"🚌 15:55 開始 德昌路與鎮中路口"},{"text":"🚌 16:18 結束 和昌街與明衙路口"},{"text":"🚌 16:48 續收開始 草衙中街93巷與89巷口(先跑16區後回頭)"},{"text":"🚌 17:05 結束 衙東街與衙國一街"},{"text":"共收11點"}]], ["18:16","18:25",[{"text":"🚌 19:12 開始 明衙路與明正一街口"},{"text":"🚌 19:45 結束 德昌路7巷口"},{"text":"共收8點"}]], ["20:34","20:45"]],
-  "12": [["15:35","15:53",[{"text":"🚌 15:52 開始/結束 翠亨北路399巷(僅1點)"}]], ["18:15","18:28"], ["20:33","20:40",[{"text":"出發時跟車出門"},{"text":"🚌 21:06 開始/結束 翠亨北路399巷(僅1點)"}]]],
+  "12": [["15:35","15:53",[{"text":"🚌 15:53 開始 翠亨北路390號(原住民服務中心)"},{"text":"🚌 15:57 結束 翠村街與凱旋四路428巷口"},{"text":"共收3點"}]], ["18:15","18:28"], ["20:33","20:40",[{"text":"出發時跟車出門"},{"text":"🚌 20:52 開始 鎮昌7巷與翠亨北路口"},{"text":"🚌 21:06 結束 翠亨北路399巷"},{"text":"共收5點"},{"text":"📦 三合一下袋處　鎮興路與鎮昌五巷口(鎮昌鎮龍里聯合活動中心)"}]]],
   "16": [["15:55","16:00",[{"text":"🚌 16:22 開始 佛佑路與佛公路36巷口"},{"text":"🚌 16:40 結束 佛佑路與后安路"},{"text":"共收5點"}]], ["18:27","18:35",[{"text":"出發時跟車出門"},{"text":"🚌 18:35 開始 翠亨南路與中平路"},{"text":"🚌 18:47 結束 草衙二路與佛宗街"},{"text":"共收7點"}]], ["20:40","20:50"]],
   "17": [["","15:55"], ["","18:30",[{"text":"🚌 18:50 開始 佛西街與后安路"},{"text":"🚌 19:05 結束 后平路120巷"},{"text":"共收7點"}]], ["","20:40"]],
 };
@@ -2247,7 +2262,8 @@ const shuttleBusData = {
   },
   "一四2台": {
     "第一車次（出車 15:40）": [
-      { addr: "翠亨北路399巷", time: "15:52", group: "12區" },
+      { addr: "翠亨北路390號(原住民服務中心)", time: "15:53", group: "12區" },
+      { addr: "翠村街與凱旋四路428巷口", time: "15:57" },
       { addr: "復興三路146號", time: "16:14", group: "1區" },
       { addr: "復興三路160號", time: "16:17" },
       { addr: "復興三路192號", time: "16:20" },
@@ -2280,7 +2296,8 @@ const shuttleBusData = {
       { addr: "成功二路70號(7-11門口)", time: "20:37", group: "2區" },
       { addr: "中華五路1007巷口", time: "20:47" },
       { addr: "正勤路41號(獅甲國宅大門口)", time: "20:52" },
-      { addr: "翠亨北路399巷", time: "21:06", group: "12區" },
+      { addr: "鎮昌7巷與翠亨北路口", time: "20:52", group: "12區" },
+      { addr: "翠亨北路399巷", time: "21:06" },
       { addr: "二聖二路6巷口", time: "21:13", group: "4區" },
       { addr: "二聖二路與桂林街口", time: "21:16" },
       { addr: "二聖二路與梧州街口", time: "21:19" },
@@ -3433,12 +3450,14 @@ function selectItem(key, btn){
           ${outerReminder ? `<div class="note">${outerReminder.text}</div>` : ''}
         </div>
         ${Array.isArray(note) && note.length ? (() => {
-          // 分三類渲染:有時間的站點列(可導航)、無時間的自由文字(※提醒/跟車出門)、統計徽章(共收/還剩/起點站/已收到底)
+          // 分四類渲染:有時間的站點列(可導航)、無時間的自由文字(※提醒/跟車出門)、統計徽章(共收/還剩/起點站/已收到底)、附加地點(下袋處等,放在徽章下方,可導航)
           const isStat = t => /^(🚏|✓|🚌|共收|還剩|只收|起點站|第\d+台共收)/.test(t);
-          const stopIdx = [], freeIdx = [], statIdx = [];
+          const isReminder = t => /^※/.test(t) || t === '出發時跟車出門';
+          const stopIdx = [], freeIdx = [], statIdx = [], tailIdx = [];
           note.forEach((n, idx) => {
             if(/\d{1,2}:\d{2}/.test(n.text)) stopIdx.push(idx);
             else if(isStat(n.text)) statIdx.push(idx);
+            else if(!isReminder(n.text) && /[路街巷弄號]/.test(n.text)) tailIdx.push(idx);
             else freeIdx.push(idx);
           });
           const stopHtml = stopIdx.map(idx => { const n = note[idx]; return `
@@ -3469,13 +3488,18 @@ function selectItem(key, btn){
           const countHtml = countParts.length ? `<div class="shuttle-stats">${countParts.join('')}</div>` : '';
           const statHtml = (indicatorIdx.length || countIdx.length)
             ? `<div class="stat-group">${pillRow(indicatorIdx)}${countHtml}</div>` : '';
+          const tailHtml = tailIdx.length ? `<div class="shuttle-tail">${tailIdx.map(idx => { const n = note[idx]; return `
+              <div class="shuttle-item">
+                <div class="shuttle-text">${n.text}</div>
+                <button class="nav-link shuttle-nav" type="button" data-note-idx="${idx}">🧭 導航</button>
+              </div>`; }).join('')}</div>` : '';
           return `
         <div class="shuttle-block">
           <button class="shuttle-summary" type="button">
             <span>🚌 有接駁紀錄(${note.filter(n => /開始/.test(n.text)).length})</span>
             <span class="shuttle-arrow">▸</span>
           </button>
-          <div class="shuttle-detail">${stopHtml}${freeHtml}${statHtml}</div>
+          <div class="shuttle-detail">${stopHtml}${freeHtml}${statHtml}${tailHtml}</div>
         </div>`;
         })() : ''}
       `;
@@ -3495,9 +3519,10 @@ function selectItem(key, btn){
             e.stopPropagation();
             // nav 欄位若是完整網址(例如 Google Maps 分享連結)就直接開啟
             const q = n.nav || n.text
-              .replace(/🚌/g, '')
+              .replace(/🚌|📦/g, '')
               .replace(/\d{1,2}:\d{2}/g, '')
               .replace(/^\s*(第\d+台)?\s*(續收開始|開始\/結束|開始|結束|續收)\s*/, '')
+              .split('　').pop()  // 若文字是「標籤　地址」格式(全形空格分隔),只取最後的地址部分搜尋
               .trim();
             const url = /^https?:\/\//.test(q)
               ? q
