@@ -3090,6 +3090,7 @@ if(!categories[currentCategory]) currentCategory = "垃圾車";
 if(!categories[currentCategory]) currentCategory = "垃圾車";
 
 let currentSelectedKey = null;
+let currentTaskName = null; // 記錄目前在「任務群組」路線(如日配套的西配)底下,選的是哪個任務(定點收運/髒亂點/工作流程)
 let countdownTimer = null;
 
 const categoryIcons = {
@@ -3269,8 +3270,19 @@ function renderPicker(){
       if(autoScrollOnOpen){
         autoScrollOnOpen = false;
         const cfgNow = categories[currentCategory];
+        // 若這個路線底下是任務群組(例如日配套的西配→工作流程),先自動進入上次選的任務,
+        // 這樣捲動記憶才會套用在真正的地址清單上,而不是停在「請選擇任務」的選單畫面
+        if(!q && cfgNow && cfgNow.type === 'address'){
+          const rawData = cfgNow.data[targetKey];
+          const isTaskGroup = rawData && !Array.isArray(rawData) && typeof rawData === 'object';
+          if(isTaskGroup){
+            const savedTask = localStorage.getItem('lastTask:' + currentCategory + ':' + targetKey);
+            if(savedTask && rawData[savedTask]) selectTask(targetKey, savedTask);
+          }
+        }
+        const scrollKey = 'scrollPos:' + currentCategory + ':' + targetKey + (currentTaskName ? ':' + currentTaskName : '');
         const savedScroll = (cfgNow && cfgNow.type === 'address')
-          ? localStorage.getItem('scrollPos:' + currentCategory + ':' + targetKey) : null;
+          ? localStorage.getItem(scrollKey) : null;
         setTimeout(()=>{
           if(savedScroll !== null){
             window.scrollTo({ top: parseInt(savedScroll, 10), behavior: 'auto' });
@@ -3317,13 +3329,15 @@ document.getElementById('searchBox').addEventListener('input', ()=>{
 });
 
 // 記憶地址類分頁(三配套/日配套/接駁車)的捲動位置,下次開啟App還原到同一處
+// 若路線底下有任務群組(如日配套的西配→工作流程),連任務名稱一起記,避免不同任務的捲動位置互相覆蓋
 let scrollSaveTimer = null;
 window.addEventListener('scroll', ()=>{
   clearTimeout(scrollSaveTimer);
   scrollSaveTimer = setTimeout(()=>{
     const cfg = categories[currentCategory];
     if(cfg && cfg.type === 'address' && currentSelectedKey){
-      localStorage.setItem('scrollPos:' + currentCategory + ':' + currentSelectedKey, String(window.scrollY));
+      const key = 'scrollPos:' + currentCategory + ':' + currentSelectedKey + (currentTaskName ? ':' + currentTaskName : '');
+      localStorage.setItem(key, String(window.scrollY));
     }
   }, 200);
 }, { passive: true });
@@ -3353,12 +3367,15 @@ function renderTaskPicker(routeKey, taskGroup){
 function selectTask(routeKey, taskName){
   const cfg = categories[currentCategory];
   const masterList = cfg.data[routeKey][taskName];
+  currentTaskName = taskName;
+  localStorage.setItem('lastTask:' + currentCategory + ':' + routeKey, taskName);
   // 唯讀清單:時間固定的路線不提供勾選與調整順序
   const readOnly = (currentCategory === '接駁車') ||
     (currentCategory === '日配套' && taskName.startsWith('定點'));
   document.getElementById('cardTitle').textContent =
     `路線 ${routeKey}　·　${taskName}　·　${currentCategory}`;
   renderAddressList(masterList, `${currentCategory}:${routeKey}:${taskName}`, ()=>{
+    currentTaskName = null;
     document.getElementById('cardTitle').textContent =
       `路線 ${routeKey}　·　${currentCategory}`;
     renderTaskPicker(routeKey, cfg.data[routeKey]);
@@ -3690,6 +3707,7 @@ function selectItem(key, btn){
 
     if(isTaskGroup){
       // 這個路線底下是「任務」(例如 西配 → 定點收運 / 髒亂點),尚未挑選任務前不是地址清單
+      currentTaskName = null;
       renderTaskPicker(key, rawData);
     } else {
       renderAddressList(rawData, `${currentCategory}:${key}`, null, currentCategory === '接駁車');
