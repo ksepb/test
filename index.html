@@ -598,12 +598,20 @@
     opacity:0.8;
   }
   .kitchen-nav-icon:active{opacity:0.4;}
+  .footer-actions{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:10px;
+    margin:16px 0 28px;
+  }
   .backup-entry{
-    text-align:center;
     font-size:13px;
     color:var(--text-dim);
-    text-decoration:underline;
-    margin:10px 0 26px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:8px 15px;
     cursor:pointer;
   }
   .backup-entry:active{opacity:0.6;}
@@ -720,12 +728,12 @@
     align-items:center;
     gap:8px;
     width:100%;
-    background:rgba(120,170,230,0.08);
-    border:1px solid rgba(120,170,230,0.3);
+    background:rgba(120,170,230,0.05);
+    border:1px solid rgba(120,170,230,0.18);
     border-radius:10px;
-    color:#9cc4ee;
-    font-size:15px;
-    font-weight:700;
+    color:#8fa8c2;
+    font-size:14px;
+    font-weight:600;
     cursor:pointer;
     padding:10px 12px;
   }
@@ -842,8 +850,8 @@
   }
   .addr-line-main{color:var(--text);transition:all .15s ease;}
   .addr-line-note{
-    color:var(--text-dim);
-    font-size:14px;
+    color:#a89a85;
+    font-size:14.5px;
     transition:all .15s ease;
   }
   .addr-hint{
@@ -1005,6 +1013,17 @@
     cursor:pointer;
     transition:all .15s ease;
     flex-shrink:0;
+  }
+  .nav-link.nav-icon{
+    border-radius:50%;
+    width:34px;
+    height:34px;
+    padding:0;
+    margin-left:8px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
   }
   .nav-link:active{transform:scale(0.92);}
   .shuttle-nav{margin-left:auto;}
@@ -1222,7 +1241,7 @@
   <div class="time-info" id="timeInfo"></div>
 
   <h1>前鎮區清運時間查詢</h1>
-  <div class="sub">選擇車輛與區域 · 查看三趟時間</div>
+  <div class="sub">選擇底部車輛類型與區域 · 查看三趟時間</div>
 
 
   <div class="tabs" id="tabs"></div>
@@ -1248,8 +1267,11 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v2.7 ｜ 更新日期：2026.07.11</div>
-  <div class="backup-entry" id="backupEntry">💾 備份與還原我的編輯記錄</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v2.9 ｜ 更新日期：2026.07.11</div>
+  <div class="footer-actions">
+    <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
+    <div class="backup-entry" id="backupEntry">💾 備份與還原</div>
+  </div>
 
   <div class="modal-overlay" id="modalOverlay" onclick="closeImg()">
     <div class="modal-box" onclick="event.stopPropagation()">
@@ -1286,6 +1308,18 @@
       </div>
 
       <button class="modal-close" onclick="closeBackup()">關閉</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="clearDataOverlay" onclick="closeClearData()">
+    <div class="modal-box backup-box" onclick="event.stopPropagation()">
+      <div class="modal-title">↺ 還原所有預設</div>
+      <p class="backup-help">這會清除<b>這支手機這個瀏覽器</b>存的所有東西：改過的時間、勾選進度、排序、上次瀏覽位置——<b>全部清空</b>，且無法復原。</p>
+      <p class="backup-help">路線本身的資料（時間表、地址、接駁路線）不會受影響，因為那些是寫在程式裡的，不是存在手機裡的。</p>
+      <p class="backup-help" style="color:#9cc4ee;">⚠ 建議清除前，先去「匯出備份」存一份起來，之後還能救回來。</p>
+      <button class="reset-btn" id="clearDataBtn" type="button" style="width:100%;text-align:center;box-sizing:border-box;background:rgba(230,162,60,0.1);border-color:rgba(230,162,60,0.4);color:#e6a23c;">還原所有預設</button>
+      <p class="backup-note" id="clearDataStatus"></p>
+      <button class="modal-close" onclick="closeClearData()">關閉</button>
     </div>
   </div>
 
@@ -2864,9 +2898,9 @@ const addressData = {
       { addr: "＊ 三多三路21號(富山香檀地下道旁)", time: "" },
       { addr: "＊ 廣西路151巷口", time: "" },
       { addr: "＊ 復興三路3號 (啟智學校)", time: "09:30 才可離開" },
-      { addr: "1. 中山市場 (復興三路與中山二路口)", time: "", group: "下午的車趟　11:45 打卡後出車" },
-      { addr: "2. 第一公有市場 (修成街與修成南街口)", time: "" },
-      { addr: "3. 民興市場 (聖德二街與台鋁五街口)", time: "" },
+      { addr: "1. 復興三路與中山二路口 (中山市場)", time: "", group: "下午的車趟　11:45 打卡後出車" },
+      { addr: "2. 修成街與修成南街口 (第一公有市場)", time: "" },
+      { addr: "3. 聖德二街與台鋁五街口 (民興市場)", time: "" },
     ],
   },
   "籬配": {
@@ -2876,11 +2910,11 @@ const addressData = {
       { addr: "瑞和街與瑞信街口(停車場門口前)", time: "07:45-07:55" },
       { addr: "公正路與武慶一路口(公園旁)", time: "08:00-08:10" },
       { addr: "崗山中街與福祥街口(大樓旁)", time: "08:15-08:25" },
-      { addr: "崗山南街市場(美聯社前)", time: "", group: "下午的車趟　11:45 打卡後出車" },
+      { addr: "美聯社前(崗山南街市場)", time: "", group: "下午的車趟　11:45 打卡後出車" },
       { addr: "崗山南街60巷與瑞雄街口", time: "" },
-      { addr: "上賀水果攤(永豐路與崗山南街口)", time: "" },
-      { addr: "憲德市場(瑞和街)", time: "" },
-      { addr: "英明市場(英明路亞舍紅茶前)", time: "" },
+      { addr: "永豐路與崗山南街口(上賀水果攤)", time: "" },
+      { addr: "瑞和街(憲德市場)", time: "" },
+      { addr: "英明路亞舍紅茶前(英明市場)", time: "" },
       { addr: "王牌水果行", time: "" },
     ],
     "髒亂點": [
@@ -2911,11 +2945,11 @@ const addressData = {
       { addr: "＊ 瑞興公園 (瑞興路)", time: "" },
       { addr: "＊ 光華國中與育樂路口圍牆邊", time: "" },
       { addr: "＊ 憲德公園 (憲德路)", time: "" },
-      { addr: "1. 崗山南街市場 (美聯社前)", time: "", group: "下午的車趟　11:45 打卡後出車" },
+      { addr: "1. 美聯社前 (崗山南街市場)", time: "", group: "下午的車趟　11:45 打卡後出車" },
       { addr: "2. 崗山南街60巷與瑞雄街口", time: "" },
-      { addr: "3. 上賀水果攤 (永豐路與崗山南街口)", time: "" },
-      { addr: "4. 憲德市場 (瑞和街)", time: "" },
-      { addr: "5. 英明市場 (英明路亞舍紅茶前)", time: "" },
+      { addr: "3. 永豐路與崗山南街口 (上賀水果攤)", time: "" },
+      { addr: "4. 瑞和街 (憲德市場)", time: "" },
+      { addr: "5. 英明路亞舍紅茶前 (英明市場)", time: "" },
       { addr: "6. 王牌水果行", time: "" },
     ],
   },
@@ -2925,10 +2959,10 @@ const addressData = {
       { addr: "新衙路與康定路口", time: "07:30-07:40" },
       { addr: "南衙路與明正三街口(公園)", time: "07:45-07:55" },
       { addr: "佛公路與后安路口", time: "08:00-08:10" },
-      { addr: "第二公有市場(凱旋路與前鎮街茶e魔手旁)", time: "", group: "下午的車趟　11:45 打卡後出車" },
-      { addr: "衙東市場(康定路香雞王前)", time: "" },
-      { addr: "衙西市場(新衙路建誠五金行右轉小巷內)", time: "" },
-      { addr: "仁愛市場(草衙全聯停車場前)", time: "" },
+      { addr: "凱旋路與前鎮街茶e魔手旁(第二公有市場)", time: "", group: "下午的車趟　11:45 打卡後出車" },
+      { addr: "康定路香雞王前(衙東市場)", time: "" },
+      { addr: "新衙路建誠五金行右轉小巷內(衙西市場)", time: "" },
+      { addr: "草衙全聯停車場前(仁愛市場)", time: "" },
       { addr: "明鳳十街與明鳳八街口", time: "12:45-12:55" },
     ],
     "髒亂點": [
@@ -2960,10 +2994,10 @@ const addressData = {
       { addr: "＊ 鎮東一街406巷", time: "" },
       { addr: "＊ 康定路139巷口(星悅卡拉ok)", time: "" },
       { addr: "＊ 興仁早市＋麵包店", time: "10:15 出車" },
-      { addr: "1. 第二公有市場(凱旋路與前鎮街茶e魔手旁)", time: "", group: "下午的車趟　11:45 打卡後出車" },
-      { addr: "2. 衙東市場(康定路香雞王前)", time: "" },
-      { addr: "3. 衙西市場(新衙路建誠五金行右轉小巷內)", time: "" },
-      { addr: "4. 仁愛市場(草衙全聯停車場前)", time: "" },
+      { addr: "1. 凱旋路與前鎮街茶e魔手旁(第二公有市場)", time: "", group: "下午的車趟　11:45 打卡後出車" },
+      { addr: "2. 康定路香雞王前(衙東市場)", time: "" },
+      { addr: "3. 新衙路建誠五金行右轉小巷內(衙西市場)", time: "" },
+      { addr: "4. 草衙全聯停車場前(仁愛市場)", time: "" },
       { addr: "＊ 衙中街93巷口", time: "" },
       { addr: "5. 明鳳十街與明鳳八街口", time: "12:45-12:55" },
       { addr: "※備註: 德昌街4巷口髒亂點，由 1999 組別處理", time: "" },
@@ -3506,7 +3540,7 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
       .replace(/(前|旁|尾|邊|對面)$/, ''));
     const isRealAddr = !mainText.startsWith('※') && /[路街巷弄號]/.test(mainText);
     const orderBtnsHtml = readOnly ? '' : `<span class="order-btns"><button class="ord-btn ord-up" ${isFirstInGroup ? 'disabled' : ''}>▲</button><button class="ord-btn ord-down" ${isLastInGroup ? 'disabled' : ''}>▼</button></span>`;
-    row.innerHTML = `${orderBtnsHtml}<span class="addr-check${parsedType.type === 'star' ? ' type-star' : ''}${parsedType.type === 'note' ? ' type-note' : ''}">${doneMap[addr] ? '✓' : displayNum}</span><div class="addr-content"><div class="addr-line-main">${mainText}</div>${noteText ? `<div class="addr-line-note">${noteText}</div>` : ''}${info.time ? `<div class="addr-time">${info.time}</div>` : ''}</div>${isRealAddr ? `<span class="nav-link">🗺️ 導航</span>` : ''}`;
+    row.innerHTML = `${orderBtnsHtml}<span class="addr-check${parsedType.type === 'star' ? ' type-star' : ''}${parsedType.type === 'note' ? ' type-note' : ''}">${doneMap[addr] ? '✓' : displayNum}</span><div class="addr-content"><div class="addr-line-main">${mainText}</div>${noteText ? `<div class="addr-line-note">${noteText}</div>` : ''}${info.time ? `<div class="addr-time">${info.time}</div>` : ''}</div>${isRealAddr ? `<span class="nav-link nav-icon">🗺️</span>` : ''}`;
     const checkEl = row.querySelector('.addr-check');
     const navEl = row.querySelector('.nav-link');
 
@@ -3901,7 +3935,7 @@ function selectItem(key, btn){
         const names = ['第一趟','第二趟','第三趟','第四趟'];
         bodyHtml += `<div class="ol-trip-head"><span>${names[ti] || ('第'+(ti+1)+'趟')}</span><span class="group-meta">${tp[0][0]}–${tp[tp.length-1][0]}　·　${tp.length}站</span></div>`;
         tp.forEach(([t, n]) => {
-          bodyHtml += `<div class="ol-row"><span class="ol-time">${t}</span><span class="ol-name">${n}</span><span class="nav-link" data-q="${n}">🗺️</span></div>`;
+          bodyHtml += `<div class="ol-row"><span class="ol-time">${t}</span><span class="ol-name">${n}</span><span class="nav-link nav-icon" data-q="${n}">🗺️</span></div>`;
         });
       });
       bodyHtml += `<div class="ol-src">${od.info}</div>`;
@@ -4295,6 +4329,47 @@ document.getElementById('doImportBtn').onclick = ()=>{
     status.className = 'backup-note err';
   }
 };
+
+// ===== 清除所有本機資料:雙重確認,清除前引導先備份 =====
+const CLEAR_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'lastItem:', 'scrollPos:'];
+const CLEAR_EXACT_KEYS = ['lastCategory'];
+
+document.getElementById('clearDataEntry').onclick = ()=>{
+  document.getElementById('clearDataOverlay').classList.add('show');
+};
+function closeClearData(){
+  document.getElementById('clearDataOverlay').classList.remove('show');
+  const btn = document.getElementById('clearDataBtn');
+  btn.dataset.armed = '';
+  btn.textContent = '還原所有預設';
+}
+
+armConfirm(
+  document.getElementById('clearDataBtn'),
+  '還原所有預設',
+  '⚠ 再按一次確認清除,無法復原',
+  ()=>{
+    let count = 0;
+    for(let i = localStorage.length - 1; i >= 0; i--){
+      const k = localStorage.key(i);
+      if(CLEAR_PREFIXES.some(p => k.startsWith(p)) || CLEAR_EXACT_KEYS.includes(k)){
+        localStorage.removeItem(k);
+        count++;
+      }
+    }
+    const status = document.getElementById('clearDataStatus');
+    status.textContent = `已清除 ${count} 筆本機資料,2秒後自動重新整理...`;
+    status.className = 'backup-note ok';
+    setTimeout(()=> location.reload(), 2000);
+  }
+);
+
+// 離線快取:註冊 Service Worker,收訊不好或沒訊號時仍可打開App(顯示上次連網時的內容)
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>
