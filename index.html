@@ -283,7 +283,7 @@
     color:var(--accent);
     font-weight:700;
     position:relative;
-    padding-left:12px;
+    padding-left:18px;
   }
   .trip.tp-active .trip-label::before{
     content:'';
@@ -313,7 +313,7 @@
   }
   .arrow{color:var(--text-dim);font-size:16px;}
   .depart{color:var(--text);}
-  .arrive{color:var(--accent);}
+  .arrive{color:#9bc25c;}
   .note{
     font-size:14px;
     color:#e6a23c;
@@ -429,6 +429,16 @@
   .stat-combo .combo-count{color:var(--accent);}
   .stat-combo .combo-remain{color:#e6a23c;}
   .stat-combo .combo-sep{opacity:0.35;font-weight:400;}
+  .car-tag{
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:0.3px;
+    color:#c2b39a;
+    background:rgba(184,169,143,0.14);
+    border:1px solid rgba(184,169,143,0.4);
+    padding:5px 11px;
+    border-radius:20px;
+  }
   .stat-pill{
     font-size:13px;
     font-weight:700;
@@ -504,6 +514,158 @@
     margin-bottom:5px;
     font-weight:700;
   }
+  .kitchen-block{
+    margin-top:10px;
+    width:100%;
+  }
+  .kitchen-toggle{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    width:100%;
+    background:rgba(184,169,143,0.07);
+    border:1px solid rgba(184,169,143,0.22);
+    border-radius:10px;
+    color:#b8a98f;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    padding:8px 12px;
+  }
+  .kitchen-toggle:active{opacity:0.6;}
+  .kitchen-detail{
+    display:none;
+    flex-direction:column;
+    margin-top:8px;
+    background:rgba(255,255,255,0.02);
+    border:1px solid var(--line);
+    border-radius:11px;
+    overflow:hidden;
+  }
+  .kitchen-detail.show{display:flex;animation:fade .25s ease;}
+  .k-line{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:11px 12px;
+    border-bottom:1px solid var(--line);
+    font-size:14px;
+    line-height:1.4;
+  }
+  .k-line:last-child{border-bottom:none;}
+  .k-icon{flex:none;width:20px;text-align:center;font-size:14px;}
+  .k-label{
+    flex:none;
+    width:52px;
+    color:var(--text-dim);
+    font-size:13.5px;
+  }
+  .k-value{
+    flex:1;
+    text-align:left;
+    color:var(--text);
+    font-weight:600;
+  }
+  .k-value-addr{font-weight:400;}
+  .k-value-stack{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+  }
+  .k-give-count{font-weight:600;}
+  .k-give-addr{
+    font-weight:400;
+    color:var(--text);
+    font-size:14px;
+  }
+  .bin-dot{font-size:12px;}
+  .bin-dot-gray{color:#aab4be;}
+  .bin-dot-green{color:var(--accent);}
+  .bin-dot-red{color:#e2695f;}
+  .bin-sep{width:10px;display:inline-block;}
+  .k-note{
+    font-size:12px;
+    color:var(--text-dim);
+    font-weight:400;
+  }
+  .kitchen-nav-icon{
+    flex:none;
+    background:none;
+    border:none;
+    font-size:16px;
+    padding:2px 0 2px 4px;
+    cursor:pointer;
+    opacity:0.8;
+  }
+  .kitchen-nav-icon:active{opacity:0.4;}
+  .backup-entry{
+    text-align:center;
+    font-size:13px;
+    color:var(--text-dim);
+    text-decoration:underline;
+    margin:10px 0 26px;
+    cursor:pointer;
+  }
+  .backup-entry:active{opacity:0.6;}
+  .backup-box{
+    max-width:420px;
+    text-align:left;
+  }
+  .backup-tabs{
+    display:flex;
+    gap:8px;
+    margin:12px 0 14px;
+  }
+  .backup-tab{
+    flex:1;
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--line);
+    border-radius:9px;
+    color:var(--text-dim);
+    font-size:14px;
+    font-weight:700;
+    padding:9px 0;
+    cursor:pointer;
+  }
+  .backup-tab.active{
+    background:rgba(168,220,74,0.12);
+    border-color:rgba(168,220,74,0.4);
+    color:var(--accent);
+  }
+  .backup-help{
+    font-size:14px;
+    color:var(--text);
+    line-height:1.6;
+    margin:0 0 10px;
+  }
+  #genBackupBtn, #copyBackupBtn, #doImportBtn{
+    width:100%;
+    text-align:center;
+    box-sizing:border-box;
+  }
+  .backup-textarea{
+    width:100%;
+    min-height:110px;
+    margin:10px 0;
+    padding:10px;
+    background:rgba(0,0,0,0.25);
+    border:1px solid var(--line);
+    border-radius:10px;
+    color:var(--text);
+    font-size:13px;
+    font-family:monospace;
+    line-height:1.5;
+    resize:vertical;
+    box-sizing:border-box;
+  }
+  .backup-note{
+    font-size:13px;
+    line-height:1.5;
+    min-height:18px;
+    margin:4px 0 0;
+  }
+  .backup-note.ok{color:var(--accent);}
+  .backup-note.err{color:#e6a23c;}
   .modal-overlay{
     display:none;
     position:fixed;
@@ -661,6 +823,14 @@
     justify-content:center;
     transition:all .18s ease;
     box-shadow:0 2px 6px rgba(0,0,0,0.25);
+  }
+  .addr-check.type-star{
+    background:rgba(230,162,60,0.22);
+    font-size:16px;
+  }
+  .addr-check.type-note{
+    background:rgba(120,170,230,0.2);
+    font-size:16px;
   }
   .addr-content{
     flex:1;
@@ -1078,7 +1248,8 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v2.1 ｜ 更新日期：2026.07.10</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v2.7 ｜ 更新日期：2026.07.11</div>
+  <div class="backup-entry" id="backupEntry">💾 備份與還原我的編輯記錄</div>
 
   <div class="modal-overlay" id="modalOverlay" onclick="closeImg()">
     <div class="modal-box" onclick="event.stopPropagation()">
@@ -1088,15 +1259,45 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="backupOverlay" onclick="closeBackup()">
+    <div class="modal-box backup-box" onclick="event.stopPropagation()">
+      <div class="modal-title">💾 備份與還原</div>
+
+      <div class="backup-tabs">
+        <button class="backup-tab active" id="tabExport" onclick="switchBackupTab('export')">匯出備份</button>
+        <button class="backup-tab" id="tabImport" onclick="switchBackupTab('import')">還原備份</button>
+      </div>
+
+      <div id="exportPane">
+        <p class="backup-help">這裡存的是你<b>自己編輯過的內容</b>：改過的時間、勾選進度、排序。不含路線本身的資料(那些本來就不會不見)。</p>
+        <p class="backup-help">點下方按鈕產生備份文字，<b>整段複製</b>起來，存到備忘錄或傳給自己的LINE。之後要換手機、換瀏覽器，或資料不見了，貼回「還原備份」就能救回來。</p>
+        <button class="reset-btn" id="genBackupBtn" type="button">產生備份文字</button>
+        <textarea class="backup-textarea" id="exportText" readonly placeholder="點上方按鈕產生備份文字…" onclick="this.select()"></textarea>
+        <button class="reset-btn" id="copyBackupBtn" type="button" style="display:none;">📋 複製這段文字</button>
+        <p class="backup-note" id="exportStatus"></p>
+      </div>
+
+      <div id="importPane" style="display:none;">
+        <p class="backup-help">把之前備份的那段文字<b>貼在下面</b>，按「還原」就能救回你編輯過的時間、勾選、排序。</p>
+        <p class="backup-help">⚠ 還原後會<b>覆蓋</b>目前手機上的編輯記錄，請確認貼的是你要的那份。</p>
+        <textarea class="backup-textarea" id="importText" placeholder="請貼上備份文字…"></textarea>
+        <button class="reset-btn" id="doImportBtn" type="button">還原備份</button>
+        <p class="backup-note" id="importStatus"></p>
+      </div>
+
+      <button class="modal-close" onclick="closeBackup()">關閉</button>
+    </div>
+  </div>
+
 <script>
 // 垃圾車 / 回收車共用: route -> [ [depart, arrive, note?], ... 三趟 ]
 const truckData = {
-  "1":  [["15:50","16:09"], ["18:15","18:37"], ["20:25","20:45"]],
+  "1":  [["15:55","16:09"], ["18:20","18:37"], ["20:20","20:45"]],
   "5":  [["15:35","15:50"], ["18:00","18:33"], ["20:35","20:50"]],
   "2":  [["15:48","16:05"], ["18:10","18:31"], ["20:20","20:37"]],
   "6":  [["15:35","15:55"], ["18:10","18:30"], ["20:30","20:48"]],
   "3":  [["15:45","16:00"], ["18:15","18:35"], ["20:20","20:45"]],
-  "7":  [["15:35","15:54"], ["18:05","18:24"], ["20:35","20:53"]],
+  "7":  [["15:38","15:54"], ["18:08","18:24"], ["20:38","20:53"]],
   "4":  [["15:35","16:02"], ["18:23","18:39"], ["20:40","20:59"]],
   "8":  [["15:35","16:00"], ["18:15","18:20"], ["20:25","20:44"]],
   "9":  [["15:50","16:08"], ["17:55","18:00"],      ["20:42","20:54"]],
@@ -2176,27 +2377,54 @@ function splitOfficialTrips(stops){
   return trips;
 }
 
+// 垃圾車廚餘資訊: 區號 -> 三趟 [{
+//   bins:[{color,count,note}], drops:[{label,addr}], leftover:未下桶說明,
+//   give:[{label,addr}]給店家桶, opNote:行車安全等一般提醒
+// }]
+const truckKitchenData = {
+  "1": [
+    { bins: [{ color: "gray", count: 2, note: "不套袋" }, { color: "green", count: 2 }],
+      drops: [{ addr: "一心二路54巷口" }] },
+    { bins: [{ color: "gray", count: 2, note: "不套袋" }, { color: "green", count: 2 }],
+      drops: [{ addr: "民興街與台鋁南巷口" }],
+      give: [{ label: "灰×1", addr: "復興三路與台鋁7巷口(茶的魔手)" }] },
+    { bins: [{ color: "gray", count: 1 }, { color: "green", count: 2 }],
+      drops: [{ addr: "民權二路405號旁" }] },
+  ],
+  "7": [
+    { bins: [{ color: "red", count: 3 }],
+      drops: [{ addr: "瑞興街與瑞恩街口(公園旁)" }, { addr: "精忠街與武德街口(路燈旁)" }],
+      leftover: '<span class="bin-dot bin-dot-red">●</span> 紅×1若沒下桶，可回場內下路燈旁' },
+    { bins: [{ color: "red", count: 3 }],
+      drops: [{ addr: "瑞祥街與瑞祥街4巷(消防栓)" }],
+      leftover: '<span class="bin-dot bin-dot-red">●</span> 紅×1若沒下桶，可回場內下路燈旁' },
+    { bins: [{ color: "red", count: 3 }],
+      drops: [{ addr: "瑞祥街與瑞忠街十字路口(機車店對面)" }],
+      opNote: "收運途中會倒車(瑞興街與精忠街路口)，可協助下車指揮；最後尾點記得把廚餘架彈力繩拉好，固定空桶。" },
+  ],
+};
+
 const truckOrder = ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17"];
 
 // 回收車: 與垃圾車相同時間但部分備註不同
 const recycleData = {
-  "1":  [["15:50","16:09",[{"text":"🚌 16:14 開始 復興三路146號"},{"text":"🚌 16:20 結束 復興三路192號"},{"text":"🚌 16:37 續收開始 一心二路2巷口(先跑2區後回頭)"},{"text":"🚌 16:43 結束 一心二路54巷"},{"text":"共收6點"}]], ["18:15","18:37",[{"text":"🚌 18:37 開始 聖德二街與台鋁7巷口"},{"text":"🚌 18:44 結束 聖德二街與台鋁1巷口"},{"text":"共收4點"}]], ["20:25","20:45",[{"text":"🚌 20:45 開始 中華五路969巷10號(南側門)"},{"text":"🚌 20:55 結束 中華五路969巷3號(東側門)"},{"text":"🚌 21:24 續收開始 一心二路2巷口(先跑3區後回頭)"},{"text":"🚌 21:35 結束 復興三路192號"},{"text":"共收9點"}]]],
-  "5":  [["15:35","15:50",[{"text":"🚌 15:50 開始 凱得街174號"},{"text":"🚌 16:10 結束 育樂路154-1號邊"},{"text":"共收5點"}]], ["18:00","18:33",[{"text":"🚌 18:33 開始 廣西路1巷口"},{"text":"🚌 18:54 結束 和平二路123號前"},{"text":"共收8點"}]], ["20:35","20:50",[{"text":"🚌 21:15 開始 英明路19巷與英義街口"},{"text":"🚌 21:29 結束 英明路145巷口"},{"text":"共收2點"}]]],
-  "2":  [["15:48","16:05", [{"text":"🚌 16:28 開始 復興三路與台鋁14巷口(老北京炸醬麵旁）"},{"text":"🚌 16:30 結束 復興三路155號前(八方雲集旁)"},{"text":"只收2點，還剩5點"}]], ["18:10","18:31",[{"text":"🚌 18:47 開始 修文街81號"},{"text":"🚌 18:50 結束 修文街79號"},{"text":"共收2點"}]], ["20:20","20:37",[{"text":"🚌 20:37 開始 成功二路70號(7-11門口)"},{"text":"🚌 20:52 結束 正勤路41號(獅甲國宅大門口)"},{"text":"共收3點"}]]],
-  "6":  [["15:35","15:55",[{"text":"🚌 16:12 開始 濂江街與一心一路306巷"},{"text":"🚌 16:48 結束 汕頭街81號"},{"text":"共收9點"}]], ["18:10","18:30",[{"text":"🚌 18:58 開始 廣東三街與和平二路227巷口"},{"text":"🚌 19:36 結束 一心一路與天山路"},{"text":"共收14點"}]], ["20:30","20:48",[{"text":"🚌 21:07 開始 長江街與天山路口"},{"text":"🚌 21:17 結束 嘉陵街與天山路口"},{"text":"共收3點"}]]],
-  "3":  [["15:45","16:00",[{"text":"🚌 16:00 開始 中華五路1332巷口"},{"text":"🚌 16:23 結束 三多三路155號"},{"text":"共收7點"},{"text":"🚌 第2台 16:46 開始 修文街239巷口"},{"text":"🚌 第2台 16:53 結束 修文街與林森三路112巷口"},{"text":"第2台共收3點"}]], ["18:15","18:35",[{"text":"🚌 18:35 開始 一心一路與沱江街口"},{"text":"🚌 18:59 結束 大禹街1號旁"},{"text":"共收6點"},{"text":"※ 一德路與修文一街吃袋子"}]], ["20:20","20:45",[{"text":"🚌 21:01 開始 復興三路417巷(蔡皮膚科)"},{"text":"🚌 21:17 結束 修文街194巷口"},{"text":"共收6點"}]]],
-  "7":  [["15:35","15:54",[{"text":"🚌 16:20 開始 公正路253號"},{"text":"🚌 16:45 結束 瑞發街37號"},{"text":"共收12點"}]], ["18:05","18:24",[{"text":"🚌 18:24 開始 瑞西街20巷"},{"text":"🚌 18:43 結束 瑞祥街與武德街口"},{"text":"共收12點"}]], ["20:35","20:53",[{"text":"🚌 20:53 開始 二聖路207號"},{"text":"🚌 21:13 結束 瑞興街與瑞恩街口"},{"text":"共收9點"}]]],
-  "4":  [["15:35","16:02",[{"text":"🚌 15:55 開始/結束 中華五路965號(正勤社區·此段僅1點)"},{"text":"🚌 16:25 續收開始 三多二路與桂林街口(先跑3區後回頭)"},{"text":"🚌 16:43 結束 二聖二路梧州街口"},{"text":"共收9點"}]], ["18:23","18:39",[{"text":"🚌 19:06 開始 民權二路622巷底"},{"text":"🚌 19:28 結束 育德路16巷"},{"text":"共收7點"}]], ["20:40","20:59",[{"text":"🚌 21:13 開始 二聖二路6巷口"},{"text":"🚌 21:32 結束 桂林街134巷口"},{"text":"共收9點"}]]],
-  "8":  [["15:35","16:00",[{"text":"🚌 16:00 開始 二聖一路166號"},{"text":"🚌 16:09 結束 英明路5巷口"},{"text":"共收9點"}]], ["18:15","18:20",[{"text":"🚌 18:20 開始 英德街與建華街口"},{"text":"🚌 18:29 結束 英德街757巷前"},{"text":"🚌 19:10 續收開始 武慶一路44號(先跑5區後回頭)"},{"text":"🚌 19:21 結束 公正路11號"},{"text":"共收10點"}]], ["20:25","20:44",[{"text":"🚌 20:44 開始 英明一路43巷口"},{"text":"🚌 20:51 結束 英明一路131巷口"},{"text":"共收5點"}]]],
-  "9":  [["15:50","16:08"], ["17:55","18:00",[{"text":"🚌 18:26 開始 瑞北路120巷口(佳加藥局）","img":"img/photo-01.jpg"},{"text":"🚌 18:55 結束 武營路47巷尾(遠境馳名大樓)","img":"img/photo-02.jpg"},{"text":"還剩6點"}]],      ["20:42","20:54",[{"text": "🚌 20:59 開始 永豐路126巷口(瑞豐復健診所）", "img": "img/photo-03.jpg"}, {"text": "🚌 21:12 結束 瑞北路與瑞泰街口(東方黎明）", "img": "img/photo-04.jpg"},{"text":"還剩8點"}]]],
+  "1":  [["15:50","16:09",[{"text":"🚌 16:14 開始 復興三路146號"},{"text":"🚌 16:20 結束 復興三路192號"},{"text":"🚌 16:37 續收開始 一心二路2巷口(先跑2區後回頭)"},{"text":"🚌 16:43 結束 一心二路54巷"},{"text":"接駁2"},{"text":"共收6點"}]], ["18:15","18:37",[{"text":"🚌 18:37 開始 聖德二街與台鋁7巷口"},{"text":"🚌 18:44 結束 聖德二街與台鋁1巷口"},{"text":"接駁2"},{"text":"共收4點"}]], ["20:25","20:45",[{"text":"🚌 20:45 開始 中華五路969巷10號(南側門)"},{"text":"🚌 20:55 結束 中華五路969巷3號(東側門)"},{"text":"🚌 21:24 續收開始 一心二路2巷口(先跑3區後回頭)"},{"text":"🚌 21:35 結束 復興三路192號"},{"text":"接駁1"},{"text":"共收9點"}]]],
+  "5":  [["15:35","15:50",[{"text":"🚌 15:50 開始 凱得街174號"},{"text":"🚌 16:10 結束 育樂路154-1號邊"},{"text":"接駁1"},{"text":"共收5點"}]], ["18:00","18:33",[{"text":"🚌 18:33 開始 廣西路1巷口"},{"text":"🚌 18:54 結束 和平二路123號前"},{"text":"接駁1"},{"text":"共收8點"}]], ["20:35","20:50",[{"text":"🚌 21:15 開始 英明路19巷與英義街口"},{"text":"🚌 21:29 結束 英明路145巷口"},{"text":"接駁2"},{"text":"共收2點"}]]],
+  "2":  [["15:48","16:05", [{"text":"🚌 16:28 開始 復興三路與台鋁14巷口(老北京炸醬麵旁）"},{"text":"🚌 16:30 結束 復興三路155號前(八方雲集旁)"},{"text":"接駁2"},{"text":"只收2點，還剩5點"}]], ["18:10","18:31",[{"text":"🚌 18:47 開始 修文街81號"},{"text":"🚌 18:50 結束 修文街79號"},{"text":"接駁2"},{"text":"共收2點"}]], ["20:20","20:37",[{"text":"🚌 20:37 開始 成功二路70號(7-11門口)"},{"text":"🚌 20:52 結束 正勤路41號(獅甲國宅大門口)"},{"text":"接駁2"},{"text":"共收3點"}]]],
+  "6":  [["15:35","15:55",[{"text":"🚌 16:12 開始 濂江街與一心一路306巷"},{"text":"🚌 16:48 結束 汕頭街81號"},{"text":"接駁1"},{"text":"共收9點"}]], ["18:10","18:30",[{"text":"🚌 18:58 開始 廣東三街與和平二路227巷口"},{"text":"🚌 19:36 結束 一心一路與天山路"},{"text":"接駁2"},{"text":"共收14點"}]], ["20:30","20:48",[{"text":"🚌 21:07 開始 長江街與天山路口"},{"text":"🚌 21:17 結束 嘉陵街與天山路口"},{"text":"接駁1"},{"text":"共收3點"}]]],
+  "3":  [["15:45","16:00",[{"text":"🚌 16:00 開始 中華五路1332巷口"},{"text":"🚌 16:23 結束 三多三路155號"},{"text":"接駁1"},{"text":"共收7點"},{"text":"🚌 16:46 開始 修文街239巷口"},{"text":"🚌 16:53 結束 修文街與林森三路112巷口"},{"text":"接駁2"},{"text":"共收3點"}]], ["18:15","18:35",[{"text":"🚌 18:35 開始 一心一路與沱江街口"},{"text":"🚌 18:59 結束 大禹街1號旁"},{"text":"接駁1"},{"text":"共收6點"}]], ["20:20","20:45",[{"text":"🚌 21:01 開始 復興三路417巷(蔡皮膚科)"},{"text":"🚌 21:17 結束 修文街194巷口"},{"text":"接駁1"},{"text":"共收6點"}]]],
+  "7":  [["15:35","15:54",[{"text":"🚌 16:20 開始 公正路253號"},{"text":"🚌 16:45 結束 瑞發街37號"},{"text":"接駁2"},{"text":"共收12點"}]], ["18:05","18:24",[{"text":"🚌 18:24 開始 瑞西街20巷"},{"text":"🚌 18:43 結束 瑞祥街與武德街口"},{"text":"接駁2"},{"text":"共收12點"}]], ["20:35","20:53",[{"text":"🚌 20:53 開始 二聖路207號"},{"text":"🚌 21:13 結束 瑞興街與瑞恩街口"},{"text":"接駁2"},{"text":"共收9點"}]]],
+  "4":  [["15:35","16:02",[{"text":"🚌 15:55 開始/結束 中華五路965號(正勤社區·此段僅1點)"},{"text":"🚌 16:25 續收開始 三多二路與桂林街口(先跑3區後回頭)"},{"text":"🚌 16:43 結束 二聖二路梧州街口"},{"text":"接駁1"},{"text":"共收9點"}]], ["18:23","18:39",[{"text":"🚌 19:06 開始 民權二路622巷底"},{"text":"🚌 19:28 結束 育德路16巷"},{"text":"接駁1"},{"text":"共收7點"}]], ["20:40","20:59",[{"text":"🚌 21:13 開始 二聖二路6巷口"},{"text":"🚌 21:32 結束 桂林街134巷口"},{"text":"接駁2"},{"text":"共收9點"}]]],
+  "8":  [["15:35","16:00",[{"text":"🚌 16:00 開始 二聖一路166號"},{"text":"🚌 16:09 結束 英明路5巷口"},{"text":"接駁2"},{"text":"共收9點"}]], ["18:15","18:20",[{"text":"🚌 18:20 開始 英德街與建華街口"},{"text":"🚌 18:29 結束 英德街757巷前"},{"text":"🚌 19:10 續收開始 武慶一路44號(先跑5區後回頭)"},{"text":"🚌 19:21 結束 公正路11號"},{"text":"接駁1"},{"text":"共收10點"}]], ["20:25","20:44",[{"text":"🚌 20:44 開始 英明一路43巷口"},{"text":"🚌 20:51 結束 英明一路131巷口"},{"text":"接駁1"},{"text":"共收5點"}]]],
+  "9":  [["15:50","16:08"], ["17:55","18:00",[{"text":"🚌 18:26 開始 瑞北路120巷口(佳加藥局）","img":"img/photo-01.jpg"},{"text":"🚌 18:55 結束 武營路47巷尾(遠境馳名大樓)","img":"img/photo-02.jpg"},{"text":"接駁3"},{"text":"共收13點"},{"text":"還剩6點"}]],      ["20:42","20:54",[{"text": "🚌 20:59 開始 永豐路126巷口(瑞豐復健診所）", "img": "img/photo-03.jpg"}, {"text": "🚌 21:12 結束 瑞北路與瑞泰街口(東方黎明）", "img": "img/photo-04.jpg"},{"text":"接駁3"},{"text":"共收5點"},{"text":"還剩8點"}]]],
   "13": [["15:58","16:05"], ["18:23","18:30"], ["20:46","20:50","出發時跟車出門"]],
-  "10": [["15:45","16:05",[{"text":"🚌 16:33 開始 忠誠路與瑞田街口(瑞祥高中附近)","nav":"https://maps.app.goo.gl/ST9N8jAtxNBxEA897"},{"text":"🚌 16:53 結束 瑞賢街與忠誠路329巷尾","nav":"https://maps.app.goo.gl/J73yz59q1P62am2E7"},{"text":"還剩1點"}]], ["18:09","18:30",[{"text":"🚌 19:16 開始 瑞政街與崗山街口"},{"text":"🚌 19:36 結束 瑞南街162號"},{"text":"共收8點"}]], ["20:44","20:55"]],
+  "10": [["15:45","16:05",[{"text":"🚌 16:33 開始 忠誠路與瑞田街口(瑞祥高中附近)","nav":"https://maps.app.goo.gl/ST9N8jAtxNBxEA897"},{"text":"🚌 16:53 結束 瑞賢街與忠誠路329巷尾","nav":"https://maps.app.goo.gl/J73yz59q1P62am2E7"},{"text":"接駁3"},{"text":"共收6點"},{"text":"還剩1點"}]], ["18:09","18:30",[{"text":"🚌 19:16 開始 瑞政街與崗山街口"},{"text":"🚌 19:36 結束 瑞南街162號"},{"text":"接駁2"},{"text":"共收8點"}]], ["20:44","20:55"]],
   "14": [["15:38","15:55"], ["18:29","18:35"], ["20:45","20:53"]],
-  "11": [["15:41","16:05",[{"text":"🚌 16:05 開始 崗山中街160巷口"},{"text":"🚌 16:25 結束 崗山南街445巷口"},{"text":"共收7點"}]], ["18:14","18:33",[{"text":"🚌 19:02 開始 公正路與武慶一路公園"},{"text":"🚌 19:21 結束 班超路18巷口"},{"text":"共收8點"}]], ["20:43","21:00",[{"text":"🚌 21:23 開始 崗山南街與福祥街"},{"text":"🚌 21:35 結束 福祥街瑞祥國小前"},{"text":"共收5點"}]]],
-  "15": [["15:45","15:55",[{"text":"🚌 15:55 開始 德昌路與鎮中路口"},{"text":"🚌 16:18 結束 和昌街與明衙路口"},{"text":"🚌 16:48 續收開始 草衙中街93巷與89巷口(先跑16區後回頭)"},{"text":"🚌 17:05 結束 衙東街與衙國一街"},{"text":"共收11點"}]], ["18:16","18:25",[{"text":"🚌 19:12 開始 明衙路與明正一街口"},{"text":"🚌 19:45 結束 德昌路7巷口"},{"text":"共收8點"}]], ["20:34","20:45"]],
-  "12": [["15:35","15:53",[{"text":"🚌 15:53 開始 翠亨北路390號(原住民服務中心)"},{"text":"🚌 15:57 結束 翠村街與凱旋四路428巷口"},{"text":"共收3點"}]], ["18:15","18:28"], ["20:33","20:40",[{"text":"出發時跟車出門"},{"text":"🚌 20:52 開始 鎮昌7巷與翠亨北路口"},{"text":"🚌 21:06 結束 翠亨北路399巷"},{"text":"共收5點"},{"text":"📦 三合一下袋處　鎮興路與鎮昌五巷口(鎮昌鎮榮里聯合活動中心)"}]]],
-  "16": [["15:55","16:00",[{"text":"🚌 16:22 開始 佛佑路與佛公路36巷口"},{"text":"🚌 16:40 結束 佛佑路與后安路"},{"text":"共收5點"}]], ["18:27","18:35",[{"text":"出發時跟車出門"},{"text":"🚌 18:35 開始 翠亨南路與中平路"},{"text":"🚌 18:47 結束 草衙二路與佛宗街"},{"text":"共收7點"}]], ["20:40","20:50"]],
-  "17": [["","15:55"], ["","18:30",[{"text":"🚌 18:50 開始 佛西街與后安路"},{"text":"🚌 19:05 結束 后平路120巷"},{"text":"共收7點"}]], ["","20:40"]],
+  "11": [["15:41","16:05",[{"text":"🚌 16:05 開始 崗山中街160巷口"},{"text":"🚌 16:25 結束 崗山南街445巷口"},{"text":"接駁3"},{"text":"共收7點"}]], ["18:14","18:33",[{"text":"🚌 19:02 開始 公正路與武慶一路公園"},{"text":"🚌 19:19 結束 保泰路15巷口"},{"text":"接駁3"},{"text":"共收7點"}]], ["20:43","21:00",[{"text":"🚌 21:23 開始 崗山南街與福祥街"},{"text":"🚌 21:35 結束 福祥街瑞祥國小前"},{"text":"接駁3"},{"text":"共收5點"}]]],
+  "15": [["15:45","15:55",[{"text":"🚌 15:55 開始 德昌路與鎮中路口"},{"text":"🚌 16:18 結束 和昌街與明衙路口"},{"text":"🚌 16:48 續收開始 草衙中街93巷與89巷口(先跑16區後回頭)"},{"text":"🚌 17:05 結束 衙東街與衙國一街"},{"text":"接駁3"},{"text":"共收11點"}]], ["18:16","18:25",[{"text":"🚌 19:12 開始 明衙路與明正一街口"},{"text":"🚌 19:45 結束 德昌路7巷口"},{"text":"接駁3"},{"text":"共收8點"}]], ["20:34","20:45"]],
+  "12": [["15:35","15:53",[{"text":"🚌 15:53 開始 翠亨北路390號(原住民服務中心)"},{"text":"🚌 15:57 結束 翠村街與凱旋四路428巷口"},{"text":"接駁2"},{"text":"共收3點"}]], ["18:15","18:28"], ["20:33","20:40",[{"text":"出發時跟車出門"},{"text":"🚌 20:52 開始 鎮昌7巷與翠亨北路口"},{"text":"🚌 21:06 結束 翠亨北路399巷"},{"text":"接駁2"},{"text":"共收5點"},{"text":"📦 三合一下袋處　鎮興路與鎮昌五巷口(鎮昌鎮榮里聯合活動中心)"}]]],
+  "16": [["15:55","16:00",[{"text":"🚌 16:22 開始 佛佑路與佛公路36巷口"},{"text":"🚌 16:40 結束 佛佑路與后安路"},{"text":"接駁3"},{"text":"共收5點"}]], ["18:27","18:35",[{"text":"出發時跟車出門"},{"text":"🚌 18:35 開始 翠亨南路與中平路"},{"text":"🚌 18:47 結束 草衙二路與佛宗街"},{"text":"接駁3"},{"text":"共收7點"}]], ["20:40","20:50"]],
+  "17": [["15:45","15:55"], ["18:23","18:30",[{"text":"🚌 18:50 開始 佛西街與后安路"},{"text":"🚌 19:05 結束 后平路120巷"},{"text":"接駁3"},{"text":"共收7點"}]], ["20:23","20:40"]],
 };
 const kitchenData = {
   "草衙": ["16:15","19:00","21:15"],
@@ -2263,6 +2491,7 @@ const shuttleBusData = {
   "一四2台": {
     "第一車次（出車 15:40）": [
       { addr: "翠亨北路390號(原住民服務中心)", time: "15:53", group: "12區" },
+      { addr: "翠亨北路392號(無障礙之家)", time: "15:54" },
       { addr: "翠村街與凱旋四路428巷口", time: "15:57" },
       { addr: "復興三路146號", time: "16:14", group: "1區" },
       { addr: "復興三路160號", time: "16:17" },
@@ -2297,6 +2526,9 @@ const shuttleBusData = {
       { addr: "中華五路1007巷口", time: "20:47" },
       { addr: "正勤路41號(獅甲國宅大門口)", time: "20:52" },
       { addr: "鎮昌7巷與翠亨北路口", time: "20:52", group: "12區" },
+      { addr: "翠和街與翠亨北路口", time: "20:57" },
+      { addr: "翠禮街與翠亨北路口", time: "21:00" },
+      { addr: "翠福街與翠亨北路口", time: "21:03" },
       { addr: "翠亨北路399巷", time: "21:06" },
       { addr: "二聖二路6巷口", time: "21:13", group: "4區" },
       { addr: "二聖二路與桂林街口", time: "21:16" },
@@ -2346,9 +2578,8 @@ const shuttleBusData = {
       { addr: "崗山南街445巷口", time: "19:13" },
       { addr: "保泰路55巷口", time: "19:17" },
       { addr: "保泰路15巷口", time: "19:19" },
-      { addr: "班超路18巷口", time: "19:21" },
     ],
-    "第三車次（出車 20:40）": [
+    "第三車次（出車 20:45）": [
       { addr: "永豐路126巷口", time: "20:59", group: "9區" },
       { addr: "瑞泰街與瑞隆路194巷", time: "21:02" },
       { addr: "瑞泰街71巷口", time: "21:05" },
@@ -2476,7 +2707,7 @@ const shuttleBusData = {
     ],
   },
   "二五3台": {
-    "第一車次": [
+    "第一車次（出車 15:50）": [
       { addr: "德昌路與鎮中路口", time: "15:55", group: "15區" },
       { addr: "德昌路110號對面", time: "15:59" },
       { addr: "德昌路59巷口", time: "16:01" },
@@ -2494,7 +2725,7 @@ const shuttleBusData = {
       { addr: "草衙二路與明衙路83巷口", time: "16:58" },
       { addr: "衙東街與衙國一街", time: "17:05" },
     ],
-    "第二車次": [
+    "第二車次（出車 18:28）": [
       { addr: "翠亨南路與中平路", time: "18:35", group: "16區" },
       { addr: "中平路42號", time: "18:37" },
       { addr: "中平路100號", time: "18:38" },
@@ -2519,7 +2750,7 @@ const shuttleBusData = {
       { addr: "德昌路7巷口", time: "19:45" },
       { addr: "※ 15區結束後去南區卸貨回廠" },
     ],
-    "第三車次": [
+    "第三車次（場內,不出車）": [
       { addr: "※ 幫場內出貨一台(無固定站點)" },
     ],
   },
@@ -2889,7 +3120,7 @@ function selectCategory(cat, btn){
   document.getElementById('card').classList.remove('show');
   document.getElementById('empty').style.display = 'block';
   localStorage.setItem('lastCategory', cat);
-  localStorage.removeItem('lastItem');
+  localStorage.removeItem('lastItem:' + cat);
   currentSelectedKey = null;
   stopCountdown();
   const dsNote = document.getElementById('daySwitchNote');
@@ -2953,7 +3184,7 @@ function renderPicker(){
 
   // 還原上次選取(依 data-key 找按鈕,不受分組標題影響)
   // 回收車限定:若上次選的區今天不是對應日(星期一四/二五),且僅在剛開啟網頁時,自動切換到同組
-  let targetKey = !q ? localStorage.getItem('lastItem') : currentSelectedKey;
+  let targetKey = !q ? localStorage.getItem('lastItem:' + currentCategory) : currentSelectedKey;
   let daySwitchFrom = null;
   if(!q && autoScrollOnOpen && currentCategory === '回收車' && targetKey && zonePairs[targetKey]){
     const today = todayZoneGroup();
@@ -2968,12 +3199,20 @@ function renderPicker(){
     if(btn){
       if(!q) selectItem(targetKey, btn);
       else btn.classList.add('active');
-      // 剛開啟網頁時自動捲到時間卡片(僅一次),之後手動點選不會捲動
+      // 剛開啟網頁時捲動還原(僅一次):地址類分頁(三配套/日配套/接駁車)優先還原精確捲動位置,
+      // 其他分頁(垃圾車/回收車/廚餘車)維持捲到時間卡片開頭
       if(autoScrollOnOpen){
         autoScrollOnOpen = false;
+        const cfgNow = categories[currentCategory];
+        const savedScroll = (cfgNow && cfgNow.type === 'address')
+          ? localStorage.getItem('scrollPos:' + currentCategory + ':' + targetKey) : null;
         setTimeout(()=>{
-          const card = document.getElementById('cardTitle');
-          if(card) card.scrollIntoView({ behavior:'smooth', block:'start' });
+          if(savedScroll !== null){
+            window.scrollTo({ top: parseInt(savedScroll, 10), behavior: 'auto' });
+          } else {
+            const card = document.getElementById('cardTitle');
+            if(card) card.scrollIntoView({ behavior:'smooth', block:'start' });
+          }
         }, 250);
       }
       // 顯示「已切換至同組」提示,可點擊改看原本那區
@@ -3011,6 +3250,18 @@ document.getElementById('searchBox').addEventListener('input', ()=>{
     renderPicker();
   }
 });
+
+// 記憶地址類分頁(三配套/日配套/接駁車)的捲動位置,下次開啟App還原到同一處
+let scrollSaveTimer = null;
+window.addEventListener('scroll', ()=>{
+  clearTimeout(scrollSaveTimer);
+  scrollSaveTimer = setTimeout(()=>{
+    const cfg = categories[currentCategory];
+    if(cfg && cfg.type === 'address' && currentSelectedKey){
+      localStorage.setItem('scrollPos:' + currentCategory + ':' + currentSelectedKey, String(window.scrollY));
+    }
+  }, 200);
+}, { passive: true });
 
 // 顯示某路線底下的「任務」選單(例如 西配 → 定點收運 / 髒亂點)
 function renderTaskPicker(routeKey, taskGroup){
@@ -3142,6 +3393,15 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
 
   function updateProgress(){ /* 進度表已移除 */ }
 
+  // 判斷地址開頭是否有「1. 」數字編號或「＊」髒亂點記號,若有則直接用來當圓圈徽章(不再另外自動編號造成兩套數字打架)
+  function parseAddrType(addr){
+    let m;
+    if((m = addr.match(/^(\d+)\.\s*(.*)$/))) return { type:'num', badge:m[1], text:m[2] };
+    if((m = addr.match(/^[＊*]\s*(.*)$/))) return { type:'star', badge:'🧹', text:m[1] };
+    if(addr.startsWith('※')) return { type:'note', badge:'📝', text:addr };
+    return { type:'plain', badge:null, text:addr };
+  }
+
   // 依分段重新編號(遇到分段標題就重新從 1 開始數)
   function renumber(){
     let counter = 0;
@@ -3150,7 +3410,10 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
       if(!el.classList.contains('addr-row')) return;
       counter++;
       const addr = el.getAttribute('data-addr');
-      if(!doneMap[addr]) el.querySelector('.addr-check').textContent = String(counter);
+      if(!doneMap[addr]){
+        const parsed = parseAddrType(addr);
+        el.querySelector('.addr-check').textContent = parsed.badge || String(counter);
+      }
     });
   }
 
@@ -3222,7 +3485,8 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
       groupCounter = 0;
     }
     groupCounter++;
-    const displayNum = groupCounter;
+    const parsedType = parseAddrType(info.addr);
+    const displayNum = parsedType.badge || groupCounter;
 
     const prevInfo = i > 0 ? itemsByAddr.get(order[i-1]) : null;
     const nextInfo = i < order.length-1 ? itemsByAddr.get(order[i+1]) : null;
@@ -3232,16 +3496,21 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
     const row = document.createElement('div');
     row.className = 'addr-row' + (doneMap[addr] ? ' done' : '');
     row.setAttribute('data-addr', addr);
-    const addrParts = info.addr.match(/^(.*?)\s*(\(.*\))\s*$/);
-    const mainText = addrParts ? addrParts[1] : info.addr;
+    const addrParts = parsedType.text.match(/^(.*?)\s*(\(.*\))\s*$/);
+    const mainText = addrParts ? addrParts[1] : parsedType.text;
     const noteText = addrParts ? addrParts[2] : '';
-    const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(mainText);
+    const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('高雄市前鎮區' + mainText
+      .replace(/與/g, '&')
+      .replace(/巷口$/, '巷').replace(/路口$/, '路')
+      .replace(/街口$/, '街')
+      .replace(/(前|旁|尾|邊|對面)$/, ''));
+    const isRealAddr = !mainText.startsWith('※') && /[路街巷弄號]/.test(mainText);
     const orderBtnsHtml = readOnly ? '' : `<span class="order-btns"><button class="ord-btn ord-up" ${isFirstInGroup ? 'disabled' : ''}>▲</button><button class="ord-btn ord-down" ${isLastInGroup ? 'disabled' : ''}>▼</button></span>`;
-    row.innerHTML = `${orderBtnsHtml}<span class="addr-check">${doneMap[addr] ? '✓' : displayNum}</span><div class="addr-content"><div class="addr-line-main">${mainText}</div>${noteText ? `<div class="addr-line-note">${noteText}</div>` : ''}${info.time ? `<div class="addr-time">${info.time}</div>` : ''}</div><span class="nav-link">🗺️ 導航</span>`;
+    row.innerHTML = `${orderBtnsHtml}<span class="addr-check${parsedType.type === 'star' ? ' type-star' : ''}${parsedType.type === 'note' ? ' type-note' : ''}">${doneMap[addr] ? '✓' : displayNum}</span><div class="addr-content"><div class="addr-line-main">${mainText}</div>${noteText ? `<div class="addr-line-note">${noteText}</div>` : ''}${info.time ? `<div class="addr-time">${info.time}</div>` : ''}</div>${isRealAddr ? `<span class="nav-link">🗺️ 導航</span>` : ''}`;
     const checkEl = row.querySelector('.addr-check');
     const navEl = row.querySelector('.nav-link');
 
-    navEl.onclick = (e)=>{
+    if(navEl) navEl.onclick = (e)=>{
       e.stopPropagation();
       window.open(mapUrl, '_blank');
     };
@@ -3266,7 +3535,7 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
       row.onclick = ()=>{
         const isDone = !row.classList.contains('done');
         row.classList.toggle('done');
-        checkEl.textContent = isDone ? '✓' : String(displayIndexOf(row));
+        checkEl.textContent = isDone ? '✓' : (parsedType.badge || String(displayIndexOf(row)));
         doneMap[addr] = isDone;
         saveDone();
         updateProgress();
@@ -3327,7 +3596,7 @@ function selectItem(key, btn){
   });
 
   document.getElementById('empty').style.display = 'none';
-  localStorage.setItem('lastItem', key);
+  localStorage.setItem('lastItem:' + currentCategory, key);
 
   const card = document.getElementById('card');
   card.classList.add('show');
@@ -3384,13 +3653,26 @@ function selectItem(key, btn){
 
         const endT = (recycleTripEndTimes[key] || [])[i];
         let hitEnd = false;
-        if(endT && !note.some(n => n.text.includes('收到結束'))){
+        if(!note.some(n => n.text.includes('收到結束'))){
           const endMin = toMin(endT);
-          hitEnd = endMin !== null && note.some(n => {
+          const hitByTime = endT && endMin !== null && note.some(n => {
             if(!/結束/.test(n.text)) return false;
             const tm = n.text.match(/(\d{1,2}:\d{2})/);
             return tm && Math.abs(toMin(tm[1]) - endMin) <= 1;
           });
+          // 地址比對:接駁最後一個「結束」站是否就是官方沿線該趟的最後一站(比純時間容差更準確,避免5分鐘內的鄰站誤判)
+          let hitByAddr = false;
+          if(officialLineData[key]){
+            const tripStops = splitOfficialTrips(officialLineData[key].stops)[i];
+            const lastEndNote = [...note].reverse().find(n => /結束/.test(n.text));
+            if(tripStops && tripStops.length && lastEndNote){
+              const officialLast = tripStops[tripStops.length - 1][1];
+              const endAddr = lastEndNote.text.replace(/^🚌\s*/, '').replace(/^\d{1,2}:\d{2}\s*結束\s*/, '').trim();
+              const norm = s => s.replace(/[（(].*?[）)]/g, '').trim();
+              hitByAddr = norm(endAddr).includes(norm(officialLast)) || norm(officialLast).includes(norm(endAddr));
+            }
+          }
+          hitEnd = hitByTime || hitByAddr;
           if(hitEnd) note = [...note, { text: '🚌 收到結束' }];
         }
 
@@ -3407,11 +3689,18 @@ function selectItem(key, btn){
             const tm = lastEndText && lastEndText.match(/(\d{1,2}:\d{2})/);
             if(tm){
               const shuttleEndMin = toMin(tm[1]);
+              // 地址若能完全對上官方站名,優先採用地址比對(避免時間剛好平手選錯站)
+              const addrMatchIdx = tripStops.findIndex(s => lastEndText.includes(s[1]));
               let bestIdx = -1, bestDiff = Infinity;
-              tripStops.forEach((s, si) => {
-                const diff = Math.abs(toMin(s[0]) - shuttleEndMin);
-                if(diff < bestDiff){ bestDiff = diff; bestIdx = si; }
-              });
+              if(addrMatchIdx > -1){
+                bestIdx = addrMatchIdx;
+                bestDiff = Math.abs(toMin(tripStops[addrMatchIdx][0]) - shuttleEndMin);
+              } else {
+                tripStops.forEach((s, si) => {
+                  const diff = Math.abs(toMin(s[0]) - shuttleEndMin);
+                  if(diff < bestDiff){ bestDiff = diff; bestIdx = si; }
+                });
+              }
               if(bestIdx > -1 && bestDiff <= 5){
                 const remaining = tripStops.length - (bestIdx + 1);
                 if(remaining > 0 && !note.some(n => n.text.includes('還剩'))){
@@ -3448,10 +3737,37 @@ function selectItem(key, btn){
           <div class="time-pair">${timeHTML}</div>
           ${(!Array.isArray(note) && note) ? `<div class="note ${img ? 'note-link' : ''}">${note}</div>` : ''}
           ${outerReminder ? `<div class="note">${outerReminder.text}</div>` : ''}
+          ${(currentCategory === '垃圾車' && truckKitchenData[key] && truckKitchenData[key][i]) ? (() => {
+            const kd = truckKitchenData[key][i];
+            const colorLabel = { gray: '灰', green: '綠', red: '紅' };
+            let rows = '';
+            if(kd.bins && kd.bins.length){
+              let binsHtml = kd.bins.map((b, bi) => {
+                let s = `${bi > 0 ? '<span class="bin-sep"></span>' : ''}<span class="bin-dot bin-dot-${b.color}">●</span> ${colorLabel[b.color] || b.color}×${b.count}`;
+                if(b.note) s += `<span class="k-note">(${b.note})</span>`;
+                return s;
+              }).join('');
+              rows += `<div class="k-line"><span class="k-icon">🗑️</span><span class="k-label">帶桶</span><span class="k-value">${binsHtml}</span></div>`;
+            }
+            const drops = kd.drops || [];
+            drops.forEach((d, di) => {
+              const label = drops.length > 1 ? `下桶${di + 1}` : '下桶';
+              rows += `<div class="k-line"><span class="k-icon">📍</span><span class="k-label">${label}</span><span class="k-value k-value-addr">${d.addr}</span><button class="kitchen-nav-icon" type="button" data-q="${d.addr}">🧭</button></div>`;
+            });
+            if(kd.leftover) rows += `<div class="k-line"><span class="k-icon">↩️</span><span class="k-label">未下桶</span><span class="k-value k-value-addr">${kd.leftover}</span></div>`;
+            (kd.give || []).forEach(g => {
+              rows += `<div class="k-line"><span class="k-icon">🏪</span><span class="k-label">給店家</span><span class="k-value k-value-stack"><span class="k-give-count"><span class="bin-dot bin-dot-gray">●</span> ${g.label}</span><span class="k-give-addr">${g.addr}</span></span><button class="kitchen-nav-icon" type="button" data-q="${g.addr}">🧭</button></div>`;
+            });
+            if(kd.opNote) rows += `<div class="k-line"><span class="k-icon">⚠️</span><span class="k-label">注意</span><span class="k-value k-value-addr">${kd.opNote}</span></div>`;
+            return `<div class="kitchen-block">
+              <button class="kitchen-toggle" type="button"><span>🗑️ 廚餘桶資訊</span><span class="shuttle-arrow">▸</span></button>
+              <div class="kitchen-detail">${rows}</div>
+            </div>`;
+          })() : ''}
         </div>
         ${Array.isArray(note) && note.length ? (() => {
           // 分四類渲染:有時間的站點列(可導航)、無時間的自由文字(※提醒/跟車出門)、統計徽章(共收/還剩/起點站/已收到底)、附加地點(下袋處等,放在徽章下方,可導航)
-          const isStat = t => /^(🚏|✓|🚌|共收|還剩|只收|起點站|第\d+台共收)/.test(t);
+          const isStat = t => /^(🚏|✓|🚌|共收|還剩|只收|起點站|第\d+台共收|接駁\d)/.test(t);
           const isReminder = t => /^※/.test(t) || t === '出發時跟車出門';
           const stopIdx = [], freeIdx = [], statIdx = [], tailIdx = [];
           note.forEach((n, idx) => {
@@ -3471,21 +3787,29 @@ function selectItem(key, btn){
           const indicatorIdx = statIdx.filter(idx => isIndicator(note[idx].text));
           const countIdx = statIdx.filter(idx => !isIndicator(note[idx].text));
           const pillRow = idxArr => idxArr.length ? `<div class="shuttle-stats">${idxArr.map(idx => `<span class="stat-pill ${statClass(note[idx].text)}">${note[idx].text}</span>`).join('')}</div>` : '';
-          // 共收+還剩成對出現時圈在一起顯示;只有共收(無還剩)則單獨顯示
-          const countParts = [];
+          // 共收+還剩成對出現時圈在一起顯示;只有共收(無還剩)則單獨顯示;
+          // 每個「接駁N」標籤代表一組新的接駁車記錄,各自獨立一行,不同組不會擠在同一排
+          const countLines = [];
+          let curLine = [];
           for(let ci = 0; ci < countIdx.length; ci++){
             const idx = countIdx[ci];
             const t = note[idx].text;
+            if(/^接駁\d$/.test(t)){
+              if(curLine.length) countLines.push(curLine);
+              curLine = [`<span class="car-tag">🚌 ${t}</span>`];
+              continue;
+            }
             const nextIdx = countIdx[ci + 1];
             const pairsWithNext = /^(共收|第\d+台共收)/.test(t) && nextIdx !== undefined && /^還剩/.test(note[nextIdx].text);
             if(pairsWithNext){
-              countParts.push(`<span class="stat-pill stat-combo"><span class="combo-count">${t}</span><span class="combo-sep">·</span><span class="combo-remain">${note[nextIdx].text}</span></span>`);
+              curLine.push(`<span class="stat-pill stat-combo"><span class="combo-count">${t}</span><span class="combo-sep">·</span><span class="combo-remain">${note[nextIdx].text}</span></span>`);
               ci++;
             } else {
-              countParts.push(`<span class="stat-pill ${statClass(t)}">${t}</span>`);
+              curLine.push(`<span class="stat-pill ${statClass(t)}">${t}</span>`);
             }
           }
-          const countHtml = countParts.length ? `<div class="shuttle-stats">${countParts.join('')}</div>` : '';
+          if(curLine.length) countLines.push(curLine);
+          const countHtml = countLines.map(line => `<div class="shuttle-stats">${line.join('')}</div>`).join('');
           const statHtml = (indicatorIdx.length || countIdx.length)
             ? `<div class="stat-group">${pillRow(indicatorIdx)}${countHtml}</div>` : '';
           const tailHtml = tailIdx.length ? `<div class="shuttle-tail">${tailIdx.map(idx => { const n = note[idx]; return `
@@ -3510,6 +3834,27 @@ function selectItem(key, btn){
         if(noteEl) noteEl.onclick = ()=> showImg(note, img);
       }
 
+      // 廚餘資訊導航:去除括號註記,只搜地址
+      row.querySelectorAll('.kitchen-nav-icon').forEach(btn=>{
+        btn.onclick = (e)=>{
+          e.stopPropagation();
+          const q = btn.getAttribute('data-q').replace(/[（(].*?[）)]/g, '').replace(/與/g, '&')
+            .replace(/巷口$/, '巷').replace(/路口$/, '路').replace(/街口$/, '街').replace(/(前|旁|尾|邊|對面)$/, '').trim();
+          window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('高雄市前鎮區' + q), '_blank');
+        };
+      });
+
+      // 廚餘資訊:預設收合,點擊展開
+      const kToggle = row.querySelector('.kitchen-toggle');
+      if(kToggle){
+        const kDetail = row.querySelector('.kitchen-detail');
+        kToggle.onclick = (e)=>{
+          e.stopPropagation();
+          const isOpen = kDetail.classList.toggle('show');
+          kToggle.querySelector('.shuttle-arrow').textContent = isOpen ? '▾' : '▸';
+        };
+      }
+
       // 接駁記錄:預設收合,點擊展開;導航按鈕開啟 Google 地圖
       if(Array.isArray(note)){
         row.querySelectorAll('.shuttle-nav').forEach(btn=>{
@@ -3523,10 +3868,14 @@ function selectItem(key, btn){
               .replace(/\d{1,2}:\d{2}/g, '')
               .replace(/^\s*(第\d+台)?\s*(續收開始|開始\/結束|開始|結束|續收)\s*/, '')
               .split('　').pop()  // 若文字是「標籤　地址」格式(全形空格分隔),只取最後的地址部分搜尋
+              .replace(/與/g, '&')
+              .replace(/巷口$/, '巷').replace(/路口$/, '路')
+              .replace(/街口$/, '街')
+              .replace(/(前|旁|尾|邊|對面)$/, '')
               .trim();
             const url = /^https?:\/\//.test(q)
               ? q
-              : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
+              : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('高雄市前鎮區' + q);
             window.open(url, '_blank');
           };
         });
@@ -3570,7 +3919,11 @@ function selectItem(key, btn){
       };
       wrap.querySelectorAll('.nav-link').forEach(nl => {
         nl.onclick = ()=> window.open('https://www.google.com/maps/search/?api=1&query=' +
-          encodeURIComponent('高雄市前鎮區' + nl.getAttribute('data-q')), '_blank');
+          encodeURIComponent('高雄市前鎮區' + nl.getAttribute('data-q')
+            .replace(/與/g, '&')
+            .replace(/巷口$/, '巷').replace(/路口$/, '路')
+            .replace(/街口$/, '街')
+            .replace(/(前|旁|尾|邊|對面)$/, '')), '_blank');
       });
       tripsEl.appendChild(wrap);
     }
@@ -3841,6 +4194,107 @@ function showImg(title, url){
 function closeImg(){
   document.getElementById('modalOverlay').classList.remove('show');
 }
+
+// ===== 備份與還原:只備份「使用者自己的編輯」(改過的時間/勾選進度/排序),不含路線本身資料 =====
+const BACKUP_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:'];
+const BACKUP_HEADER = '【前鎮清運備份】';
+
+function utf8ToBase64(str){ return btoa(unescape(encodeURIComponent(str))); }
+function base64ToUtf8(str){ return decodeURIComponent(escape(atob(str))); }
+
+document.getElementById('backupEntry').onclick = openBackup;
+
+function openBackup(){
+  document.getElementById('backupOverlay').classList.add('show');
+}
+function closeBackup(){
+  document.getElementById('backupOverlay').classList.remove('show');
+}
+function switchBackupTab(which){
+  const isExport = which === 'export';
+  document.getElementById('tabExport').classList.toggle('active', isExport);
+  document.getElementById('tabImport').classList.toggle('active', !isExport);
+  document.getElementById('exportPane').style.display = isExport ? '' : 'none';
+  document.getElementById('importPane').style.display = isExport ? 'none' : '';
+}
+
+document.getElementById('genBackupBtn').onclick = ()=>{
+  const data = {};
+  let count = 0;
+  for(let i = 0; i < localStorage.length; i++){
+    const k = localStorage.key(i);
+    if(BACKUP_PREFIXES.some(p => k.startsWith(p))){
+      data[k] = localStorage.getItem(k);
+      count++;
+    }
+  }
+  const status = document.getElementById('exportStatus');
+  const ta = document.getElementById('exportText');
+  const copyBtn = document.getElementById('copyBackupBtn');
+  if(count === 0){
+    ta.value = '';
+    copyBtn.style.display = 'none';
+    status.textContent = '目前沒有可備份的編輯記錄(你還沒改過時間或勾選過項目)。';
+    status.className = 'backup-note err';
+    return;
+  }
+  const payload = { v: 'v2.2', at: new Date().toISOString().slice(0,10), data };
+  ta.value = BACKUP_HEADER + '\n' + utf8ToBase64(JSON.stringify(payload));
+  copyBtn.style.display = '';
+  status.textContent = `已產生備份(共 ${count} 筆記錄)，請整段複製起來保存。`;
+  status.className = 'backup-note ok';
+  ta.select();
+};
+
+document.getElementById('copyBackupBtn').onclick = async ()=>{
+  const ta = document.getElementById('exportText');
+  const status = document.getElementById('exportStatus');
+  ta.select();
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(ta.value);
+      status.textContent = '已複製到剪貼簿！可以貼到備忘錄或LINE了。';
+      status.className = 'backup-note ok';
+      return;
+    }
+    throw new Error('no clipboard api');
+  }catch(e){
+    // LINE 內建瀏覽器等環境會擋剪貼簿權限,改用手動選取方式
+    document.execCommand && document.execCommand('copy');
+    status.textContent = '文字已選取，請手動長按選擇「複製」。';
+    status.className = 'backup-note ok';
+  }
+};
+
+document.getElementById('doImportBtn').onclick = ()=>{
+  const raw = document.getElementById('importText').value.trim();
+  const status = document.getElementById('importStatus');
+  if(!raw){
+    status.textContent = '請先貼上備份文字。';
+    status.className = 'backup-note err';
+    return;
+  }
+  try{
+    const b64 = raw.replace(BACKUP_HEADER, '').trim();
+    const payload = JSON.parse(base64ToUtf8(b64));
+    if(!payload || typeof payload.data !== 'object') throw new Error('格式不對');
+    let restored = 0, skipped = 0;
+    Object.keys(payload.data).forEach(k=>{
+      if(BACKUP_PREFIXES.some(p => k.startsWith(p))){
+        localStorage.setItem(k, payload.data[k]);
+        restored++;
+      } else {
+        skipped++;
+      }
+    });
+    status.textContent = `還原成功！共救回 ${restored} 筆記錄${payload.at ? '(備份於 '+payload.at+')' : ''}。重新整理頁面即可看到。`;
+    status.className = 'backup-note ok';
+    document.getElementById('importText').value = '';
+  }catch(e){
+    status.textContent = '這段文字看起來不是有效的備份內容，請確認複製完整再試一次。';
+    status.className = 'backup-note err';
+  }
+};
 </script>
 </body>
 </html>
