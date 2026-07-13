@@ -636,6 +636,18 @@
     gap:10px;
     margin:16px 0 28px;
   }
+  .end-point-tag{
+    display:inline;
+    white-space:nowrap;
+    font-size:11px;
+    font-weight:700;
+    color:#8fa8c2;
+    background:rgba(120,170,230,0.1);
+    border:1px solid rgba(120,170,230,0.3);
+    padding:1px 5px;
+    border-radius:9px;
+    margin-left:5px;
+  }
   .backup-entry{
     font-size:13px;
     color:var(--text-dim);
@@ -1298,7 +1310,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v3.1 ｜ 更新日期：2026.07.13</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v3.2 ｜ 更新日期：2026.07.14</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
     <div class="backup-entry" id="backupEntry">💾 備份與還原</div>
@@ -1359,19 +1371,19 @@
 const truckData = {
   "1":  [["15:55","16:09"], ["18:20","18:37"], ["20:20","20:45"]],
   "5":  [["15:35","15:50"], ["18:00","18:33"], ["20:35","20:50"]],
-  "2":  [["15:48","16:05"], ["18:10","18:31"], ["20:20","20:37"]],
+  "2":  [["15:50","16:05"], ["18:10","18:31"], ["20:20","20:37"]],
   "6":  [["15:35","15:55"], ["18:10","18:30"], ["20:30","20:48"]],
   "3":  [["15:45","16:00"], ["18:15","18:35"], ["20:20","20:45"]],
   "7":  [["15:38","15:54"], ["18:08","18:24"], ["20:38","20:53"]],
   "4":  [["15:35","16:02"], ["18:23","18:39"], ["20:40","20:59"]],
-  "8":  [["15:35","16:00"], ["18:15","18:20"], ["20:25","20:44"]],
+  "8":  [["15:40","16:00"], ["18:20","18:20"], ["20:29","20:44"]],
   "9":  [["15:50","16:08"], ["17:55","18:00"],      ["20:42","20:54"]],
   "13": [["15:58","16:05"], ["18:23","18:30"], ["20:46","20:50"]],
   "10": [["15:45","16:05"], ["18:09","18:30"], ["20:44","20:55"]],
   "14": [["15:38","15:55"], ["18:29","18:35"], ["20:45","20:53"]],
   "11": [["15:41","16:05"], ["18:14","18:33"], ["20:43","21:00"]],
   "15": [["15:45","15:55"], ["18:16","18:25"], ["20:34","20:45"]],
-  "12": [["15:35","15:53"], ["18:15","18:28"], ["20:33","20:40"]],
+  "12": [["15:36","15:53"], ["18:20","18:28"], ["20:30","20:40"]],
   "16": [["15:55","16:00"], ["18:27","18:35"], ["20:40","20:50"]],
   "17": [["","15:55"], ["","18:30"], ["","20:40"]],
 };
@@ -2452,9 +2464,31 @@ const truckKitchenData = {
       drops: [{ addr: "一心二路54巷口" }] },
     { bins: [{ color: "gray", count: 2, note: "不套袋" }, { color: "green", count: 2 }],
       drops: [{ addr: "民興街與台鋁南巷口" }],
-      give: [{ label: "灰×1", addr: "復興三路與台鋁7巷口(茶的魔手)" }] },
+      give: [{ label: "灰×1", addr: "復興三路與台鋁7巷口(茶的魔手放柱子)" }] },
     { bins: [{ color: "gray", count: 1 }, { color: "green", count: 2 }],
-      drops: [{ addr: "民權二路405號旁" }] },
+      drops: [{ addr: "民權二路405號旁", isEndPoint: true }] },
+  ],
+  "2": [
+    { bins: [{ color: "gray", count: 4 }, { color: "red", count: 2 }] },
+    { bins: [{ color: "gray", count: 2 }, { color: "red", count: 2 }] },
+    { bins: [{ color: "gray", count: 2 }, { color: "red", count: 2 }] },
+  ],
+  "8": [
+    { bins: [{ color: "green", count: 3 }, { color: "gray", count: 1 }],
+      leftover: "若未下桶，回廠處理" },
+    { bins: [{ color: "green", count: 3 }, { color: "gray", count: 1 }],
+      leftover: "若未下桶，回廠處理",
+      opNote: "本車與第三車會噴廚餘，記得擋住民眾，避免噴到人。" },
+    { bins: [{ color: "green", count: 1, note: "下桶留1桶即可；不下桶需帶滿4桶才能卡住後面" }],
+      drops: [{ addr: "瑞和街67號前", isEndPoint: true }],
+      opNote: "本車與第二車會噴廚餘，記得擋住民眾，避免噴到人。" },
+  ],
+  "12": [
+    { bins: [{ color: "red", count: 3 }, { color: "gray", count: 1 }] },
+    { bins: [{ color: "red", count: 3 }, { color: "gray", count: 1 }],
+      drops: [{ addr: '<span class="bin-dot bin-dot-red">●</span> 紅×1(司機會說下哪)' }] },
+    { bins: [{ color: "red", count: 2 }, { color: "gray", count: 1 }],
+      drops: [{ addr: "凱旋四路與翠和街口" }] },
   ],
   "7": [
     { bins: [{ color: "red", count: 3 }],
@@ -3822,7 +3856,7 @@ function selectItem(key, btn){
           ${outerReminder ? `<div class="note">${outerReminder.text}</div>` : ''}
           ${(currentCategory === '垃圾車' && truckKitchenData[key] && truckKitchenData[key][i]) ? (() => {
             const kd = truckKitchenData[key][i];
-            const colorLabel = { gray: '灰', green: '綠', red: '紅' };
+            const colorLabel = { gray: '灰', green: '綠', red: '紅', white: '白' };
             let rows = '';
             if(kd.bins && kd.bins.length){
               let binsHtml = kd.bins.map((b, bi) => {
@@ -3835,7 +3869,9 @@ function selectItem(key, btn){
             const drops = kd.drops || [];
             drops.forEach((d, di) => {
               const label = drops.length > 1 ? `下桶${di + 1}` : '下桶';
-              rows += `<div class="k-line"><span class="k-icon">📍</span><span class="k-label">${label}</span><span class="k-value k-value-addr">${d.addr}</span><button class="kitchen-nav-icon" type="button" data-q="${d.addr}">🧭</button></div>`;
+              const hasRealAddr = /[路街巷弄號]/.test(d.addr);
+              const endTag = d.isEndPoint ? `<span class="end-point-tag">🏁 尾點</span>` : '';
+              rows += `<div class="k-line"><span class="k-icon">📍</span><span class="k-label">${label}</span><span class="k-value k-value-addr">${d.addr}${endTag}</span>${hasRealAddr ? `<button class="kitchen-nav-icon" type="button" data-q="${d.addr}">🧭</button>` : ''}</div>`;
             });
             if(kd.leftover) rows += `<div class="k-line"><span class="k-icon">↩️</span><span class="k-label">未下桶</span><span class="k-value k-value-addr">${kd.leftover}</span></div>`;
             (kd.give || []).forEach(g => {
