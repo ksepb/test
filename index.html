@@ -3298,7 +3298,7 @@ function renderPicker(){
         if(noteEl){
           const dayLabel = todayZoneGroup() === 'monThu' ? '星期一、四' : '星期二、五';
           noteEl.style.display = 'flex';
-          noteEl.innerHTML = `🔁 已切換至${targetKey}區(今日對應${dayLabel})<span class="day-switch-link">→ 查看${daySwitchFrom}區</span>`;
+          noteEl.innerHTML = `🔁 已切換至${targetKey}區(今日對應${dayLabel})<span class="day-switch-link">→ 返回查看${daySwitchFrom}區</span>`;
           const link = noteEl.querySelector('.day-switch-link');
           link.onclick = ()=>{
             const backBtn = Array.from(picker.querySelectorAll('.route-btn')).find(b => b.dataset.key === daySwitchFrom);
