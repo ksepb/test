@@ -604,6 +604,7 @@
     gap:3px;
   }
   .k-give-count{font-weight:600;}
+  .k-addr-pending{color:#e6a23c;font-style:normal;}
   .k-give-addr{
     font-weight:400;
     color:var(--text);
@@ -2469,7 +2470,8 @@ const truckKitchenData = {
       drops: [{ addr: "民權二路405號旁", isEndPoint: true }] },
   ],
   "2": [
-    { bins: [{ color: "gray", count: 4 }, { color: "red", count: 2 }] },
+    { bins: [{ color: "gray", count: 4 }, { color: "red", count: 2 }],
+      give: [{ label: "灰×2", addr: "" }] },
     { bins: [{ color: "gray", count: 2 }, { color: "red", count: 2 }] },
     { bins: [{ color: "gray", count: 2 }, { color: "red", count: 2 }] },
   ],
@@ -3875,7 +3877,9 @@ function selectItem(key, btn){
             });
             if(kd.leftover) rows += `<div class="k-line"><span class="k-icon">↩️</span><span class="k-label">未下桶</span><span class="k-value k-value-addr">${kd.leftover}</span></div>`;
             (kd.give || []).forEach(g => {
-              rows += `<div class="k-line"><span class="k-icon">🏪</span><span class="k-label">給店家</span><span class="k-value k-value-stack"><span class="k-give-count"><span class="bin-dot bin-dot-gray">●</span> ${g.label}</span><span class="k-give-addr">${g.addr}</span></span><button class="kitchen-nav-icon" type="button" data-q="${g.addr}">🧭</button></div>`;
+              const hasAddr = !!g.addr;
+              const addrDisplay = hasAddr ? g.addr : '<span class="k-addr-pending">地址待補</span>';
+              rows += `<div class="k-line"><span class="k-icon">🏪</span><span class="k-label">給店家</span><span class="k-value k-value-stack"><span class="k-give-count"><span class="bin-dot bin-dot-gray">●</span> ${g.label}</span><span class="k-give-addr">${addrDisplay}</span></span>${hasAddr ? `<button class="kitchen-nav-icon" type="button" data-q="${g.addr}">🧭</button>` : ''}</div>`;
             });
             if(kd.opNote) rows += `<div class="k-line"><span class="k-icon">⚠️</span><span class="k-label">注意</span><span class="k-value k-value-addr">${kd.opNote}</span></div>`;
             return `<div class="kitchen-block">
