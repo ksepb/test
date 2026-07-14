@@ -1,7 +1,7 @@
 // 前鎮清運 離線快取
 // 邏輯:每次連網都嘗試抓最新版(4秒內),成功就更新快取;
 //      超時或完全沒訊號就退回手機裡存好的舊版,確保App一定打得開
-const CACHE_NAME = 'qianzhen-cleanup-v3.7';
+const CACHE_NAME = 'qianzhen-cleanup-v3.8';
 const CORE_ASSETS = [
   './',
   './index.html',

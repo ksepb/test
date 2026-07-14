@@ -318,8 +318,30 @@
   .trip.tp-past{opacity:0.4;}
   .trip.tp-past .trip-label::after{content:' · 已過站'; font-size:10px;}
   .trip.tp-active{
+    position:relative;
     background:rgba(168,220,74,0.08);
-    border-color:rgba(168,220,74,0.5);
+    border-color:transparent;
+  }
+  .trip.tp-active::before{
+    content:'';
+    position:absolute;
+    inset:-1px;
+    border-radius:inherit;
+    padding:1.5px;
+    background:conic-gradient(from var(--chase-angle, 0deg), transparent 0%, rgba(168,220,74,0.7) 37.5%, #d4f28a 50%, rgba(168,220,74,0.7) 62.5%, transparent 100%);
+    -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite:xor;
+    mask-composite:exclude;
+    animation:chase-rotate 3s linear infinite;
+    pointer-events:none;
+  }
+  @property --chase-angle{
+    syntax:'<angle>';
+    initial-value:0deg;
+    inherits:false;
+  }
+  @keyframes chase-rotate{
+    to{ --chase-angle:360deg; }
   }
   .trip.tp-active .trip-label{
     color:var(--accent);
@@ -1247,7 +1269,7 @@
   .tl-item.active .tl-dot{
     background:var(--accent);
     box-shadow:0 0 0 4px rgba(168,220,74,0.2);
-    animation:breathe 1.6s ease-in-out infinite;
+    animation:breathe 2.2s ease-in-out infinite;
   }
   @keyframes breathe{
     0%,100%{box-shadow:0 0 0 4px rgba(168,220,74,0.2);}
@@ -1443,7 +1465,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v3.7 ｜ 更新日期：2026.07.14</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v3.8 ｜ 更新日期：2026.07.14</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
     <div class="backup-entry" id="backupEntry">💾 備份與還原</div>
