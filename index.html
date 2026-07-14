@@ -292,16 +292,24 @@
   }
   .trip{
     display:flex;
-    flex-wrap:wrap;
-    align-items:center;
-    justify-content:flex-start;
-    gap:14px;
+    flex-direction:column;
+    align-items:stretch;
+    gap:10px;
     padding:14px 12px;
     margin:0 0 10px;
     background:rgba(255,255,255,0.02);
     border:1px solid var(--line);
     border-radius:12px;
     transition:background .2s ease, opacity .2s ease;
+    position:relative;
+  }
+  .trip-toprow{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:6px 8px;
+    width:100%;
+    position:relative;
   }
   .trip:last-child{margin-bottom:0;}
   .trip.tp-past{opacity:0.4;}
@@ -333,6 +341,18 @@
     font-size:14px;
     color:var(--text-dim);
     width:60px;
+    flex-shrink:0;
+  }
+  .time-edit-col{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+  }
+  .time-edit-label{
+    font-size:11px;
+    font-weight:600;
+    color:var(--text-dim);
   }
   .time-pair{
     display:flex;
@@ -340,6 +360,7 @@
     gap:10px;
     font-size:22px;
     font-weight:700;
+    flex-shrink:0;
     font-variant-numeric:tabular-nums;
   }
   .arrow{color:var(--text-dim);font-size:16px;}
@@ -580,7 +601,7 @@
     gap:8px;
     padding:11px 12px;
     border-bottom:1px solid var(--line);
-    font-size:14px;
+    font-size:16px;
     line-height:1.4;
   }
   .k-line:last-child{border-bottom:none;}
@@ -608,7 +629,7 @@
   .k-give-addr{
     font-weight:400;
     color:var(--text);
-    font-size:14px;
+    font-size:16px;
   }
   .bin-dot{font-size:12px;}
   .bin-dot-gray{color:#aab4be;}
@@ -636,6 +657,114 @@
     flex-wrap:wrap;
     gap:10px;
     margin:16px 0 28px;
+  }
+  .personal-note-block{
+    margin-top:9px;
+    width:100%;
+  }
+  .personal-note-view{
+    display:flex;
+    align-items:flex-start;
+    gap:7px;
+    padding:8px 10px;
+    background:rgba(179,140,235,0.08);
+    border:1px solid rgba(179,140,235,0.28);
+    border-radius:10px;
+  }
+  .pn-icon{flex:none;font-size:13px;line-height:1.5;}
+  .pn-text{
+    flex:1;
+    color:#c9a8ef;
+    font-size:15px;
+    line-height:1.5;
+    white-space:pre-wrap;
+    word-break:break-word;
+    cursor:pointer;
+  }
+  .pn-text.pn-clamped{
+    display:-webkit-box;
+    -webkit-line-clamp:1;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .pn-text:not(.pn-clamped){
+    font-size:16px;
+    line-height:1.6;
+  }
+  .pn-toggle-btn{
+    flex:none;
+    background:none;
+    border:none;
+    color:#c9a8ef;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    padding:0 0 0 4px;
+    align-self:flex-start;
+  }
+  .pn-toggle-btn:active{opacity:0.6;}
+  .pn-icon-btn{
+    flex:none;
+    margin-left:auto;
+    background:rgba(179,140,235,0.08);
+    border:1px solid rgba(179,140,235,0.3);
+    border-radius:10px;
+    color:#9d85b8;
+    font-size:10.5px;
+    font-weight:700;
+    opacity:0.85;
+    cursor:pointer;
+    padding:3px 7px;
+    white-space:nowrap;
+  }
+  .pn-icon-btn:active{opacity:0.5;}
+  .personal-note-edit{
+    background:rgba(179,140,235,0.06);
+    border:1px solid rgba(179,140,235,0.3);
+    border-radius:10px;
+    padding:9px;
+  }
+  .pn-textarea{
+    width:100%;
+    min-height:60px;
+    background:rgba(0,0,0,0.2);
+    border:1px solid var(--line);
+    border-radius:8px;
+    color:var(--text);
+    font-size:16px;
+    font-family:inherit;
+    padding:8px;
+    box-sizing:border-box;
+    resize:vertical;
+  }
+  .pn-edit-actions{
+    display:flex;
+    gap:8px;
+    margin-top:7px;
+  }
+  .pn-save-btn, .pn-cancel-btn, .pn-delete-btn{
+    font-size:13px;
+    font-weight:700;
+    padding:6px 14px;
+    border-radius:16px;
+    cursor:pointer;
+    border:1px solid;
+  }
+  .pn-save-btn{
+    color:#141810;
+    background:#b38ceb;
+    border-color:#b38ceb;
+  }
+  .pn-cancel-btn{
+    color:var(--text-dim);
+    background:transparent;
+    border-color:var(--line);
+  }
+  .pn-delete-btn{
+    color:#e6a23c;
+    background:transparent;
+    border-color:rgba(230,162,60,0.4);
+    margin-left:auto;
   }
   .end-point-tag{
     display:inline;
@@ -1311,7 +1440,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v3.3 ｜ 更新日期：2026.07.14</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v3.5 ｜ 更新日期：2026.07.14</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
     <div class="backup-entry" id="backupEntry">💾 備份與還原</div>
@@ -1364,6 +1493,15 @@
       <button class="reset-btn" id="clearDataBtn" type="button" style="width:100%;text-align:center;box-sizing:border-box;background:rgba(230,162,60,0.1);border-color:rgba(230,162,60,0.4);color:#e6a23c;">還原所有預設</button>
       <p class="backup-note" id="clearDataStatus"></p>
       <button class="modal-close" onclick="closeClearData()">關閉</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="deleteNoteOverlay" onclick="closeDeleteNote()">
+    <div class="modal-box backup-box" onclick="event.stopPropagation()">
+      <div class="modal-title">🗑️ 刪除這則備註？</div>
+      <p class="backup-help">刪除後<b>無法復原</b>，確定要刪除嗎？</p>
+      <button class="reset-btn" id="deleteNoteConfirmBtn" type="button" style="width:100%;text-align:center;box-sizing:border-box;background:rgba(230,162,60,0.1);border-color:rgba(230,162,60,0.4);color:#e6a23c;">確定刪除</button>
+      <button class="reset-btn" type="button" style="width:100%;text-align:center;box-sizing:border-box;margin-top:8px;" onclick="closeDeleteNote()">取消</button>
     </div>
   </div>
 
@@ -2461,12 +2599,12 @@ function splitOfficialTrips(stops){
 // }]
 const truckKitchenData = {
   "1": [
-    { bins: [{ color: "gray", count: 2, note: "不套袋" }, { color: "green", count: 2 }],
+    { bins: [{ color: "green", count: 2 }, { color: "gray", count: 2, note: "不套袋" }],
       drops: [{ addr: "一心二路54巷口" }] },
-    { bins: [{ color: "gray", count: 2, note: "不套袋" }, { color: "green", count: 2 }],
+    { bins: [{ color: "green", count: 2 }, { color: "gray", count: 2, note: "不套袋" }],
       drops: [{ addr: "民興街與台鋁南巷口" }],
       give: [{ label: "灰×1", addr: "復興三路與台鋁7巷口(茶的魔手放柱子)" }] },
-    { bins: [{ color: "gray", count: 1 }, { color: "green", count: 2 }],
+    { bins: [{ color: "green", count: 2 }, { color: "gray", count: 1 }],
       drops: [{ addr: "民權二路405號旁", isEndPoint: true }] },
   ],
   "2": [
@@ -3127,6 +3265,12 @@ if(!categories[currentCategory]) currentCategory = "垃圾車";
 
 let currentSelectedKey = null;
 let currentTaskName = null; // 記錄目前在「任務群組」路線(如日配套的西配)底下,選的是哪個任務(定點收運/髒亂點/工作流程)
+let pendingDeleteNote = null; // 暫存正在等待彈窗確認刪除的個人備註資訊
+
+// 個人備註:使用者自己輸入的文字一律要跳脫,避免特殊符號(< > & 等)破壞畫面排版
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
 let countdownTimer = null;
 
 const categoryIcons = {
@@ -3844,16 +3988,19 @@ function selectItem(key, btn){
       const outerReminder = Array.isArray(note) ? note.find(n => n.text === '出發時跟車出門') : null;
       if(outerReminder) note = note.filter(n => n !== outerReminder);
       const timeHTML = editMode
-        ? `<input type="time" class="time-edit" value="${dep || ''}" data-idx="${i}" data-which="dep">
+        ? `<span class="time-edit-col"><span class="time-edit-label">出車</span><input type="time" class="time-edit" value="${dep || ''}" data-idx="${i}" data-which="dep"></span>
            <span class="arrow">→</span>
-           <input type="time" class="time-edit" value="${arr || ''}" data-idx="${i}" data-which="arr">`
+           <span class="time-edit-col"><span class="time-edit-label">抵達</span><input type="time" class="time-edit" value="${arr || ''}" data-idx="${i}" data-which="arr"></span>`
         : `<span class="depart ${depEdited ? 'edited' : ''}">${dep || '—'}</span>
            <span class="arrow">→</span>
            <span class="arrive ${arrEdited ? 'edited' : ''}">${arr || '—'}</span>`;
       row.innerHTML = `
-        <div class="trip-label">${labels[i] || '第' + (i + 1) + '趟'}</div>
-        <div style="display:flex;flex-direction:column;align-items:flex-start;">
+        <div class="trip-toprow">
+          <div class="trip-label">${labels[i] || '第' + (i + 1) + '趟'}</div>
           <div class="time-pair">${timeHTML}</div>
+          ${(currentCategory === '回收車' || currentCategory === '垃圾車') ? `<button class="pn-icon-btn" type="button" data-pn-key="personalNote:${currentCategory}:${key}:${i}">+備註</button>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
           ${(!Array.isArray(note) && note) ? `<div class="note ${img ? 'note-link' : ''}">${note}</div>` : ''}
           ${outerReminder ? `<div class="note">${outerReminder.text}</div>` : ''}
           ${(currentCategory === '垃圾車' && truckKitchenData[key] && truckKitchenData[key][i]) ? (() => {
@@ -3885,6 +4032,25 @@ function selectItem(key, btn){
             return `<div class="kitchen-block">
               <button class="kitchen-toggle" type="button"><span>🗑️ 廚餘桶資訊</span><span class="shuttle-arrow">▸</span></button>
               <div class="kitchen-detail">${rows}</div>
+            </div>`;
+          })() : ''}
+          ${(currentCategory === '垃圾車') ? (() => {
+            const pnKey = `personalNote:${currentCategory}:${key}:${i}`;
+            const pnVal = localStorage.getItem(pnKey) || '';
+            const pnEsc = escapeHtml(pnVal);
+            return `<div class="personal-note-block" data-pn-key="${pnKey}" style="${pnVal ? '' : 'display:none;'}">
+              <div class="personal-note-view" style="${pnVal ? '' : 'display:none;'}">
+                <span class="pn-icon">🖊️</span><span class="pn-text pn-clamped">${pnEsc}</span>
+                <button class="pn-toggle-btn" type="button" style="display:none;">▸</button>
+              </div>
+              <div class="personal-note-edit" style="display:none;">
+                <textarea class="pn-textarea" maxlength="200" placeholder="寫給自己看的備註,存在這支手機裡…">${pnEsc}</textarea>
+                <div class="pn-edit-actions">
+                  <button class="pn-save-btn" type="button">儲存</button>
+                  <button class="pn-cancel-btn" type="button">取消</button>
+                  <button class="pn-delete-btn" type="button">刪除</button>
+                </div>
+              </div>
             </div>`;
           })() : ''}
         </div>
@@ -3949,6 +4115,25 @@ function selectItem(key, btn){
           <div class="shuttle-detail">${stopHtml}${freeHtml}${statHtml}${tailHtml}</div>
         </div>`;
         })() : ''}
+        ${(currentCategory === '回收車') ? (() => {
+          const pnKey = `personalNote:${currentCategory}:${key}:${i}`;
+          const pnVal = localStorage.getItem(pnKey) || '';
+          const pnEsc = escapeHtml(pnVal);
+          return `<div class="personal-note-block" data-pn-key="${pnKey}" style="${pnVal ? '' : 'display:none;'}">
+            <div class="personal-note-view" style="${pnVal ? '' : 'display:none;'}">
+              <span class="pn-icon">🖊️</span><span class="pn-text pn-clamped">${pnEsc}</span>
+              <button class="pn-toggle-btn" type="button" style="display:none;">▸</button>
+            </div>
+            <div class="personal-note-edit" style="display:none;">
+              <textarea class="pn-textarea" maxlength="200" placeholder="寫給自己看的備註,存在這支手機裡…">${pnEsc}</textarea>
+              <div class="pn-edit-actions">
+                <button class="pn-save-btn" type="button">儲存</button>
+                <button class="pn-cancel-btn" type="button">取消</button>
+                <button class="pn-delete-btn" type="button">刪除</button>
+              </div>
+            </div>
+          </div>`;
+        })() : ''}
       `;
 
       // 單一備註(非陣列)若有圖片,點擊開啟大圖
@@ -3975,6 +4160,83 @@ function selectItem(key, btn){
           e.stopPropagation();
           const isOpen = kDetail.classList.toggle('show');
           kToggle.querySelector('.shuttle-arrow').textContent = isOpen ? '▾' : '▸';
+        };
+      }
+
+      // 個人備註(測試階段,僅第一趟):只存在這支手機裡,不會同步給別人看
+      // 沒有備註時,只在趟次標籤旁留一個小圖示,不佔額外版面;有寫才會往下多出顯示區
+      // 超過兩行預設收合,加箭頭可展開(跟廚餘資訊同一套收合邏輯)
+      const pnIconBtn = row.querySelector('.pn-icon-btn');
+      const pnBlock = row.querySelector('.personal-note-block');
+      if(pnBlock){
+        const pnKey = pnBlock.getAttribute('data-pn-key');
+        const viewEl = pnBlock.querySelector('.personal-note-view');
+        const editBox = pnBlock.querySelector('.personal-note-edit');
+        const textarea = pnBlock.querySelector('.pn-textarea');
+        const textEl = pnBlock.querySelector('.pn-text');
+        const toggleBtn = pnBlock.querySelector('.pn-toggle-btn');
+
+        // 檢查文字是否真的超過三行,超過才顯示展開箭頭,沒超過就不顯示(避免多一顆沒用的按鈕)
+        const checkOverflow = ()=>{
+          textEl.classList.add('pn-clamped');
+          toggleBtn.textContent = '▸';
+          // 用 setTimeout 讓瀏覽器先套用 clamp 樣式,才能量到正確的 scrollHeight
+          setTimeout(()=>{
+            const overflowing = textEl.scrollHeight > textEl.clientHeight + 1;
+            toggleBtn.style.display = overflowing ? '' : 'none';
+          }, 0);
+        };
+        if(localStorage.getItem(pnKey)) checkOverflow();
+
+        const doToggle = (e)=>{
+          e.stopPropagation();
+          const isClamped = textEl.classList.toggle('pn-clamped');
+          toggleBtn.textContent = isClamped ? '▸' : '▾';
+        };
+        toggleBtn.onclick = doToggle;
+        textEl.onclick = doToggle;
+
+        const openEdit = (e)=>{
+          e.stopPropagation();
+          pnBlock.style.display = ''; // 重新顯示區塊(可能原本因為沒內容而隱藏)
+          viewEl.style.display = 'none';
+          editBox.style.display = 'block';
+          textarea.style.height = ''; // 重置為預設高度,避免保留上次手動拖曳放大的大小
+          textarea.focus();
+          // 游標移到文字最後面,方便直接接著往下寫,不用手動移過去
+          const len = textarea.value.length;
+          textarea.setSelectionRange(len, len);
+          textarea.scrollTop = textarea.scrollHeight;
+        };
+        if(pnIconBtn) pnIconBtn.onclick = openEdit;
+
+        pnBlock.querySelector('.pn-save-btn').onclick = (e)=>{
+          e.stopPropagation();
+          const val = textarea.value.trim();
+          editBox.style.display = 'none';
+          if(val){
+            localStorage.setItem(pnKey, val);
+            textEl.textContent = val; // 用 textContent 賦值,自動跳脫特殊符號,安全不會破壞排版
+            viewEl.style.display = 'flex';
+            checkOverflow();
+          } else {
+            localStorage.removeItem(pnKey);
+            viewEl.style.display = 'none';
+            pnBlock.style.display = 'none'; // 沒有內容,整個區塊收起來不佔版面
+          }
+        };
+        pnBlock.querySelector('.pn-cancel-btn').onclick = (e)=>{
+          e.stopPropagation();
+          const saved = localStorage.getItem(pnKey);
+          textarea.value = saved || '';
+          editBox.style.display = 'none';
+          if(saved){ viewEl.style.display = 'flex'; }
+          else{ pnBlock.style.display = 'none'; } // 原本就沒內容,取消後整個區塊收起來
+        };
+        pnBlock.querySelector('.pn-delete-btn').onclick = (e)=>{
+          e.stopPropagation();
+          pendingDeleteNote = { pnKey, viewEl, editBox, pnBlock };
+          document.getElementById('deleteNoteOverlay').classList.add('show');
         };
       }
 
@@ -4319,7 +4581,7 @@ function closeImg(){
 }
 
 // ===== 備份與還原:只備份「使用者自己的編輯」(改過的時間/勾選進度/排序),不含路線本身資料 =====
-const BACKUP_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:'];
+const BACKUP_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'personalNote:'];
 const BACKUP_HEADER = '【前鎮清運備份】';
 
 function utf8ToBase64(str){ return btoa(unescape(encodeURIComponent(str))); }
@@ -4420,7 +4682,7 @@ document.getElementById('doImportBtn').onclick = ()=>{
 };
 
 // ===== 清除所有本機資料:雙重確認,清除前引導先備份 =====
-const CLEAR_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'lastItem:', 'scrollPos:'];
+const CLEAR_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'lastItem:', 'scrollPos:', 'personalNote:'];
 const CLEAR_EXACT_KEYS = ['lastCategory'];
 
 document.getElementById('clearDataEntry').onclick = ()=>{
@@ -4432,6 +4694,22 @@ function closeClearData(){
   btn.dataset.armed = '';
   btn.textContent = '還原所有預設';
 }
+
+function closeDeleteNote(){
+  document.getElementById('deleteNoteOverlay').classList.remove('show');
+  pendingDeleteNote = null;
+}
+
+document.getElementById('deleteNoteConfirmBtn').onclick = ()=>{
+  if(pendingDeleteNote){
+    const { pnKey, viewEl, editBox, pnBlock } = pendingDeleteNote;
+    localStorage.removeItem(pnKey);
+    editBox.style.display = 'none';
+    viewEl.style.display = 'none';
+    if(pnBlock) pnBlock.style.display = 'none';
+  }
+  closeDeleteNote();
+};
 
 armConfirm(
   document.getElementById('clearDataBtn'),
