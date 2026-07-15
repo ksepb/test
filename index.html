@@ -629,6 +629,20 @@
     font-size:16px;
     line-height:1.4;
   }
+  .k-line-top{align-items:flex-start;}
+  .k-give-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    width:100%;
+  }
+  .k-give-item-stack{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+    flex:1;
+  }
+  .k-give-item:not(:last-child){margin-bottom:10px;}
   .k-line:last-child{border-bottom:none;}
   .k-icon{flex:none;width:20px;text-align:center;font-size:14px;}
   .k-label{
@@ -4144,19 +4158,22 @@ function selectItem(key, btn){
               rows += `<div class="k-line"><span class="k-icon">📍</span><span class="k-label">${label}</span><span class="k-value k-value-addr">${noteTag}${d.addr}${endTag}</span>${hasRealAddr ? `<button class="kitchen-nav-icon" type="button" data-q="${d.addr}">🧭</button>` : ''}</div>`;
             });
             if(kd.leftover) rows += `<div class="k-line"><span class="k-icon">↩️</span><span class="k-label">未下桶</span><span class="k-value k-value-addr">${kd.leftover}</span></div>`;
-            (kd.give || []).forEach(g => {
-              const hasAddr = !!g.addr && /[路街巷弄號]/.test(g.addr);
-              const addrDisplay = g.addr || '<span class="k-addr-pending">地址待補</span>';
-              let countHtml;
-              if(g.bins && g.bins.length){
-                countHtml = g.bins.map((b, bi) => {
-                  return `${bi > 0 ? '<span class="bin-sep"></span>' : ''}<span class="bin-dot bin-dot-${b.color}">●</span> ${colorLabel[b.color] || b.color}×${b.count}`;
-                }).join('');
-              } else {
-                countHtml = `<span class="bin-dot bin-dot-gray">●</span> ${g.label}`;
-              }
-              rows += `<div class="k-line"><span class="k-icon">🏪</span><span class="k-label">${kd.giveLabel || '給店家'}</span><span class="k-value k-value-stack"><span class="k-give-count">${countHtml}</span><span class="k-give-addr">${addrDisplay}</span></span>${hasAddr ? `<button class="kitchen-nav-icon" type="button" data-q="${g.addr}">🧭</button>` : ''}</div>`;
-            });
+            if(kd.give && kd.give.length){
+              const giveItems = kd.give.map(g => {
+                const hasAddr = !!g.addr && /[路街巷弄號]/.test(g.addr);
+                const addrDisplay = g.addr || '<span class="k-addr-pending">地址待補</span>';
+                let countHtml;
+                if(g.bins && g.bins.length){
+                  countHtml = g.bins.map((b, bi) => {
+                    return `${bi > 0 ? '<span class="bin-sep"></span>' : ''}<span class="bin-dot bin-dot-${b.color}">●</span> ${colorLabel[b.color] || b.color}×${b.count}`;
+                  }).join('');
+                } else {
+                  countHtml = `<span class="bin-dot bin-dot-gray">●</span> ${g.label}`;
+                }
+                return `<div class="k-give-item"><span class="k-give-item-stack"><span class="k-give-count">${countHtml}</span><span class="k-give-addr">${addrDisplay}</span></span>${hasAddr ? `<button class="kitchen-nav-icon" type="button" data-q="${g.addr}">🧭</button>` : ''}</div>`;
+              }).join('');
+              rows += `<div class="k-line k-line-top"><span class="k-icon">🏪</span><span class="k-label">${kd.giveLabel || '給店家'}</span><span class="k-value k-value-stack">${giveItems}</span></div>`;
+            }
             if(kd.opNote) rows += `<div class="k-line"><span class="k-icon">⚠️</span><span class="k-label">注意</span><span class="k-value k-value-addr">${kd.opNote}</span></div>`;
             return `<div class="kitchen-block">
               <button class="kitchen-toggle" type="button"><span>🗑️ 廚餘桶資訊</span><span class="shuttle-arrow">▸</span></button>
