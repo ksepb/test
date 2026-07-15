@@ -2701,7 +2701,7 @@ const truckKitchenData = {
       leftover: "自行處理" },
     { bins: [{ color: "red", count: 3 }, { color: "gray", count: 1, note: "不套袋" }],
       drops: [
-        { addr: "瑞華里瑞北路66號(東方黎明大樓)", note: "1紅" },
+        { addr: "瑞華里瑞北路66號(東方黎明大樓)", note: "紅×1" },
         { addr: "瑞榮路與瑞達街路口(消防栓)", note: "廚餘桶全下" },
       ] },
   ],
@@ -4134,7 +4134,13 @@ function selectItem(key, btn){
               const label = drops.length > 1 ? `下桶${di + 1}` : '下桶';
               const hasRealAddr = /[路街巷弄號]/.test(d.addr);
               const endTag = d.isEndPoint ? `<span class="end-point-tag">🏁 尾點</span>` : '';
-              const noteTag = d.note ? `<span class="k-note">${d.note}　</span>` : '';
+              const noteColorMap = { "紅":"red", "灰":"gray", "綠":"green" };
+              let noteTag = '';
+              if(d.note){
+                const colorChar = Object.keys(noteColorMap).find(c => d.note.includes(c));
+                const dotHtml = colorChar ? `<span class="bin-dot bin-dot-${noteColorMap[colorChar]}">●</span> ` : '';
+                noteTag = `<span class="k-note">${dotHtml}${d.note}　</span>`;
+              }
               rows += `<div class="k-line"><span class="k-icon">📍</span><span class="k-label">${label}</span><span class="k-value k-value-addr">${noteTag}${d.addr}${endTag}</span>${hasRealAddr ? `<button class="kitchen-nav-icon" type="button" data-q="${d.addr}">🧭</button>` : ''}</div>`;
             });
             if(kd.leftover) rows += `<div class="k-line"><span class="k-icon">↩️</span><span class="k-label">未下桶</span><span class="k-value k-value-addr">${kd.leftover}</span></div>`;
