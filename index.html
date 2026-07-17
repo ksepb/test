@@ -671,6 +671,7 @@
     gap:3px;
   }
   .k-give-count{font-weight:600;}
+  .k-give-label-text{color:var(--accent);font-weight:700;}
   .k-addr-pending{color:#e6a23c;font-style:normal;}
   .k-give-addr{
     font-weight:400;
@@ -1486,7 +1487,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v3.9 ｜ 更新日期：2026.07.15</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.0 ｜ 更新日期：2026.07.17</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
     <div class="backup-entry" id="backupEntry">💾 備份與還原</div>
@@ -1557,20 +1558,20 @@ const truckData = {
   "1":  [["15:55","16:09"], ["18:20","18:37"], ["20:20","20:45"]],
   "5":  [["15:35","15:50"], ["18:04","18:33"], ["20:35","20:50"]],
   "2":  [["15:50","16:05"], ["18:10","18:31"], ["20:20","20:37"]],
-  "6":  [["15:35","15:55"], ["18:10","18:30"], ["20:30","20:48"]],
+  "6":  [["15:45","15:55"], ["18:20","18:30"], ["20:42","20:48"]],
   "3":  [["15:42","16:00"], ["18:12","18:35"], ["20:25","20:45"]],
   "7":  [["15:38","15:54"], ["18:08","18:24"], ["20:38","20:53"]],
   "4":  [["15:45","16:02"], ["18:28","18:39"], ["20:45","20:59"]],
   "8":  [["15:40","16:00"], ["18:20","18:20"], ["20:29","20:44"]],
   "9":  [["15:52","16:08"], ["17:58","18:00"],      ["20:45","20:54"]],
   "13": [["15:58","16:05"], ["18:23","18:30"], ["20:46","20:50"]],
-  "10": [["15:45","16:05"], ["18:09","18:30"], ["20:44","20:55"]],
+  "10": [["15:45","16:05"], ["18:06","18:30"], ["20:47","20:55"]],
   "14": [["15:45","15:55"], ["18:30","18:35"], ["20:45","20:53"]],
   "11": [["15:41","16:05"], ["18:14","18:33"], ["20:43","21:00"]],
   "15": [["15:50","15:55"], ["18:20","18:25"], ["20:37","20:45"]],
   "12": [["15:36","15:53"], ["18:20","18:28"], ["20:30","20:40"]],
   "16": [["15:55","16:00"], ["18:27","18:35"], ["20:40","20:50"]],
-  "17": [["","15:55"], ["","18:30"], ["","20:40"]],
+  "17": [["15:48","15:55"], ["18:25","18:30"], ["20:18","20:40"]],
 };
 // ===== 回收車各區三趟「實際收運結束時間」(隱藏,不顯示) =====
 // 用途:接駁備註中的「結束」時間若與該趟結束時間相同,自動加註「⭐ 接駁車收到結束」
@@ -2647,7 +2648,10 @@ const truckKitchenData = {
   "1": [
     { bins: [{ color: "green", count: 2 }, { color: "gray", count: 2, note: "不套袋" }],
       drops: [{ addr: "一心二路54巷口" }] },
-    { bins: [{ color: "green", count: 2 }, { color: "gray", count: 2, note: "不套袋" }],
+    { bins: [{ color: "green", count: 2 }, { color: "gray", count: 1, note: "不套袋" }],
+      extraBins: [
+        { dayLabel: "加帶", bins: [{ color: "gray", count: 1, note: "不套袋" }] },
+      ],
       drops: [{ addr: "民興街與台鋁南巷口" }],
       give: [{ bins: [{ color: "gray", count: 1 }], addr: "復興三路與台鋁7巷口(茶的魔手放柱子)" }] },
     { bins: [{ color: "green", count: 2 }, { color: "gray", count: 1 }],
@@ -2656,8 +2660,8 @@ const truckKitchenData = {
   "3": [
     { bins: [{ color: "green", count: 3 }],
       extraBins: [
-        { dayLabel: "禮拜一、四多帶", bins: [{ color: "gray", count: 3 }, { color: "green", count: 1 }] },
-        { dayLabel: "禮拜二多帶", bins: [{ color: "gray", count: 3 }] },
+        { dayLabel: "禮拜一、四加帶", bins: [{ color: "gray", count: 3 }, { color: "green", count: 1 }] },
+        { dayLabel: "禮拜二加帶", bins: [{ color: "gray", count: 3 }] },
       ],
       leftover: "自行處理",
       give: [{ label: "加帶廚餘桶", addr: "放置垃圾車旁(自取)" }] },
@@ -2672,7 +2676,10 @@ const truckKitchenData = {
       leftover: "自行處理" },
     { bins: [{ color: "red", count: 3 }],
       leftover: "自行處理" },
-    { bins: [{ color: "red", count: 2 }, { color: "gray", count: 1 }],
+    { bins: [{ color: "red", count: 2 }],
+      extraBins: [
+        { dayLabel: "加帶", bins: [{ color: "gray", count: 1 }] },
+      ],
       drops: [{ addr: "廣西路192巷口(高雄市私立溫心養護中心轉角)", isEndPoint: true }],
       give: [{ bins: [{ color: "gray", count: 1 }], addr: "806高雄市前鎮區復國里廣西路200號(高雄市私立溫心養護中心門口)" }] },
   ],
@@ -2708,6 +2715,46 @@ const truckKitchenData = {
     { bins: [{ color: "green", count: 2 }, { color: "gray", count: 1, note: "不套袋" }],
       leftover: "自行處理" },
   ],
+  "6": [
+    { bins: [{ color: "red", count: 3 }, { color: "gray", count: 2 }],
+      drops: [{ addr: "光華二路與二聖三巷口(呈陽當鋪)" }] },
+    { bins: [{ color: "red", count: 3 }, { color: "gray", count: 1 }],
+      extraBins: [
+        { dayLabel: "加帶", bins: [{ color: "gray", count: 1 }] },
+      ],
+      drops: [{ addr: "光華雙喜大樓" }],
+      giveLabel: "給民眾",
+      give: [{ bins: [{ color: "gray", count: 1 }], addr: "一心一路與天山路口(放7-11)" }] },
+    { bins: [{ color: "red", count: 3 }, { color: "gray", count: 2 }],
+      drops: [{ addr: "光華二路與二聖三巷口(呈陽當鋪)" }] },
+  ],
+  "10": [
+    { bins: [{ color: "green", count: 3 }, { color: "gray", count: 1 }] },
+    { bins: [{ color: "green", count: 3 }, { color: "gray", count: 1 }] },
+    { bins: [{ color: "green", count: 2 }, { color: "gray", count: 1 }],
+      drops: [{ addr: "迴轉點下桶" }] },
+  ],
+  "11": [
+    { bins: [{ color: "green", count: 3 }, { color: "gray", count: 1 }] },
+    { bins: [{ color: "green", count: 3 }, { color: "gray", count: 1 }] },
+    { bins: [{ color: "green", count: 3 }, { color: "gray", count: 1 }] },
+  ],
+  "13": [
+    { bins: [{ color: "red", count: 2 }, { color: "gray", count: 2 }],
+      leftover: "自行處理" },
+    { bins: [{ color: "red", count: 2 }, { color: "gray", count: 2 }],
+      leftover: "自行處理" },
+    { bins: [{ color: "red", count: 2 }, { color: "gray", count: 2 }],
+      leftover: "自行處理" },
+  ],
+  "17": [
+    { bins: [{ color: "red", count: 3 }],
+      leftover: "紅×1若沒下桶,可回場內下路燈旁" },
+    { bins: [{ color: "red", count: 3 }],
+      drops: [{ addr: "佛公路210巷口", isEndPoint: true }] },
+    { bins: [{ color: "red", count: 2 }],
+      drops: [{ addr: "明鳳七街20號前(紅毛港國小)", isEndPoint: true }] },
+  ],
   "9": [
     { bins: [{ color: "red", count: 3 }, { color: "gray", count: 1, note: "不套袋" }],
       drops: [{ addr: "瑞泰街與永豐路126巷" }] },
@@ -2729,7 +2776,10 @@ const truckKitchenData = {
       opNote: "最後第4點英德街19巷口,自行處理後放置車身側邊" },
   ],
   "2": [
-    { bins: [{ color: "gray", count: 4 }, { color: "red", count: 2 }],
+    { bins: [{ color: "gray", count: 2 }, { color: "red", count: 2 }],
+      extraBins: [
+        { dayLabel: "加帶", bins: [{ color: "gray", count: 2 }] },
+      ],
       give: [{ bins: [{ color: "gray", count: 2 }], addr: "" }] },
     { bins: [{ color: "gray", count: 2 }, { color: "red", count: 2 }] },
     { bins: [{ color: "gray", count: 2 }, { color: "red", count: 2 }] },
@@ -4168,7 +4218,7 @@ function selectItem(key, btn){
                     return `${bi > 0 ? '<span class="bin-sep"></span>' : ''}<span class="bin-dot bin-dot-${b.color}">●</span> ${colorLabel[b.color] || b.color}×${b.count}`;
                   }).join('');
                 } else {
-                  countHtml = `<span class="bin-dot bin-dot-gray">●</span> ${g.label}`;
+                  countHtml = `<span class="k-give-label-text">${g.label}</span>`;
                 }
                 return `<div class="k-give-item"><span class="k-give-item-stack"><span class="k-give-count">${countHtml}</span><span class="k-give-addr">${addrDisplay}</span></span>${hasAddr ? `<button class="kitchen-nav-icon" type="button" data-q="${g.addr}">🧭</button>` : ''}</div>`;
               }).join('');
