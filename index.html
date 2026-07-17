@@ -238,9 +238,10 @@
   @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
   .card-head{
     display:flex;
+    flex-wrap:wrap;
     align-items:center;
     justify-content:space-between;
-    gap:10px;
+    gap:6px;
     margin-bottom:16px;
     border-bottom:1px solid var(--line);
     padding-bottom:12px;
@@ -250,14 +251,15 @@
     color:var(--accent);
     letter-spacing:1px;
     font-weight:700;
+    white-space:nowrap;
   }
   .edit-btn{
-    font-size:13px;
+    font-size:12px;
     color:var(--text-dim);
     background:rgba(255,255,255,0.05);
     border:1px solid var(--line);
-    border-radius:20px;
-    padding:7px 12px;
+    border-radius:16px;
+    padding:5px 9px;
     white-space:nowrap;
     cursor:pointer;
     flex-shrink:0;
@@ -315,7 +317,8 @@
     position:relative;
   }
   .trip:last-child{margin-bottom:0;}
-  .trip.tp-past{opacity:0.4;}
+  .trip.tp-past{opacity:0.4;cursor:pointer;}
+  .trip.tp-past:active{opacity:0.6;}
   .trip.tp-past .trip-label::after{content:' · 已過站'; font-size:10px;}
   .trip.tp-active{
     position:relative;
@@ -1477,7 +1480,7 @@
   <div class="card" id="card">
     <div class="card-head">
       <div class="card-title" id="cardTitle">路線</div>
-      <button class="edit-btn" id="editBtn" type="button" style="display:none;">✏️ 編輯時間</button>
+      <button class="edit-btn" id="editBtn" type="button" style="display:none;">✏️編輯時間</button>
     </div>
     <div class="day-switch-note" id="daySwitchNote" style="display:none;"></div>
     <div id="trips"></div>
@@ -1487,7 +1490,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.0 ｜ 更新日期：2026.07.17</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.1 ｜ 更新日期：2026.07.17</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
     <div class="backup-entry" id="backupEntry">💾 備份與還原</div>
@@ -2778,7 +2781,7 @@ const truckKitchenData = {
   "2": [
     { bins: [{ color: "gray", count: 2 }, { color: "red", count: 2 }],
       extraBins: [
-        { dayLabel: "加帶", bins: [{ color: "gray", count: 2 }] },
+        { dayLabel: "加帶", bins: [{ color: "gray", count: 2, note: "週六不需要" }] },
       ],
       give: [{ bins: [{ color: "gray", count: 2 }], addr: "" }] },
     { bins: [{ color: "gray", count: 2 }, { color: "red", count: 2 }] },
@@ -3443,6 +3446,7 @@ function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 }
 let countdownTimer = null;
+let wokenTrips = new Set(); // 記錄使用者手動點擊「喚醒」過的趟次索引(該路線底下),點擊變暗的卡片可單獨恢復亮度
 
 const categoryIcons = {
   "垃圾車": "🚛",
@@ -3723,12 +3727,15 @@ function selectTask(routeKey, taskName){
   // 唯讀清單:時間固定的路線不提供勾選與調整順序
   const readOnly = (currentCategory === '接駁車') ||
     (currentCategory === '日配套' && taskName.startsWith('定點'));
+  // 接駁車的任務名稱(如「第一車次（出車 15:45）」)本身已經很長,標題只取「第一車次」,時間內容會在下方完整顯示不用重複
+  const shortTaskName = currentCategory === '接駁車' ? taskName.replace(/（.*?）/, '') : taskName;
+  const titlePrefix2 = currentCategory === '接駁車' ? '' : '路線 ';
   document.getElementById('cardTitle').textContent =
-    `路線 ${routeKey}　·　${taskName}　·　${currentCategory}`;
+    `${titlePrefix2}${routeKey} · ${shortTaskName} · ${currentCategory}`;
   renderAddressList(masterList, `${currentCategory}:${routeKey}:${taskName}`, ()=>{
     currentTaskName = null;
     document.getElementById('cardTitle').textContent =
-      `路線 ${routeKey}　·　${currentCategory}`;
+      `${titlePrefix2}${routeKey} · ${currentCategory}`;
     renderTaskPicker(routeKey, cfg.data[routeKey]);
   }, readOnly);
 }
@@ -4037,11 +4044,9 @@ function selectItem(key, btn){
   const cfg = categories[currentCategory];
   const isRoute = cfg.order === truckOrder;
   const titlePrefix = currentCategory === '接駁車' ? '' : (cfg.type === 'address' ? '路線 ' : (isRoute ? '路線 ' : '區域 '));
-  const dispKey = currentCategory === '接駁車'
-    ? key.replace(/^一四/, '(一、四) ').replace(/^二五/, '(二、五) ')
-    : key;
+  const dispKey = key;
   document.getElementById('cardTitle').textContent =
-    titlePrefix + dispKey + '　·　' + currentCategory;
+    titlePrefix + dispKey + ' · ' + currentCategory;
 
   currentSelectedKey = key;
   startCountdown();
@@ -4188,7 +4193,9 @@ function selectItem(key, btn){
             }
             (kd.extraBins || []).forEach(eb => {
               let ebHtml = eb.bins.map((b, bi) => {
-                return `${bi > 0 ? '<span class="bin-sep"></span>' : ''}<span class="bin-dot bin-dot-${b.color}">●</span> ${colorLabel[b.color] || b.color}×${b.count}`;
+                let s = `${bi > 0 ? '<span class="bin-sep"></span>' : ''}<span class="bin-dot bin-dot-${b.color}">●</span> ${colorLabel[b.color] || b.color}×${b.count}`;
+                if(b.note) s += `<span class="k-note">(${b.note})</span>`;
+                return s;
               }).join('');
               const wideClass = eb.dayLabel.length > 2 ? ' k-label-wide' : '';
               rows += `<div class="k-line"><span class="k-icon">🗑️</span><span class="k-label${wideClass}">${eb.dayLabel}</span><span class="k-value">${ebHtml}</span></div>`;
@@ -4468,6 +4475,15 @@ function selectItem(key, btn){
         };
       }
 
+      // 點擊已過站(變暗)的卡片,單獨喚醒這一趟恢復正常亮度,方便晚上先看隔天班表
+      // 用捕獲階段(第三個參數 true):不管點到卡片裡的哪個按鈕(備註、廚餘資訊等內部有attachEvent攔截冒泡的元素),都會先觸發喚醒判斷
+      row.addEventListener('click', ()=>{
+        if(row.classList.contains('tp-past')){
+          wokenTrips.add(i);
+          row.classList.remove('tp-past');
+        }
+      }, true);
+
       tripsEl.appendChild(row);
     });
 
@@ -4563,7 +4579,10 @@ function selectItem(key, btn){
   const editable = cfg.type === 'truck' || cfg.type === 'kitchen';
   editBtn.style.display = editable ? '' : 'none';
   editBtn.classList.toggle('on', editMode);
-  editBtn.textContent = editMode ? '✔ 完成' : '✏️ 編輯時間';
+  editBtn.textContent = editMode ? '✔完成' : '✏️編輯時間';
+
+  // 切換路線時,重置「手動喚醒」記錄,不要帶到下一個路線去
+  wokenTrips = new Set();
 
   if(editable && editMode){
     // 輸入框變更即儲存,並更新倒數與高亮
@@ -4722,6 +4741,7 @@ function updateCountdown(){
   document.querySelectorAll('.trip[data-trip-idx]').forEach(row=>{
     const idx = parseInt(row.getAttribute('data-trip-idx'), 10);
     row.classList.remove('tp-past', 'tp-active');
+    if(wokenTrips.has(idx)) return; // 這一趟已被點擊喚醒過,維持正常亮度,不重新變暗
     if(nextIdx === -1){
       row.classList.add('tp-past');
     } else if(idx < nextIdx){
