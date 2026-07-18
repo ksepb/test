@@ -1490,7 +1490,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.1 ｜ 更新日期：2026.07.17</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.2 ｜ 更新日期：2026.07.17</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
     <div class="backup-entry" id="backupEntry">💾 備份與還原</div>
@@ -2783,14 +2783,24 @@ const truckKitchenData = {
       extraBins: [
         { dayLabel: "加帶", bins: [{ color: "gray", count: 2, note: "週六不需要" }] },
       ],
+      boardPoints: [
+        { addr: "中山二路1號(中山首府)" },
+        { addr: "民壽街與民權二路口 下一點(臨時點)", noNav: true },
+      ],
       drops: [{ addr: "復興三路與台鋁14巷口" }],
       give: [{ bins: [{ color: "gray", count: 2 }], addr: "" }] },
     { bins: [{ color: "gray", count: 2 }, { color: "red", count: 2 }],
+      boardPoints: [{ addr: "滇池街44巷口" }],
       drops: [
         { addr: "修文街79號" },
         { addr: "民裕街與沱江街132巷", note: "前面一點點的變電箱需緊貼" },
       ] },
     { bins: [{ color: "gray", count: 2 }, { color: "red", count: 2 }],
+      boardPoints: [
+        { addr: "正勤路80號" },
+        { addr: "復興三路與中山二路口" },
+      ],
+      boardNote: "壓縮完沒人上車或等到司機關音樂",
       drops: [{ addr: "修成街31號", isEndPoint: true }] },
   ],
   "8": [
@@ -4206,6 +4216,14 @@ function selectItem(key, btn){
               const wideClass = eb.dayLabel.length > 2 ? ' k-label-wide' : '';
               rows += `<div class="k-line"><span class="k-icon">🗑️</span><span class="k-label${wideClass}">${eb.dayLabel}</span><span class="k-value">${ebHtml}</span></div>`;
             });
+            let boardRows = '';
+            (kd.boardPoints || []).forEach((bp, bi) => {
+              const list = kd.boardPoints;
+              const label = list.length > 1 ? `上車點${bi + 1}` : '上車點';
+              const hasRealAddr = !bp.noNav && /[路街巷弄號]/.test(bp.addr);
+              boardRows += `<div class="k-line"><span class="k-icon">🚏</span><span class="k-label k-label-wide">${label}</span><span class="k-value k-value-addr">${bp.addr}</span>${hasRealAddr ? `<button class="kitchen-nav-icon" type="button" data-q="${bp.addr}">🧭</button>` : ''}</div>`;
+            });
+            if(kd.boardNote) boardRows += `<div class="k-line"><span class="k-icon">⚠️</span><span class="k-label k-label-wide">上車備註</span><span class="k-value k-value-addr">${kd.boardNote}</span></div>`;
             const drops = kd.drops || [];
             drops.forEach((d, di) => {
               const label = drops.length > 1 ? `下桶${di + 1}` : '下桶';
@@ -4238,10 +4256,14 @@ function selectItem(key, btn){
               rows += `<div class="k-line k-line-top"><span class="k-icon">🏪</span><span class="k-label">${kd.giveLabel || '給店家'}</span><span class="k-value k-value-stack">${giveItems}</span></div>`;
             }
             if(kd.opNote) rows += `<div class="k-line"><span class="k-icon">⚠️</span><span class="k-label">注意</span><span class="k-value k-value-addr">${kd.opNote}</span></div>`;
+            const boardBlock = boardRows ? `<div class="kitchen-block">
+              <button class="kitchen-toggle" type="button"><span>🚏 上車點資訊</span><span class="shuttle-arrow">▸</span></button>
+              <div class="kitchen-detail">${boardRows}</div>
+            </div>` : '';
             return `<div class="kitchen-block">
               <button class="kitchen-toggle" type="button"><span>🗑️ 廚餘桶資訊</span><span class="shuttle-arrow">▸</span></button>
               <div class="kitchen-detail">${rows}</div>
-            </div>`;
+            </div>${boardBlock}`;
           })() : ''}
           ${(currentCategory === '垃圾車') ? (() => {
             const pnKey = `personalNote:${currentCategory}:${key}:${i}`;
@@ -4361,16 +4383,15 @@ function selectItem(key, btn){
         };
       });
 
-      // 廚餘資訊:預設收合,點擊展開
-      const kToggle = row.querySelector('.kitchen-toggle');
-      if(kToggle){
-        const kDetail = row.querySelector('.kitchen-detail');
+      // 廚餘資訊/上車點資訊:預設收合,點擊展開(可能有多組,各自獨立)
+      row.querySelectorAll('.kitchen-toggle').forEach(kToggle=>{
+        const kDetail = kToggle.nextElementSibling;
         kToggle.onclick = (e)=>{
           e.stopPropagation();
           const isOpen = kDetail.classList.toggle('show');
           kToggle.querySelector('.shuttle-arrow').textContent = isOpen ? '▾' : '▸';
         };
-      }
+      });
 
       // 個人備註(測試階段,僅第一趟):只存在這支手機裡,不會同步給別人看
       // 沒有備註時,只在趟次標籤旁留一個小圖示,不佔額外版面;有寫才會往下多出顯示區
