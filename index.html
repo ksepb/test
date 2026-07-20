@@ -1016,7 +1016,8 @@
     font-weight:700;
   }
   .site-footer{
-    text-align:center;
+    text-align:left;
+    width:100%;
     font-size:12px;
     color:var(--text-dim);
     opacity:0.7;
@@ -1490,7 +1491,8 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.3 ｜ 更新日期：2026.07.20</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.6 ｜ 更新日期：2026.07.20</div>
+  <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
     <div class="backup-entry" id="backupEntry">💾 備份與還原</div>
@@ -1573,7 +1575,7 @@ const truckData = {
   "11": [["15:41","16:05"], ["18:14","18:33"], ["20:43","21:00"]],
   "15": [["15:50","15:55"], ["18:20","18:25"], ["20:37","20:45"]],
   "12": [["15:36","15:53"], ["18:20","18:28"], ["20:30","20:40"]],
-  "16": [["15:55","16:00"], ["18:27","18:35"], ["20:40","20:50"]],
+  "16": [["15:58","16:00"], ["18:28","18:35"], ["20:44","20:50"]],
   "17": [["15:48","15:55"], ["18:25","18:30"], ["20:18","20:40"]],
 };
 // ===== 回收車各區三趟「實際收運結束時間」(隱藏,不顯示) =====
@@ -2744,6 +2746,18 @@ const truckKitchenData = {
       leftover: "自行處理" },
     { bins: [{ color: "green", count: 2 }, { color: "gray", count: 1, note: "不套袋" }],
       leftover: "自行處理" },
+  ],
+  "16": [
+    { bins: [{ color: "green", count: 3 }],
+      extraBins: [
+        { dayLabel: "加帶", bins: [{ color: "gray", count: 2 }] },
+      ],
+      give: [
+        { bins: [{ color: "gray", count: 1 }], addr: "佛佑路與佛公路36巷口(茶的魔手)" },
+        { bins: [{ color: "gray", count: 1 }], addr: "光芒冷飲站" },
+      ] },
+    { bins: [{ color: "green", count: 3 }] },
+    { bins: [{ color: "green", count: 3 }] },
   ],
   "6": [
     { bins: [{ color: "red", count: 3 }, { color: "gray", count: 2 }],
