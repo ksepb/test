@@ -1491,7 +1491,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.6 ｜ 更新日期：2026.07.20</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.7 ｜ 更新日期：2026.07.22</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -2752,12 +2752,24 @@ const truckKitchenData = {
       extraBins: [
         { dayLabel: "加帶", bins: [{ color: "gray", count: 2 }] },
       ],
+      boardPoints: [
+        { addr: "草衙一路與衙松一街口" },
+        { addr: "佛德路與佛東路口" },
+      ],
       give: [
         { bins: [{ color: "gray", count: 1 }], addr: "佛佑路與佛公路36巷口(茶的魔手)" },
         { bins: [{ color: "gray", count: 1 }], addr: "光芒冷飲站" },
       ] },
-    { bins: [{ color: "green", count: 3 }] },
-    { bins: [{ color: "green", count: 3 }] },
+    { bins: [{ color: "green", count: 3 }],
+      boardPoints: [
+        { addr: "佛西街與國光路口" },
+        { addr: "和祥街170號前" },
+      ] },
+    { bins: [{ color: "green", count: 3 }],
+      boardPoints: [
+        { addr: "草衙一路與衙松一街口" },
+        { addr: "佛德街與和祥街口" },
+      ] },
   ],
   "6": [
     { bins: [{ color: "red", count: 3 }, { color: "gray", count: 2 }],
