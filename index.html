@@ -910,6 +910,146 @@
   .modal-overlay.show{
     display:flex;
   }
+  .route-nav-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:var(--bg);
+    z-index:60;
+    flex-direction:column;
+  }
+  .route-nav-overlay.show{display:flex;}
+  .route-nav-head{
+    flex:none;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:14px 16px calc(12px + env(safe-area-inset-top)) 16px;
+    border-bottom:1px solid var(--line);
+    background:var(--panel);
+  }
+  .route-nav-head .rn-title{
+    flex:1;
+    font-size:16px;
+    font-weight:700;
+    color:var(--accent);
+  }
+  .route-nav-close{
+    flex:none;
+    background:rgba(255,255,255,0.08);
+    border:1px solid var(--line);
+    color:var(--text);
+    border-radius:50%;
+    width:34px;
+    height:34px;
+    font-size:16px;
+    cursor:pointer;
+  }
+  .route-nav-body{
+    flex:1;
+    overflow-y:auto;
+    padding:16px 16px calc(24px + env(safe-area-inset-bottom));
+    -webkit-overflow-scrolling:touch;
+  }
+  .rn-start{
+    background:rgba(168,220,74,0.08);
+    border:1px solid rgba(168,220,74,0.3);
+    border-radius:12px;
+    padding:12px 14px;
+    font-size:15.5px;
+    line-height:1.7;
+    color:var(--accent);
+    margin:14px 0;
+  }
+  .rn-turn{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 12px;
+    font-size:15px;
+    font-weight:600;
+    line-height:1.6;
+    color:#c9b896;
+    background:rgba(201,184,150,0.1);
+    border-left:3px solid #a8935f;
+    border-radius:8px;
+    margin:10px 0;
+  }
+  .rn-turn.rn-turn-right{
+    color:#f0a84f;
+    background:rgba(240,168,79,0.12);
+    border-left-color:#f0a84f;
+  }
+  .rn-turn.rn-turn-left{
+    color:#c9b896;
+    background:rgba(201,184,150,0.1);
+    border-left-color:#a8935f;
+  }
+  .rn-turn.rn-turn-uturn{
+    color:#7a9cc6;
+    background:rgba(122,156,198,0.14);
+    border-left-color:#5b7fa8;
+  }
+  .rn-stop{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:13px 14px;
+    background:rgba(255,255,255,0.02);
+    border:1px solid var(--line);
+    border-radius:12px;
+    margin:4px 0;
+  }
+  .rn-stop-num{
+    flex:none;
+    width:30px;
+    height:30px;
+    border-radius:50%;
+    background:rgba(168,220,74,0.15);
+    color:var(--accent);
+    font-size:14px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .rn-stop-body{flex:1;min-width:0;}
+  .rn-stop-time{
+    font-size:13px;
+    color:var(--text-dim);
+    font-variant-numeric:tabular-nums;
+  }
+  .rn-stop-addr{
+    font-size:17px;
+    color:var(--text);
+    margin-top:3px;
+  }
+  .rn-nav-btn{
+    flex:none;
+    background:none;
+    border:none;
+    font-size:20px;
+    cursor:pointer;
+    padding:4px;
+    opacity:0.8;
+  }
+  .rn-trip-head{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+    padding:10px 4px;
+    margin-top:18px;
+    color:var(--accent);
+    font-size:16px;
+    font-weight:700;
+    border-bottom:1px solid rgba(168,220,74,0.3);
+  }
+  .rn-trip-head:first-child{margin-top:0;}
+  .rn-trip-head .rn-trip-meta{
+    font-size:13px;
+    font-weight:400;
+    color:var(--text-dim);
+  }
   .modal-box{
     background:linear-gradient(180deg, var(--panel), #1b2017);
     border:1px solid var(--line);
@@ -1491,7 +1631,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.8 ｜ 更新日期：2026.07.22</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.9 ｜ 更新日期：2026.07.25</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -1557,6 +1697,14 @@
     </div>
   </div>
 
+  <div class="route-nav-overlay" id="routeNavOverlay">
+    <div class="route-nav-head">
+      <div class="rn-title" id="routeNavTitle">完整路線導航</div>
+      <button class="route-nav-close" type="button" onclick="closeRouteNav()">✕</button>
+    </div>
+    <div class="route-nav-body" id="routeNavBody"></div>
+  </div>
+
 <script>
 // 垃圾車 / 回收車共用: route -> [ [depart, arrive, note?], ... 三趟 ]
 const truckData = {
@@ -1606,35 +1754,35 @@ const officialLineData = {
   "1": { info: "第一責任區 · 車號942N6 · 資料來源:環境部清運路線查詢網", stops: [
     ["16:08","一德路與聖德二街口"],
     ["16:14","復興三路136號"],
-    ["16:17","復興三路154號"],
-    ["16:20","復興三路192號"],
-    ["16:23","二聖二路223號旁巷口"],
+    ["16:17","復興三路154號(接駁車)"],
+    ["16:20","復興三路192號(石宏藥局)"],
+    ["16:23","二聖二路223號旁巷口(西哥檳榔)"],
     ["16:25","二聖二路179巷口"],
-    ["16:27","二聖二路135巷口"],
+    ["16:27","二聖二路135巷口(學群補習班)"],
     ["16:29","民權二路與二聖二巷口"],
     ["16:31","民權二路405號旁"],
-    ["16:34","民權二路與一心二路14巷2弄口"],
+    ["16:34","民權二路與一心二路14巷2弄口(等接駁車)"],
     ["16:37","一心二路2巷口"],
     ["16:40","一心二路32巷口"],
     ["16:42","一心二路54巷口"],
     ["16:51","沱江街與鄭和路口"],
     ["16:54","沱江街與管仲路口"],
     ["16:59","民瑞街與民豐街口"],
-    ["18:37","聖德二街與台鋁7巷口"],
+    ["18:37","聖德二街與台鋁7巷口(面向勞工公園後門,有接駁)"],
     ["18:40","聖德二街與台鋁4巷口"],
     ["18:43","聖德二街與台鋁2巷口"],
     ["18:44","聖德二街與台鋁1巷口"],
     ["18:47","一德路與台鋁中巷口"],
     ["18:49","復興三路與台鋁2巷口"],
     ["18:51","復興三路96號旁(復興派出所)"],
-    ["18:53","復興三路與台鋁7巷口"],
-    ["18:56","一心二路與台鋁中巷口"],
-    ["18:59","一心二路與聖德二街口"],
-    ["19:02","一心二路與台鋁南巷口"],
+    ["18:53","復興三路與台鋁7巷口(茶的魔手)"],
+    ["18:56","一心二路與台鋁中巷口(台灣大哥大、路易莎)"],
+    ["18:59","一心二路與聖德二街口(中國信託)"],
+    ["19:02","一心二路與台鋁南巷口(中華電信)"],
     ["19:04","民權二路與台鋁11巷口"],
     ["19:07","民興街與台鋁南巷口"],
     ["19:11","沱江街與鄭和路口"],
-    ["19:13","鄭和路與民權二路口"],
+    ["19:13","鄭和路與民權二路口(上光眼鏡)"],
     ["20:45","中華五路969巷10號(南側門)"],
     ["20:51","中華五路969巷7號(北側門)"],
     ["20:55","中華五路969巷3號(東側門)"],
@@ -1713,23 +1861,23 @@ const officialLineData = {
   "3": { info: "第三責任區 · 車號KEH5332 · 資料來源:環境部清運路線查詢網", stops: [
     ["16:00","中華五路1332巷口"],
     ["16:03","修文街16巷口"],
-    ["16:10","一心二路192號"],
-    ["16:12","一心二路206號"],
-    ["16:14","一心二路252號"],
-    ["16:19","三多三路197號前"],
-    ["16:22","三多三路155號前"],
-    ["16:24","修文街與林森三路192巷口"],
+    ["16:10","一心二路192號(芝蘭大廈)"],
+    ["16:12","一心二路206號(多那之)"],
+    ["16:14","一心二路252號(湯姆熊)"],
+    ["16:19","三多三路197號前(第一銀行)"],
+    ["16:22","三多三路155號前(彰銀)"],
+    ["16:24","修文街與林森三路192巷口(囍味羊肉爐)"],
     ["16:26","復興三路417巷口"],
-    ["16:30","復興三路與修文街194巷口"],
-    ["16:32","復興三路與修文街154巷口"],
-    ["16:35","一心二路84巷口"],
-    ["16:37","一心二路128號"],
+    ["16:30","復興三路與修文街194巷口(佳佳鹽酥雞對面)"],
+    ["16:32","復興三路與修文街154巷口(池上飯包旁,靠公車站牌)"],
+    ["16:35","一心二路84巷口(方師傅麵包)"],
+    ["16:37","一心二路128號(春暉牙醫)"],
     ["16:39","林森三路120號前"],
     ["16:43","廣西路與二聖二路310巷口"],
     ["16:46","修文街239巷口"],
     ["16:49","修文街194巷口"],
     ["16:51","修文街與林森三路112巷口"],
-    ["18:34","一心一路與沱江街口"],
+    ["18:34","一心一路與沱江街口(鑽石檳榔)"],
     ["18:38","泰山街(民權國小圍牆旁)"],
     ["18:42","沱江街與少康街口"],
     ["18:45","沱江街與衡山街口"],
@@ -2645,6 +2793,82 @@ const officialLineData = {
   ] },
 };
 
+// 完整路線導航資料(手寫路線腳本謄打):每一區記錄「出發指引」+「在第幾站之後要轉彎」
+// 站點本身沿用 officialLineData,不重複輸入地址時間,避免兩邊對不齊
+const routeTurnsData = {
+  "1": {
+    startInstructions: "區隊出發，左轉康定路，右轉鎮海路，左轉中山路，右轉光華路，左轉管仲南路，過民權路（復興國小圍牆，臭豆腐旁邊）",
+    turns: [
+      { afterStop: 1, text: "右轉復興路" },
+      { afterStop: 4, text: "右轉二聖路" },
+      { afterStop: 7, text: "右轉民權二路（機車道）" },
+      { afterStop: 10, text: "右轉一心二路" },
+      { afterStop: 13, text: "左轉復興路，左轉一德路，左轉民權二路（機車道，經過民權二路188巷路口、220巷路口），右轉鄭和路" },
+      { afterStop: 14, text: "右轉沱江街" },
+      { afterStop: 15, text: "左轉管仲路，右轉民裕街，經過沱江街22巷20號，右轉民壽街，經過民壽街10號，左轉民瑞街" },
+      { afterStop: 16, text: "區隊出發，左轉康定路，右轉鎮海路，左轉中山路，右轉民權路，左轉一心路，左轉聖德二街" },
+      { afterStop: 20, text: "右轉一德路" },
+      { afterStop: 21, text: "右轉復興路" },
+      { afterStop: 24, text: "右轉一心路" },
+      { afterStop: 27, text: "右轉民權路" },
+      { afterStop: 28, text: "右轉民興街" },
+      { afterStop: 29, text: "左轉聖德二街，左轉一德路，過民權路接管仲路，左轉沱江街，左轉鄭和路" },
+      { afterStop: 31, text: "區隊出發，左轉康定路，右轉鎮興路，左轉凱旋路，右轉中華路，左轉正勤路，從正勤路左轉進入君毅社區里民活動中心（南側鐵門進入）" },
+      { afterStop: 34, text: "左轉中華路走慢車道（等接駁車），右轉正勤路，左轉建隆街" },
+      { afterStop: 35, text: "左轉中華五路770巷，右轉建盛街" },
+      { afterStop: 36, text: "左轉復興路" },
+      { afterStop: 37, text: "右轉中華路" },
+      { afterStop: 38, text: "右轉修文街" },
+      { afterStop: 39, text: "右轉中山二路" },
+      { afterStop: 41, text: "右轉復興路" },
+      { afterStop: 45, text: "在中華五路大迴轉，走復興路，右轉一德路，左轉民權路，左轉一心路（接駁車）" },
+      { afterStop: 48, text: "右轉復興路" },
+      { afterStop: 51, text: "右轉二聖路" },
+      { afterStop: 52, text: "右轉民權路" },
+    ],
+  },
+  "3": {
+    startInstructions: "左轉康定路，右轉鎮興路，左轉凱旋路，右轉中華路，過復興路靠右",
+    turns: [
+      { afterStop: 2, text: "左轉中山路，右轉林森三路，左轉一心二路" },
+      { afterStop: 6, text: "右轉三多三路" },
+      { afterStop: 8, text: "左轉廣西路，右轉復興路" },
+      { afterStop: 12, text: "右轉一心二路" },
+      { afterStop: 14, text: "右轉林森路" },
+      { afterStop: 15, text: "右轉修文街" },
+      { afterStop: 16, text: "直走" },
+      { afterStop: 18, text: "區隊出發，左轉康定路，右轉鎮海路，左轉中山路，右轉光華路，左轉管仲南路，右轉民權路，右轉一心路" },
+      { afterStop: 19, text: "右轉民裕街" },
+      { afterStop: 20, text: "右轉泰山街，左轉沱江街" },
+      { afterStop: 22, text: "右轉鄭和路，右轉民權路，左轉一心二路" },
+      { afterStop: 23, text: "右轉林森路" },
+      { afterStop: 24, text: "右轉南天街，左轉大禹街" },
+      { afterStop: 25, text: "走二聖二路310巷，左轉廣西路" },
+      { afterStop: 26, text: "左轉林森三路，右轉南天街" },
+      { afterStop: 27, text: "右轉文橫三路，馬上再右轉廣西路" },
+      { afterStop: 28, text: "右轉林森路，右轉一心二路" },
+      { afterStop: 29, text: "右轉文橫三路" },
+      { afterStop: 30, text: "沿文橫三路走（跨唱片行前，新光三越旁，路易莎）" },
+      { afterStop: 31, text: "右轉三多路" },
+      { afterStop: 32, text: "右轉林森三路" },
+      { afterStop: 33, text: "區隊出發，左轉康定路，右轉鎮海路，左轉中山路，右轉光華路，左轉管仲南路，右轉民權二路，左轉二聖路" },
+      { afterStop: 34, text: "左轉廣西路" },
+      { afterStop: 35, text: "右轉林森三路" },
+      { afterStop: 36, text: "右轉三多路，右轉修文街" },
+      { afterStop: 37, text: "左轉廣西路（在復興路之前的巷子）" },
+      { afterStop: 38, text: "右轉復興路" },
+      { afterStop: 41, text: "右轉一心二路" },
+      { afterStop: 42, text: "右轉修文街" },
+      { afterStop: 44, text: "右轉二聖路" },
+      { afterStop: 45, text: "右轉民權路，到中山路時大迴轉，走機車道" },
+      { afterStop: 46, text: "右轉民壽街，左轉沱江街" },
+      { afterStop: 47, text: "右轉管仲路，右轉民裕街" },
+      { afterStop: 48, text: "右轉民壽街" },
+      { afterStop: 49, text: "左轉民瑞街" },
+    ],
+  },
+};
+
 // 依時間斷層(>=40分鐘)把官方沿線清單切成三趟,回收車備註自動比對與垃圾車顯示共用
 function splitOfficialTrips(stops){
   const toMin = s => { const m = String(s).match(/(\d{1,2}):(\d{2})/); return m ? (+m[1])*60 + (+m[2]) : null; };
@@ -2705,7 +2929,11 @@ const truckKitchenData = {
       ],
       leftover: "自行處理" },
     { bins: [{ color: "red", count: 3 }],
-      boardPoints: [{ addr: "衡山街與一心二路289巷(地圖上找不到,旁邊有彩繪圍牆,加油站旁)" }],
+      boardPoints: [
+        { addr: "衡山街與一心二路289巷(地圖上找不到,旁邊有彩繪圍牆,加油站旁)" },
+        { addr: "廣西路與梧州街口" },
+        { addr: "民權二路603巷口" },
+      ],
       leftover: "自行處理" },
     { bins: [{ color: "red", count: 2 }],
       extraBins: [
@@ -4609,6 +4837,17 @@ function selectItem(key, btn){
             .replace(/(前|旁|尾|邊|對面)$/, '')), '_blank');
       });
       tripsEl.appendChild(wrap);
+
+      // 完整路線導航(手寫路線腳本謄打,只有部分區有資料)
+      if(routeTurnsData[key]){
+        const navBtn = document.createElement('button');
+        navBtn.className = 'ol-toggle';
+        navBtn.type = 'button';
+        navBtn.style.marginTop = '8px';
+        navBtn.innerHTML = '<span>🗺️ 完整路線導航</span>';
+        navBtn.onclick = () => openRouteNav(key);
+        tripsEl.appendChild(navBtn);
+      }
     }
   } else if(cfg.type === 'doc'){
     legend.style.display = 'none';
@@ -5009,6 +5248,89 @@ function closeClearData(){
 function closeDeleteNote(){
   document.getElementById('deleteNoteOverlay').classList.remove('show');
   pendingDeleteNote = null;
+}
+
+// 完整路線導航:把官方沿線站點跟謄打好的轉彎指引交錯排列顯示,只用來閱讀不影響原本的資料判斷邏輯
+function openRouteNav(zoneKey){
+  const turnsInfo = routeTurnsData[zoneKey];
+  const official = officialLineData[zoneKey];
+  if(!turnsInfo || !official) return;
+
+  document.getElementById('routeNavTitle').textContent = `路線${zoneKey} 完整路線導航`;
+  const body = document.getElementById('routeNavBody');
+
+  const turnsByStop = {};
+  turnsInfo.turns.forEach(t => {
+    if(!turnsByStop[t.afterStop]) turnsByStop[t.afterStop] = [];
+    turnsByStop[t.afterStop].push(t.text);
+  });
+
+  const tripLabels = ['第一車','第二車','第三車','第四車'];
+  const trips = splitOfficialTrips(official.stops);
+
+  // 算出每一車「最後一站」的連續編號,這些站後面的指引屬於「下一車的開頭」,不該算在這一車結尾
+  const tripLastStopNum = [];
+  { let n = 0; trips.forEach(t => { n += t.length; tripLastStopNum.push(n); }); }
+
+  const renderTurn = text => {
+    if(text.startsWith('區隊出發')) return `<div class="rn-start">🚦 ${text}</div>`;
+    const isRight = /^右轉/.test(text);
+    const isLeft = /^左轉/.test(text);
+    const isUturn = text.includes('大迴轉');
+    const cls = isUturn ? ' rn-turn-uturn' : (isRight ? ' rn-turn-right' : (isLeft ? ' rn-turn-left' : ''));
+    const icon = isUturn ? '↩' : (isRight ? '↱' : (isLeft ? '↰' : '🔄'));
+    return `<div class="rn-turn${cls}">${icon} ${text}</div>`;
+  };
+
+  let html = '';
+  let stopNum = 0;
+
+  trips.forEach((tripStops, ti) => {
+    html += `<div class="rn-trip-head"><span>${tripLabels[ti] || ('第'+(ti+1)+'車')}</span><span class="rn-trip-meta">${tripStops[0][0]}–${tripStops[tripStops.length-1][0]}　·　${tripStops.length}站</span></div>`;
+    if(ti === 0){
+      html += `<div class="rn-start">🚦 ${turnsInfo.startInstructions}</div>`;
+    } else {
+      // 上一車結尾之後的指引(通常是下一趟的「區隊出發...」),移到這一車車頭後面顯示
+      const boundaryNum = tripLastStopNum[ti - 1];
+      if(turnsByStop[boundaryNum]){
+        turnsByStop[boundaryNum].forEach(text => { html += renderTurn(text); });
+      }
+    }
+    tripStops.forEach(stop => {
+      stopNum++;
+      const [time, addr] = stop;
+      const hasRealAddr = /[路街巷弄號]/.test(addr.replace(/[（(].*?[）)]/g, ''));
+      html += `<div class="rn-stop">
+        <span class="rn-stop-num">${stopNum}</span>
+        <span class="rn-stop-body">
+          <span class="rn-stop-time">${time}</span>
+          <span class="rn-stop-addr">${addr}</span>
+        </span>
+        ${hasRealAddr ? `<button class="rn-nav-btn" type="button" data-addr="${addr.replace(/"/g,'&quot;')}">🧭</button>` : ''}
+      </div>`;
+      // 這一車的最後一站,它的指引已經移到下一車開頭顯示了,這裡不重複顯示
+      const isTripBoundary = tripLastStopNum.includes(stopNum) && stopNum !== tripLastStopNum[tripLastStopNum.length - 1];
+      if(turnsByStop[stopNum] && !isTripBoundary){
+        turnsByStop[stopNum].forEach(text => { html += renderTurn(text); });
+      }
+    });
+  });
+
+  body.innerHTML = html;
+  body.querySelectorAll('.rn-nav-btn').forEach(btn => {
+    btn.onclick = () => {
+      const addr = btn.getAttribute('data-addr');
+      const q = addr.replace(/[（(].*?[）)]/g, '').replace(/與/g, '&').trim();
+      window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('高雄市前鎮區' + q), '_blank');
+    };
+  });
+
+  document.getElementById('routeNavOverlay').classList.add('show');
+  body.scrollTop = 0;
+}
+
+function closeRouteNav(){
+  document.getElementById('routeNavOverlay').classList.remove('show');
 }
 
 document.getElementById('deleteNoteConfirmBtn').onclick = ()=>{
