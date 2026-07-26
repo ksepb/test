@@ -917,6 +917,7 @@
     background:var(--bg);
     z-index:60;
     flex-direction:column;
+    --rn-scale:1;
   }
   .route-nav-overlay.show{display:flex;}
   .route-nav-head{
@@ -933,6 +934,42 @@
     font-size:16px;
     font-weight:700;
     color:var(--accent);
+  }
+  .rn-font-ctrl{
+    flex:none;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    background:rgba(255,255,255,0.06);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:2px;
+  }
+  .rn-font-btn{
+    flex:none;
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--accent-dim);
+    color:var(--text);
+    border-radius:14px;
+    width:auto;
+    height:30px;
+    padding:0 10px;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    white-space:nowrap;
+  }
+  .rn-font-btn:active{background:rgba(168,220,74,0.2);border-color:var(--accent);}
+  .rn-font-pct{
+    flex:none;
+    min-width:34px;
+    text-align:center;
+    font-size:11px;
+    color:var(--text-dim);
+    font-variant-numeric:tabular-nums;
   }
   .route-nav-close{
     flex:none;
@@ -956,7 +993,7 @@
     border:1px solid rgba(168,220,74,0.3);
     border-radius:12px;
     padding:12px 14px;
-    font-size:15.5px;
+    font-size:calc(17px * var(--rn-scale));
     line-height:1.7;
     color:var(--accent);
     margin:14px 0;
@@ -966,7 +1003,7 @@
     align-items:center;
     gap:8px;
     padding:10px 12px;
-    font-size:15px;
+    font-size:calc(17px * var(--rn-scale));
     font-weight:600;
     line-height:1.6;
     color:#c9b896;
@@ -1015,12 +1052,12 @@
   }
   .rn-stop-body{flex:1;min-width:0;}
   .rn-stop-time{
-    font-size:13px;
+    font-size:calc(13px * var(--rn-scale));
     color:var(--text-dim);
     font-variant-numeric:tabular-nums;
   }
   .rn-stop-addr{
-    font-size:17px;
+    font-size:calc(17px * var(--rn-scale));
     color:var(--text);
     margin-top:3px;
   }
@@ -1644,7 +1681,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.9 ｜ 更新日期：2026.07.25</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.11 ｜ 更新日期：2026.07.26</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -1713,6 +1750,11 @@
   <div class="route-nav-overlay" id="routeNavOverlay">
     <div class="route-nav-head">
       <div class="rn-title" id="routeNavTitle">完整路線導航</div>
+      <div class="rn-font-ctrl">
+        <button class="rn-font-btn" type="button" onclick="changeRnFontScale(-0.1)">縮小－</button>
+        <span class="rn-font-pct" id="rnFontPct">100%</span>
+        <button class="rn-font-btn" type="button" onclick="changeRnFontScale(0.1)">放大＋</button>
+      </div>
       <button class="route-nav-close" type="button" onclick="closeRouteNav()">✕</button>
     </div>
     <div class="route-nav-body" id="routeNavBody"></div>
@@ -3119,37 +3161,8 @@ const routeTurnsData = {
   },
 };
 
-// 手繪路線示意圖資料(試驗性質):目前只有1區第一趟,座標依第一版的長方形+尾巴形狀手動排列,不是精確比例地圖
+// 手繪路線示意圖資料(試驗性質):1區的手繪版本已移除,之後改用上傳照片呈現
 const routeSketchData = {
-  "1": {
-    title: "1區 第一趟 路線示意圖",
-    viewW: 280, viewH: 340,
-    streetLabels: [
-      { x: 75, y: 20, text: "復興三路" },
-      { x: 250, y: 90, text: "二聖二路" },
-      { x: 150, y: 168, text: "民權二路" },
-      { x: 20, y: 220, text: "一心二路" },
-      { x: 130, y: 320, text: "沱江街／民瑞街一帶" },
-    ],
-    points: [
-      { addr: "一德路與聖德二街口(起點)", x: 40, y: 30 },
-      { addr: "復興三路136號", x: 110, y: 30 },
-      { addr: "復興三路154號", x: 150, y: 30 },
-      { addr: "復興三路192號", x: 190, y: 30 },
-      { addr: "二聖二路223號", x: 230, y: 30 },
-      { addr: "二聖二路179巷口", x: 230, y: 90 },
-      { addr: "二聖二路135巷口", x: 230, y: 150 },
-      { addr: "民權二路與二聖二巷口", x: 170, y: 150 },
-      { addr: "民權二路405號", x: 110, y: 150 },
-      { addr: "民權二路與一心二路14巷2弄口", x: 40, y: 150 },
-      { addr: "一心二路2巷口", x: 40, y: 190 },
-      { addr: "一心二路32巷口", x: 40, y: 230 },
-      { addr: "一心二路54巷口", x: 40, y: 270 },
-      { addr: "沱江街與鄭和路口", x: 100, y: 300 },
-      { addr: "沱江街與管仲路口", x: 160, y: 320 },
-      { addr: "民瑞街與民豐街口(終點)", x: 220, y: 330 },
-    ],
-  },
 };
 
 // 依時間斷層(>=40分鐘)把官方沿線清單切成三趟,回收車備註自動比對與垃圾車顯示共用
@@ -5545,6 +5558,29 @@ function closeDeleteNote(){
 }
 
 // 完整路線導航:把官方沿線站點跟謄打好的轉彎指引交錯排列顯示,只用來閱讀不影響原本的資料判斷邏輯
+const RN_FONT_SCALE_KEY = 'rnFontScale';
+const RN_FONT_SCALE_MIN = 0.8;
+const RN_FONT_SCALE_MAX = 1.6;
+
+function getRnFontScale(){
+  const v = parseFloat(localStorage.getItem(RN_FONT_SCALE_KEY));
+  return (!isNaN(v) && v >= RN_FONT_SCALE_MIN && v <= RN_FONT_SCALE_MAX) ? v : 1;
+}
+
+function applyRnFontScale(scale){
+  const overlay = document.getElementById('routeNavOverlay');
+  overlay.style.setProperty('--rn-scale', scale);
+  const pctEl = document.getElementById('rnFontPct');
+  if(pctEl) pctEl.textContent = Math.round(scale * 100) + '%';
+}
+
+function changeRnFontScale(delta){
+  let scale = Math.round((getRnFontScale() + delta) * 10) / 10;
+  scale = Math.min(RN_FONT_SCALE_MAX, Math.max(RN_FONT_SCALE_MIN, scale));
+  localStorage.setItem(RN_FONT_SCALE_KEY, String(scale));
+  applyRnFontScale(scale);
+}
+
 function openRouteNav(zoneKey){
   const turnsInfo = routeTurnsData[zoneKey];
   const official = officialLineData[zoneKey];
@@ -5620,6 +5656,7 @@ function openRouteNav(zoneKey){
   });
 
   document.getElementById('routeNavOverlay').classList.add('show');
+  applyRnFontScale(getRnFontScale());
   body.scrollTop = 0;
 }
 
