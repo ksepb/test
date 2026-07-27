@@ -1087,18 +1087,23 @@
     font-weight:400;
     color:var(--text-dim);
   }
-  .rn-sketch-wrap{
-    background:rgba(255,255,255,0.02);
-    border:1px solid var(--line);
-    border-radius:12px;
-    padding:10px;
-    margin:4px 0 14px;
+  .rn-photo-block{
+    margin:0 0 20px;
   }
-  .rn-sketch-label{
-    font-size:12px;
+  .rn-photo-img{
+    display:block;
+    width:100%;
+    height:auto;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,0.02);
+  }
+  .rn-photo-caption{
+    font-size:13px;
     color:var(--text-dim);
     text-align:center;
-    margin-bottom:6px;
+    margin-top:8px;
+    line-height:1.5;
   }
   .modal-box{
     background:linear-gradient(180deg, var(--panel), #1b2017);
@@ -1689,7 +1694,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.13 ｜ 更新日期：2026.07.26</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.20 ｜ 更新日期：2026.07.27</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -2862,6 +2867,26 @@ const officialLineData = {
     ["21:25","中安路83號前"],
     ["21:26","明鳳七街20號前(紅毛港國小)"]
   ] },
+  "西配": { info: "西甲配套 · 車號KEU-5603 · 手寫路線腳本謄打", stops: [
+    ["07:30","二聖一路與英明一路口"],
+    ["07:45","光華二路與英德街口（二聖公園旁）"],
+    ["08:00","南寧街與長江街口"],
+    ["08:15","一心二路與修文街口（中華電信大樓旁）"],
+    ["08:30","中華五路969巷10號（君毅正勤社區，里民活動中心前方）"],
+  ] },
+  "籬配": { info: "籬仔內配套 · 車號KEU-5602 · 手寫路線腳本謄打", stops: [
+    ["07:15","精忠街與武德街口（公園旁）"],
+    ["07:30","瑞北路205號（近瑞祥街口）"],
+    ["07:45","瑞和街與瑞信街口"],
+    ["08:00","公正路與武慶一路口（瑞和兒童遊戲場）"],
+    ["08:15","崗山中街與福祥街口"],
+  ] },
+  "草配": { info: "草衙配套 · 車號KEP-J812 · 手寫路線腳本謄打", stops: [
+    ["07:15","鎮州路與鎮東三街口（鎮州公園）"],
+    ["07:30","新衙路與康定路口"],
+    ["07:45","南衙路與明正三街口"],
+    ["08:15","佛公路與后安路口"],
+  ] },
 };
 
 // 完整路線導航資料(手寫路線腳本謄打):每一區記錄「出發指引」+「在第幾站之後要轉彎」
@@ -3167,11 +3192,66 @@ const routeTurnsData = {
       { afterStop: 55, text: "左轉南寧街，右轉景德路" },
     ],
   },
+  "西配": {
+    startInstructions: "區隊出發，左轉康定路，右轉鎮海路，左轉中山路，右轉凱旋路北段，左轉賢明路，右轉英明一路",
+    turns: [
+      { afterStop: 1, text: "左轉二聖一路，右轉光華二路（二聖公園旁）" },
+      { afterStop: 2, text: "於英德街口大迴轉走光華二路，右轉黃埔街，左轉南寧街（花漾KTV旁）" },
+      { afterStop: 3, text: "右轉一心二路，於修文街前（中華電信大樓旁）" },
+      { afterStop: 4, text: "左轉修文街，左轉中華五路" },
+    ],
+  },
+  "籬配": {
+    startInstructions: "區隊出發，從籬仔內瑞和街進入，左轉隆興街，左轉瑞發街，右轉精忠街",
+    turns: [
+      { afterStop: 1, text: "精忠街往東走（旁邊有公園），右轉瑞北路" },
+      { afterStop: 2, text: "右轉公正路，左轉瑞和街" },
+      { afterStop: 3, text: "右轉武慶一路，右轉瑞隆路，左轉公正路（瑞和兒童遊戲場）" },
+      { afterStop: 4, text: "右轉崗山南街（北京藥局），右轉瑞誠街（豬肉攤），左轉崗山中街" },
+    ],
+  },
+  "草配": {
+    startInstructions: "區隊出發，左轉康定路，右轉鎮興路，左轉鎮州路",
+    turns: [
+      { afterStop: 1, text: "左轉鎮華街，過興仁橋下橋接旺路，左轉興化街到底三叉路，右轉德昌路，左轉新衙路" },
+      { afterStop: 2, text: "右轉草衙一路，過高速公路橋下往草衙二路，左轉明衙路83巷（小三角公園前，8字形轉彎），走明衙路，右轉明正三街，右轉南衙路（順著公園右轉）" },
+      { afterStop: 3, text: "左轉草衙二路，右轉佛道路（佛德街的下一條），左轉佛公路" },
+    ],
+  },
 };
 
-// 手繪路線示意圖資料(試驗性質):1區的手繪版本已移除,之後改用上傳照片呈現
+// 手繪路線圖資料:每一區對應一張或多張照片(放在 img/ 資料夾,跟 index.html 同一層上傳到 GitHub Pages)
+// 檔名不用改成統一格式,原始檔名(如 IMG_1234.JPG)直接寫進 src 就好,大小寫要跟實際檔名完全一致
+// 格式: "區號": { images: [ { src: "img/檔名.jpg", caption: "說明文字(選填)" }, ... ] }
 const routeSketchData = {
+  "1": {
+    images: [
+      { src: "img/IMG_3034.jpeg", caption: "1-1車 · 出車 15:48" },
+      { src: "img/IMG_3035.jpeg", caption: "1-2車 · 出車 18:20" },
+      { src: "img/IMG_3036.jpeg", caption: "1-3車 · 出車 20:26" },
+    ],
+  },
 };
+
+// 開啟手繪路線圖(照片)全螢幕檢視:圖片用 object-fit:contain 撐滿螢幕,手機原生兩指縮放可直接放大細節
+function openRouteSketch(zoneKey){
+  const data = routeSketchData[zoneKey];
+  if(!data || !data.images || !data.images.length) return;
+  document.getElementById('routeSketchTitle').textContent = `路線${zoneKey} · 手繪路線圖`;
+  const body = document.getElementById('routeSketchBody');
+  body.innerHTML = data.images.map(img => `
+    <div class="rn-photo-block">
+      <img class="rn-photo-img" src="${img.src}" alt="路線${zoneKey}手繪路線圖" loading="lazy">
+      ${img.caption ? `<div class="rn-photo-caption">${img.caption}</div>` : ''}
+    </div>
+  `).join('');
+  document.getElementById('routeSketchOverlay').classList.add('show');
+  body.scrollTop = 0;
+}
+
+function closeRouteSketch(){
+  document.getElementById('routeSketchOverlay').classList.remove('show');
+}
 
 // 依時間斷層(>=40分鐘)把官方沿線清單切成三趟,回收車備註自動比對與垃圾車顯示共用
 function splitOfficialTrips(stops){
@@ -4313,6 +4393,8 @@ function renderTaskPicker(routeKey, taskGroup){
   hint.textContent = '請選擇任務項目';
   tripsEl.appendChild(hint);
 
+  const hasNav = routeTurnsData[routeKey] && ['西配','籬配','草配'].includes(routeKey);
+
   Object.keys(taskGroup).forEach(taskName=>{
     const btn = document.createElement('button');
     btn.className = 'route-btn';
@@ -4321,6 +4403,17 @@ function renderTaskPicker(routeKey, taskGroup){
     btn.textContent = taskName;
     btn.onclick = ()=> selectTask(routeKey, taskName);
     tripsEl.appendChild(btn);
+
+    // 有謄打完整轉彎指引的配套路線(西配/籬配/草配),緊接在「定點收運」按鈕下方插入路線導航選項
+    if(hasNav && taskName.startsWith('定點')){
+      const navBtn = document.createElement('button');
+      navBtn.className = 'route-btn';
+      navBtn.style.width = '100%';
+      navBtn.style.marginBottom = '8px';
+      navBtn.textContent = '定點收運路線導航';
+      navBtn.onclick = () => openRouteNav(routeKey);
+      tripsEl.appendChild(navBtn);
+    }
   });
 }
 
@@ -5153,13 +5246,13 @@ function selectItem(key, btn){
         tripsEl.appendChild(navBtn);
       }
 
-      // 手繪路線示意圖(試驗性質,目前只有1區第一趟有重製版本)
-      if(key === '1' && routeSketchData[key]){
+      // 手繪路線圖(照片):任何一區只要有上傳照片就會出現這顆按鈕
+      if(routeSketchData[key]){
         const sketchBtn = document.createElement('button');
         sketchBtn.className = 'ol-toggle';
         sketchBtn.type = 'button';
         sketchBtn.style.marginTop = '8px';
-        sketchBtn.innerHTML = '<span class="ol-label"><span class="ol-emoji">✏️</span>手繪路線示意圖(第一趟,試驗版)</span>';
+        sketchBtn.innerHTML = '<span class="ol-label"><span class="ol-emoji">📷</span>手繪路線圖</span>';
         sketchBtn.onclick = () => openRouteSketch(key);
         tripsEl.appendChild(sketchBtn);
       }
@@ -5594,7 +5687,10 @@ function openRouteNav(zoneKey){
   const official = officialLineData[zoneKey];
   if(!turnsInfo || !official) return;
 
-  document.getElementById('routeNavTitle').textContent = `路線${zoneKey} 完整路線導航`;
+  const isSupportRoute = ['西配','籬配','草配'].includes(zoneKey);
+  const titlePrefix = isSupportRoute ? '' : '路線 ';
+  const titleSuffix = isSupportRoute ? '定點收運路線導航' : '完整路線導航';
+  document.getElementById('routeNavTitle').textContent = `${titlePrefix}${zoneKey} · ${titleSuffix}`;
   const body = document.getElementById('routeNavBody');
 
   const turnsByStop = {};
@@ -5670,41 +5766,6 @@ function openRouteNav(zoneKey){
 
 function closeRouteNav(){
   document.getElementById('routeNavOverlay').classList.remove('show');
-}
-
-// 手繪路線示意圖(試驗性質):把站點依編號排成蛇形(每排4個,左右來回),自動算座標畫線連起來
-function openRouteSketch(zoneKey){
-  const data = routeSketchData[zoneKey];
-  if(!data) return;
-  document.getElementById('routeSketchTitle').textContent = data.title;
-  const body = document.getElementById('routeSketchBody');
-
-  const polyPoints = data.points.map(p => `${p.x},${p.y}`).join(' ');
-  let svg = `<svg viewBox="0 0 ${data.viewW} ${data.viewH}" style="width:100%;height:auto;">
-    <polyline points="${polyPoints}" fill="none" stroke="#a8dc4a" stroke-width="2" stroke-opacity="0.6"/>`;
-  (data.streetLabels || []).forEach(s => {
-    svg += `<text x="${s.x}" y="${s.y}" fill="#8fa8c2" font-size="11" font-weight="600">${s.text}</text>`;
-  });
-  data.points.forEach((p, i) => {
-    const isEnd = i === 0 || i === data.points.length - 1;
-    svg += `<circle cx="${p.x}" cy="${p.y}" r="11" fill="${isEnd ? '#e6a23c' : '#1c2318'}" stroke="#a8dc4a" stroke-width="1.5"/>
-      <text x="${p.x}" y="${p.y+4}" fill="${isEnd ? '#1c2318' : '#a8dc4a'}" font-size="11" font-weight="700" text-anchor="middle">${i+1}</text>`;
-  });
-  svg += `</svg>`;
-
-  let list = '<div style="margin-top:14px;">';
-  data.points.forEach((p, i) => {
-    list += `<div class="rn-stop" style="margin:4px 0;"><span class="rn-stop-num">${i+1}</span><span class="rn-stop-body"><span class="rn-stop-addr">${p.addr}</span></span></div>`;
-  });
-  list += '</div>';
-
-  body.innerHTML = `<div class="rn-sketch-label">依第一版形狀手動排列,僅供參考流向,非精確比例地圖</div><div class="rn-sketch-wrap">${svg}</div>${list}`;
-  document.getElementById('routeSketchOverlay').classList.add('show');
-  body.scrollTop = 0;
-}
-
-function closeRouteSketch(){
-  document.getElementById('routeSketchOverlay').classList.remove('show');
 }
 
 document.getElementById('deleteNoteConfirmBtn').onclick = ()=>{
