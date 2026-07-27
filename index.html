@@ -1141,6 +1141,7 @@
     cursor:pointer;
   }
   .ol-wrap{margin-top:16px;}
+  .ol-more-wrap{margin-top:16px;}
   .ol-toggle{
     display:flex;
     align-items:center;
@@ -1165,6 +1166,8 @@
     margin-right:4px;
   }
   .ol-body{display:none;margin-top:10px;}
+  .ol-more-body{display:none;margin-top:8px;}
+  .ol-more-body.show{display:block;animation:fade .25s ease;}
   .ol-body.show{display:block;animation:fade .25s ease;}
   .ol-trip-head{
     display:flex;
@@ -1694,7 +1697,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.21 ｜ 更新日期：2026.07.27</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.24 ｜ 更新日期：2026.07.27</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -3221,16 +3224,15 @@ const routeTurnsData = {
 };
 
 // 手繪路線圖資料:每一區對應一張或多張照片(放在 img/ 資料夾,跟 index.html 同一層上傳到 GitHub Pages)
-// 檔名不用改成統一格式,原始檔名直接寫進 src 就好,大小寫要跟實際檔名完全一致
-// 注意:手機上傳時檔名裡的底線 _ 常會被吃掉變成空格(例如 IMG_3034.jpeg 變成 IMG 3034.jpeg)
-//      網址不能有空格,所以檔名若含空格,src 要把空格寫成 %20,例如 "img/IMG%203034.jpeg"
+// 檔名直接照抄GitHub上的實際檔名就好(含空格也沒關係,程式會自動處理,不用手動轉%20)
+// 注意:手機上傳時檔名裡的底線 _ 常會被吃掉變成空格(例如 IMG_3034.jpeg 變成 IMG 3034.jpeg),大小寫仍要跟實際檔名完全一致
 // 格式: "區號": { images: [ { src: "img/檔名.jpg", caption: "說明文字(選填)" }, ... ] }
 const routeSketchData = {
   "1": {
     images: [
-      { src: "img/IMG%203034.jpeg", caption: "1-1車 · 出車 15:48" },
-      { src: "img/IMG%203035.jpeg", caption: "1-2車 · 出車 18:20" },
-      { src: "img/IMG%203036.jpeg", caption: "1-3車 · 出車 20:26" },
+      { src: "img/IMG 3034.jpeg", caption: "1-1車 · 出車 15:48" },
+      { src: "img/IMG 3035.jpeg", caption: "1-2車 · 出車 18:20" },
+      { src: "img/IMG 3036.jpeg", caption: "1-3車 · 出車 20:26" },
     ],
   },
 };
@@ -3243,7 +3245,7 @@ function openRouteSketch(zoneKey){
   const body = document.getElementById('routeSketchBody');
   body.innerHTML = data.images.map(img => `
     <div class="rn-photo-block">
-      <img class="rn-photo-img" src="${img.src}" alt="路線${zoneKey}手繪路線圖" loading="lazy">
+      <img class="rn-photo-img" src="${encodeURI(img.src)}" alt="路線${zoneKey}手繪路線圖" loading="lazy">
       ${img.caption ? `<div class="rn-photo-caption">${img.caption}</div>` : ''}
     </div>
   `).join('');
@@ -5200,11 +5202,26 @@ function selectItem(key, btn){
       tripsEl.appendChild(row);
     });
 
-    // 官方沿線時刻(僅垃圾車分頁、有資料的區)
+    // 官方沿線時刻(僅垃圾車分頁、有資料的區),連同完整路線導航、手繪路線圖,收合進單一「更多路線資訊」展開鈕
     if(currentCategory === '垃圾車' && officialLineData[key]){
       const od = officialLineData[key];
-      const wrap = document.createElement('div');
-      wrap.className = 'ol-wrap';
+
+      const moreWrap = document.createElement('div');
+      moreWrap.className = 'ol-more-wrap';
+      const moreToggle = document.createElement('button');
+      moreToggle.className = 'ol-toggle';
+      moreToggle.type = 'button';
+      moreToggle.innerHTML = '<span class="ol-label"><span class="ol-emoji">📚</span>司機路線資訊</span><span class="shuttle-arrow" style="margin-left:auto;">▸</span>';
+      const moreBody = document.createElement('div');
+      moreBody.className = 'ol-more-body';
+      moreToggle.onclick = ()=>{
+        const isOpen = moreBody.classList.toggle('show');
+        moreToggle.querySelector('.shuttle-arrow').textContent = isOpen ? '▾' : '▸';
+      };
+      moreWrap.appendChild(moreToggle);
+      moreWrap.appendChild(moreBody);
+      tripsEl.appendChild(moreWrap);
+
       const trips = splitOfficialTrips(od.stops);
       let bodyHtml = '';
       trips.forEach((tp, ti) => {
@@ -5215,6 +5232,7 @@ function selectItem(key, btn){
         });
       });
       bodyHtml += `<div class="ol-src">${od.info}</div>`;
+      const wrap = document.createElement('div');
       wrap.innerHTML = `
         <button class="ol-toggle" type="button">
           <span class="ol-label"><span class="ol-emoji">📍</span>沿線時刻(${od.stops.length}站)</span>
@@ -5235,7 +5253,7 @@ function selectItem(key, btn){
             .replace(/街口$/, '街')
             .replace(/(前|旁|尾|邊|對面)$/, '')), '_blank');
       });
-      tripsEl.appendChild(wrap);
+      moreBody.appendChild(wrap);
 
       // 完整路線導航(手寫路線腳本謄打,只有部分區有資料)
       if(routeTurnsData[key]){
@@ -5245,7 +5263,7 @@ function selectItem(key, btn){
         navBtn.style.marginTop = '8px';
         navBtn.innerHTML = '<span class="ol-label"><span class="ol-emoji">🗺️</span>完整路線導航</span>';
         navBtn.onclick = () => openRouteNav(key);
-        tripsEl.appendChild(navBtn);
+        moreBody.appendChild(navBtn);
       }
 
       // 手繪路線圖(照片):任何一區只要有上傳照片就會出現這顆按鈕
@@ -5256,7 +5274,7 @@ function selectItem(key, btn){
         sketchBtn.style.marginTop = '8px';
         sketchBtn.innerHTML = '<span class="ol-label"><span class="ol-emoji">📷</span>手繪路線圖</span>';
         sketchBtn.onclick = () => openRouteSketch(key);
-        tripsEl.appendChild(sketchBtn);
+        moreBody.appendChild(sketchBtn);
       }
     }
   } else if(cfg.type === 'doc'){
