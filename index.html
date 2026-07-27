@@ -1697,7 +1697,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.25 ｜ 更新日期：2026.07.27</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.31 ｜ 更新日期：2026.07.27</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -1945,7 +1945,7 @@ const officialLineData = {
     ["16:14","一心二路252號(湯姆熊)"],
     ["16:19","三多三路197號前(第一銀行)"],
     ["16:22","三多三路155號前(彰銀)"],
-    ["16:24","修文街與林森三路192巷口(囍味羊肉爐)"],
+    ["16:24","修文街與林森三路192巷口(霸味羊肉爐)"],
     ["16:26","復興三路417巷口"],
     ["16:30","復興三路與修文街194巷口(佳佳鹽酥雞對面)"],
     ["16:32","復興三路與修文街154巷口(池上飯包旁,靠公車站牌)"],
@@ -1992,7 +1992,7 @@ const officialLineData = {
   ] },
   "4": { info: "第四責任區 · 車號KEB6832 · 資料來源:環境部清運路線查詢網", stops: [
     ["15:57","中華五路1007巷口"],
-    ["15:59","中華五路965號(正勤社區)"],
+    ["15:59","中華五路965號(正勤社區對面,東北酸菜白肉鍋)"],
     ["16:05","復興三路61巷口"],
     ["16:07","復興三路與中華五路1332巷口"],
     ["16:15","三多三路139號(郵局前,石二鍋)"],
@@ -2929,11 +2929,14 @@ const routeTurnsData = {
   "3": {
     startInstructions: "左轉康定路，右轉鎮興路，左轉凱旋路，右轉中華路，過復興路靠右",
     turns: [
+      { afterStop: 1, text: "右轉修文街" },
       { afterStop: 2, text: "左轉中山路，右轉林森三路，左轉一心二路" },
-      { afterStop: 6, text: "右轉三多三路" },
+      { afterStop: 5, text: "右轉三多三路" },
+      { afterStop: 7, text: "右轉修文街（霸味羊肉爐）" },
       { afterStop: 8, text: "左轉廣西路，右轉復興路" },
-      { afterStop: 12, text: "右轉一心二路" },
-      { afterStop: 14, text: "右轉林森路" },
+      { afterStop: 11, text: "右轉一心二路" },
+      { afterStop: 13, text: "右轉林森路" },
+      { afterStop: 14, text: "右轉廣西路（等接駁車）" },
       { afterStop: 15, text: "右轉修文街" },
       { afterStop: 16, text: "直走" },
       { afterStop: 18, text: "區隊出發，左轉康定路，右轉鎮海路，左轉中山路，右轉光華路，左轉管仲南路，右轉民權路，右轉一心路" },
@@ -2964,6 +2967,7 @@ const routeTurnsData = {
       { afterStop: 47, text: "右轉管仲路，右轉民裕街" },
       { afterStop: 48, text: "右轉民壽街" },
       { afterStop: 49, text: "左轉民瑞街" },
+      { afterStop: 50, text: "右轉中山三路" },
     ],
   },
   "2": {
@@ -3008,9 +3012,9 @@ const routeTurnsData = {
       { afterStop: 4, text: "右轉修文街，右轉三多路" },
       { afterStop: 5, text: "右轉桂林街（恆安復健科診所右轉）" },
       { afterStop: 6, text: "直走" },
-      { afterStop: 7, text: "左轉廣西路" },
+      { afterStop: 8, text: "左轉廣西路" },
       { afterStop: 9, text: "右轉光華三路，右轉二聖路" },
-      { afterStop: 11, text: "右轉民權路（走機車道）" },
+      { afterStop: 12, text: "右轉民權路（走機車道）" },
       { afterStop: 15, text: "區隊出發，左轉康定路，右轉鎮海路，左轉中山路，右轉光華路，左轉管仲路" },
       { afterStop: 16, text: "右轉民權路（走機車道）" },
       { afterStop: 17, text: "右轉衡山街（民權加油站正後方）" },
@@ -3018,23 +3022,23 @@ const routeTurnsData = {
       { afterStop: 20, text: "右轉廣州三街，左轉廣西路" },
       { afterStop: 21, text: "右轉民權路（走機車道）" },
       { afterStop: 22, text: "右轉民權二路622巷，左轉桂林街，左轉三多路，左轉民權路（走機車道）" },
-      { afterStop: 23, text: "右轉廣西路" },
-      { afterStop: 25, text: "右轉復興路" },
-      { afterStop: 26, text: "右轉三多路" },
-      { afterStop: 27, text: "右轉育德路" },
-      { afterStop: 28, text: "右轉廣西路" },
-      { afterStop: 29, text: "右轉仁愛三街" },
-      { afterStop: 30, text: "右轉三多路（新灣SPA）" },
+      { afterStop: 24, text: "右轉廣西路" },
+      { afterStop: 26, text: "右轉復興路" },
+      { afterStop: 27, text: "右轉三多路" },
+      { afterStop: 28, text: "右轉育德路" },
+      { afterStop: 29, text: "右轉廣西路" },
+      { afterStop: 30, text: "右轉仁愛三街" },
+      { afterStop: 31, text: "右轉三多路（新灣SPA）" },
       { afterStop: 33, text: "區隊出發，左轉康定路，右轉鎮海路，左轉中山路，右轉凱旋路北段，左轉賢明路，右轉英明路" },
       { afterStop: 34, text: "右轉二聖一路" },
       { afterStop: 35, text: "右轉廣州三街（中正高工足球場正後方），左轉廣西路，左轉光華路" },
-      { afterStop: 36, text: "右轉二聖二路" },
-      { afterStop: 39, text: "右轉民權路（走機車道）" },
-      { afterStop: 40, text: "右轉廣西路" },
-      { afterStop: 41, text: "左轉桂林街" },
-      { afterStop: 45, text: "右轉三多二路" },
-      { afterStop: 46, text: "右轉光華二路" },
-      { afterStop: 49, text: "右轉廣西路" },
+      { afterStop: 37, text: "右轉二聖二路" },
+      { afterStop: 40, text: "右轉民權路（走機車道）" },
+      { afterStop: 41, text: "右轉廣西路" },
+      { afterStop: 42, text: "左轉桂林街" },
+      { afterStop: 46, text: "右轉三多二路" },
+      { afterStop: 47, text: "右轉光華二路" },
+      { afterStop: 50, text: "右轉廣西路" },
     ],
   },
   "5": {
