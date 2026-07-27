@@ -1694,7 +1694,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.20 ｜ 更新日期：2026.07.27</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.21 ｜ 更新日期：2026.07.27</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -3221,14 +3221,16 @@ const routeTurnsData = {
 };
 
 // 手繪路線圖資料:每一區對應一張或多張照片(放在 img/ 資料夾,跟 index.html 同一層上傳到 GitHub Pages)
-// 檔名不用改成統一格式,原始檔名(如 IMG_1234.JPG)直接寫進 src 就好,大小寫要跟實際檔名完全一致
+// 檔名不用改成統一格式,原始檔名直接寫進 src 就好,大小寫要跟實際檔名完全一致
+// 注意:手機上傳時檔名裡的底線 _ 常會被吃掉變成空格(例如 IMG_3034.jpeg 變成 IMG 3034.jpeg)
+//      網址不能有空格,所以檔名若含空格,src 要把空格寫成 %20,例如 "img/IMG%203034.jpeg"
 // 格式: "區號": { images: [ { src: "img/檔名.jpg", caption: "說明文字(選填)" }, ... ] }
 const routeSketchData = {
   "1": {
     images: [
-      { src: "img/IMG_3034.jpeg", caption: "1-1車 · 出車 15:48" },
-      { src: "img/IMG_3035.jpeg", caption: "1-2車 · 出車 18:20" },
-      { src: "img/IMG_3036.jpeg", caption: "1-3車 · 出車 20:26" },
+      { src: "img/IMG%203034.jpeg", caption: "1-1車 · 出車 15:48" },
+      { src: "img/IMG%203035.jpeg", caption: "1-2車 · 出車 18:20" },
+      { src: "img/IMG%203036.jpeg", caption: "1-3車 · 出車 20:26" },
     ],
   },
 };
