@@ -1157,6 +1157,11 @@
     padding:10px 12px;
   }
   .ol-toggle:active{opacity:0.6;}
+  .ol-toggle-sub{
+    background:rgba(168,220,74,0.06);
+    border-color:rgba(168,220,74,0.25);
+    color:var(--accent);
+  }
   .ol-label{display:flex;align-items:center;flex:1;}
   .ol-emoji{
     display:inline-block;
@@ -1697,7 +1702,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.43 ｜ 更新日期：2026.07.27</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.44 ｜ 更新日期：2026.07.27</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -3279,7 +3284,7 @@ const routeSketchData = {
       { src: "img/IMG_3157.jpeg", caption: "5-1車 · 出車 15:37" },
       { src: "img/IMG_3158.jpeg", caption: "5-2車 · 出車 18:16" },
       { src: "img/IMG_3159.jpeg", caption: "5-3車 · 路線1 · 出車 20:30" },
-      { src: "img/IMG_3203.jpeg", caption: "5-3車 · 路線2" },
+      { src: "img/IMG 3203.jpeg", caption: "5-3車 · 路線2" },
     ],
   },
   "6": {
@@ -5335,7 +5340,7 @@ function selectItem(key, btn){
       const moreToggle = document.createElement('button');
       moreToggle.className = 'ol-toggle';
       moreToggle.type = 'button';
-      moreToggle.innerHTML = '<span class="ol-label"><span class="ol-emoji">📚</span>司機路線資訊</span><span class="shuttle-arrow" style="margin-left:auto;">▸</span>';
+      moreToggle.innerHTML = '<span class="ol-label"><span class="ol-emoji">📚</span>路線資訊 (司機專用)</span><span class="shuttle-arrow" style="margin-left:auto;">▸</span>';
       const moreBody = document.createElement('div');
       moreBody.className = 'ol-more-body';
       moreToggle.onclick = ()=>{
@@ -5347,7 +5352,7 @@ function selectItem(key, btn){
       tripsEl.appendChild(moreWrap);
 
       const stopsBtn = document.createElement('button');
-      stopsBtn.className = 'ol-toggle';
+      stopsBtn.className = 'ol-toggle ol-toggle-sub';
       stopsBtn.type = 'button';
       stopsBtn.innerHTML = `<span class="ol-label"><span class="ol-emoji">📍</span>沿線時刻(${od.stops.length}站)</span>`;
       stopsBtn.onclick = () => openRouteStops(key);
@@ -5356,7 +5361,7 @@ function selectItem(key, btn){
       // 完整路線導航(手寫路線腳本謄打,只有部分區有資料)
       if(routeTurnsData[key]){
         const navBtn = document.createElement('button');
-        navBtn.className = 'ol-toggle';
+        navBtn.className = 'ol-toggle ol-toggle-sub';
         navBtn.type = 'button';
         navBtn.style.marginTop = '8px';
         navBtn.innerHTML = '<span class="ol-label"><span class="ol-emoji">🗺️</span>完整路線導航</span>';
@@ -5367,7 +5372,7 @@ function selectItem(key, btn){
       // 手繪路線圖(照片):任何一區只要有上傳照片就會出現這顆按鈕
       if(routeSketchData[key]){
         const sketchBtn = document.createElement('button');
-        sketchBtn.className = 'ol-toggle';
+        sketchBtn.className = 'ol-toggle ol-toggle-sub';
         sketchBtn.type = 'button';
         sketchBtn.style.marginTop = '8px';
         sketchBtn.innerHTML = '<span class="ol-label"><span class="ol-emoji">📷</span>手繪路線圖</span>';
