@@ -1697,7 +1697,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.36 ｜ 更新日期：2026.07.27</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.43 ｜ 更新日期：2026.07.27</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -1768,7 +1768,7 @@
       <div class="rn-title" id="routeNavTitle">完整路線導航</div>
       <div class="rn-font-ctrl">
         <button class="rn-font-btn" type="button" onclick="changeRnFontScale(-0.1)">縮小－</button>
-        <span class="rn-font-pct" id="rnFontPct">100%</span>
+        <span class="rn-font-pct">100%</span>
         <button class="rn-font-btn" type="button" onclick="changeRnFontScale(0.1)">放大＋</button>
       </div>
       <button class="route-nav-close" type="button" onclick="closeRouteNav()">✕</button>
@@ -1782,6 +1782,19 @@
       <button class="route-nav-close" type="button" onclick="closeRouteSketch()">✕</button>
     </div>
     <div class="route-nav-body" id="routeSketchBody"></div>
+  </div>
+
+  <div class="route-nav-overlay" id="routeStopsOverlay">
+    <div class="route-nav-head">
+      <div class="rn-title" id="routeStopsTitle">沿線時刻</div>
+      <div class="rn-font-ctrl">
+        <button class="rn-font-btn" type="button" onclick="changeRnFontScale(-0.1)">縮小－</button>
+        <span class="rn-font-pct">100%</span>
+        <button class="rn-font-btn" type="button" onclick="changeRnFontScale(0.1)">放大＋</button>
+      </div>
+      <button class="route-nav-close" type="button" onclick="closeRouteStops()">✕</button>
+    </div>
+    <div class="route-nav-body" id="routeStopsBody"></div>
   </div>
 
 <script>
@@ -2053,7 +2066,7 @@ const officialLineData = {
     ["16:13","育樂路91號"],
     ["16:20","賢明路1號邊（育樂路18巷口）"],
     ["16:25","凱旋三路109巷口(光陽机車店前)"],
-    ["16:27","育樂路29巷口對面(王壹天下)"],
+    ["16:27","育樂路29巷口對面(玉璽天下)"],
     ["16:33","英明一路73巷口(威靈專業汽車美容)"],
     ["16:38","英明一路131巷口(SYM三陽机車)"],
     ["16:41","二聖一路23號前(DKS精剪髮藝)"],
@@ -2073,7 +2086,7 @@ const officialLineData = {
     ["18:57","一心一路與育群街口"],
     ["19:00","育群街318巷與育群街266巷口"],
     ["19:03","育群街318巷口"],
-    ["19:05","育樂路29號邊（一心一路22巷口）(王壹天下對面)"],
+    ["19:05","育樂路29號邊（一心一路22巷口）(玉璽天下對面)"],
     ["19:08","凱旋三路45巷口"],
     ["19:11","一心一路22巷口"],
     ["19:14","一心一路與和平二路口(小北百貨旁)"],
@@ -3047,15 +3060,14 @@ const routeTurnsData = {
       { afterStop: 1, text: "左轉籬仔內路，右轉憲德街，左轉育群街" },
       { afterStop: 3, text: "過一心一路" },
       { afterStop: 4, text: "走到巷底看見樂群國小圍牆右轉，左轉育樂路（樂群國小正門口）" },
-      { afterStop: 5, text: "育樂路走到底（光華國中圍牆前大迴轉）" },
+      { afterStop: 6, text: "育樂路走到底（光華國中圍牆前大迴轉）" },
       { afterStop: 7, text: "左轉賢明路" },
       { afterStop: 8, text: "右轉凱旋三路" },
       { afterStop: 9, text: "右轉育樂路" },
       { afterStop: 10, text: "過樂群國小，右轉賢明路（看見夏立克綠豆沙右轉），左轉英明一路" },
-      { afterStop: 11, text: "右轉二聖一路" },
+      { afterStop: 12, text: "右轉二聖一路" },
       { afterStop: 13, text: "區隊出發，左轉康定路，右轉鎮海路，左轉中山路，右轉凱旋路北段，左轉賢明路，右轉英明一路，過二聖路，左轉英德街" },
       { afterStop: 14, text: "過和平路" },
-      { afterStop: 18, text: "區隊出發，左轉康定路，右轉鎮海路，左轉中山路，右轉凱旋路，左轉二聖路，右轉廣東三街（王家中正商圈，足球場迴轉），右轉廣西路" },
       { afterStop: 19, text: "右轉和平路" },
       { afterStop: 20, text: "英德街大迴轉，繼續走和平路" },
       { afterStop: 21, text: "右轉和平二路300巷，右轉建華街" },
@@ -3068,19 +3080,21 @@ const routeTurnsData = {
       { afterStop: 31, text: "右轉一心路" },
       { afterStop: 32, text: "右轉和平路" },
       { afterStop: 34, text: "靠右，準備右轉" },
-      { afterStop: 35, text: "中央分隔島看見汕頭街左轉，右轉和平二路84號" },
+      { afterStop: 35, text: "下方和平二路134巷右轉，順著小巷子進去，順著樂群國小圍牆右轉，右轉育樂路89巷" },
       { afterStop: 36, text: "左轉育樂路" },
       { afterStop: 38, text: "往前走到光華國中圍牆邊，大迴轉，左轉賢明路" },
-      // Off41~46(賢明路1號邊/凱得街/籬仔內路一帶)原始手稿沒有逐筆標示轉彎指引
-      { afterStop: 46, text: "右轉凱旋路" },
-      { afterStop: 47, text: "右轉籬仔內路" },
-      { afterStop: 49, text: "在和平三路與籬仔內路交叉點大迴轉" },
-      { afterStop: 51, text: "收完籬仔內路15號後迴轉，右轉憲德街，左轉育群街，過一心路，走到巷底看見樂群國小圍牆右轉，右轉育樂路，左轉育樂路18巷" },
-      { afterStop: 52, text: "左轉凱旋路，左轉育樂路，進入育樂路後第一條巷子右轉" },
-      { afterStop: 53, text: "左轉賢明路，馬上右轉英明一路" },
-      { afterStop: 54, text: "左轉英義街，左轉英德街19巷" },
-      { afterStop: 55, text: "右轉英明路5巷，右轉英德街橫巷，右轉英德街，左轉英明路" },
-      { afterStop: 56, text: "在英明國中正門口大迴轉後，第一條巷子就是英明路145巷" },
+      { afterStop: 41, text: "區隊出發，左轉康定路，右轉鎮海路，左轉中山路，右轉凱旋路北段，左轉籬仔內路" },
+      { afterStop: 42, text: "右轉憲德街" },
+      { afterStop: 43, text: "左轉育群街" },
+      { afterStop: 44, text: "育群街236巷左轉標誌牌（路旁有消防栓）" },
+      { afterStop: 45, text: "右轉一心路" },
+      { afterStop: 47, text: "右轉凱旋路" },
+      { afterStop: 48, text: "右轉籬仔內路" },
+      { afterStop: 50, text: "在和平三路與籬仔內路交叉點大迴轉" },
+      { afterStop: 52, text: "兩種線路可選擇<br>線路1.<br>🔄 收完籬仔內路15號後迴轉，右轉憲德街，左轉育群街，過一心路，走到巷底看見樂群國小圍牆右轉，右轉育樂路，左轉育樂路18巷<br>線路2.<br>左轉凱旋路，左轉育樂路，進入育樂路後第一條巷子右轉（玉璽天下前）右轉" },
+      { afterStop: 54, text: "左轉賢明路，馬上右轉英明一路" },
+      { afterStop: 55, text: "左轉英義街，左轉英德街19巷" },
+      { afterStop: 56, text: "右轉英明路5巷，右轉英德街橫巷，右轉英德街，左轉英明路" },
       { afterStop: 57, text: "左轉二聖一路" },
     ],
   },
@@ -3264,7 +3278,8 @@ const routeSketchData = {
     images: [
       { src: "img/IMG_3157.jpeg", caption: "5-1車 · 出車 15:37" },
       { src: "img/IMG_3158.jpeg", caption: "5-2車 · 出車 18:16" },
-      { src: "img/IMG_3159.jpeg", caption: "5-3車 · 出車 20:30" },
+      { src: "img/IMG_3159.jpeg", caption: "5-3車 · 路線1 · 出車 20:30" },
+      { src: "img/IMG_3203.jpeg", caption: "5-3車 · 路線2" },
     ],
   },
   "6": {
@@ -5331,38 +5346,12 @@ function selectItem(key, btn){
       moreWrap.appendChild(moreBody);
       tripsEl.appendChild(moreWrap);
 
-      const trips = splitOfficialTrips(od.stops);
-      let bodyHtml = '';
-      trips.forEach((tp, ti) => {
-        const names = ['第一趟','第二趟','第三趟','第四趟'];
-        bodyHtml += `<div class="ol-trip-head"><span>${names[ti] || ('第'+(ti+1)+'趟')}</span><span class="group-meta">${tp[0][0]}–${tp[tp.length-1][0]}　·　${tp.length}站</span></div>`;
-        tp.forEach(([t, n]) => {
-          bodyHtml += `<div class="ol-row"><span class="ol-time">${t}</span><span class="ol-name">${n}</span><span class="nav-link nav-icon" data-q="${n}">🗺️</span></div>`;
-        });
-      });
-      bodyHtml += `<div class="ol-src">${od.info}</div>`;
-      const wrap = document.createElement('div');
-      wrap.innerHTML = `
-        <button class="ol-toggle" type="button">
-          <span class="ol-label"><span class="ol-emoji">📍</span>沿線時刻(${od.stops.length}站)</span>
-          <span class="shuttle-arrow" style="margin-left:auto;">▸</span>
-        </button>
-        <div class="ol-body">${bodyHtml}</div>`;
-      const btn = wrap.querySelector('.ol-toggle');
-      const body = wrap.querySelector('.ol-body');
-      btn.onclick = ()=>{
-        const isOpen = body.classList.toggle('show');
-        btn.querySelector('.shuttle-arrow').textContent = isOpen ? '▾' : '▸';
-      };
-      wrap.querySelectorAll('.nav-link').forEach(nl => {
-        nl.onclick = ()=> window.open('https://www.google.com/maps/search/?api=1&query=' +
-          encodeURIComponent('高雄市前鎮區' + nl.getAttribute('data-q')
-            .replace(/與/g, '&')
-            .replace(/巷口$/, '巷').replace(/路口$/, '路')
-            .replace(/街口$/, '街')
-            .replace(/(前|旁|尾|邊|對面)$/, '')), '_blank');
-      });
-      moreBody.appendChild(wrap);
+      const stopsBtn = document.createElement('button');
+      stopsBtn.className = 'ol-toggle';
+      stopsBtn.type = 'button';
+      stopsBtn.innerHTML = `<span class="ol-label"><span class="ol-emoji">📍</span>沿線時刻(${od.stops.length}站)</span>`;
+      stopsBtn.onclick = () => openRouteStops(key);
+      moreBody.appendChild(stopsBtn);
 
       // 完整路線導航(手寫路線腳本謄打,只有部分區有資料)
       if(routeTurnsData[key]){
@@ -5792,15 +5781,18 @@ const RN_FONT_SCALE_KEY = 'rnFontScale';
 const RN_FONT_SCALE_MIN = 0.8;
 const RN_FONT_SCALE_MAX = 1.6;
 
+let currentFontOverlayId = 'routeNavOverlay';
+
 function getRnFontScale(){
   const v = parseFloat(localStorage.getItem(RN_FONT_SCALE_KEY));
   return (!isNaN(v) && v >= RN_FONT_SCALE_MIN && v <= RN_FONT_SCALE_MAX) ? v : 1;
 }
 
 function applyRnFontScale(scale){
-  const overlay = document.getElementById('routeNavOverlay');
+  const overlay = document.getElementById(currentFontOverlayId);
+  if(!overlay) return;
   overlay.style.setProperty('--rn-scale', scale);
-  const pctEl = document.getElementById('rnFontPct');
+  const pctEl = overlay.querySelector('.rn-font-pct');
   if(pctEl) pctEl.textContent = Math.round(scale * 100) + '%';
 }
 
@@ -5889,12 +5881,63 @@ function openRouteNav(zoneKey){
   });
 
   document.getElementById('routeNavOverlay').classList.add('show');
+  currentFontOverlayId = 'routeNavOverlay';
   applyRnFontScale(getRnFontScale());
   body.scrollTop = 0;
 }
 
 function closeRouteNav(){
   document.getElementById('routeNavOverlay').classList.remove('show');
+}
+
+// 沿線時刻獨立頁面:格式比照完整路線導航(rn-stop清單、字級縮放共用同一套),但只列站點不含轉彎指引
+function openRouteStops(zoneKey){
+  const official = officialLineData[zoneKey];
+  if(!official) return;
+
+  document.getElementById('routeStopsTitle').textContent = `路線 ${zoneKey} · 沿線時刻`;
+  const body = document.getElementById('routeStopsBody');
+
+  const tripLabels = ['第一車','第二車','第三車','第四車'];
+  const trips = splitOfficialTrips(official.stops);
+
+  let html = '';
+  let stopNum = 0;
+  trips.forEach((tripStops, ti) => {
+    html += `<div class="rn-trip-head"><span>${tripLabels[ti] || ('第'+(ti+1)+'車')}</span><span class="rn-trip-meta">${tripStops[0][0]}–${tripStops[tripStops.length-1][0]}　·　${tripStops.length}站</span></div>`;
+    tripStops.forEach(stop => {
+      stopNum++;
+      const [time, addr] = stop;
+      const hasRealAddr = /[路街巷弄號]/.test(addr.replace(/[（(].*?[）)]/g, ''));
+      html += `<div class="rn-stop">
+        <span class="rn-stop-num">${stopNum}</span>
+        <span class="rn-stop-body">
+          <span class="rn-stop-time">${time}</span>
+          <span class="rn-stop-addr">${addr}</span>
+        </span>
+        ${hasRealAddr ? `<button class="rn-nav-btn" type="button" data-addr="${addr.replace(/"/g,'&quot;')}">🧭</button>` : ''}
+      </div>`;
+    });
+  });
+  html += `<div class="rn-sketch-label">${official.info}</div>`;
+
+  body.innerHTML = html;
+  body.querySelectorAll('.rn-nav-btn').forEach(btn => {
+    btn.onclick = () => {
+      const addr = btn.getAttribute('data-addr');
+      const q = addr.replace(/[（(].*?[）)]/g, '').replace(/與/g, '&').trim();
+      window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('高雄市前鎮區' + q), '_blank');
+    };
+  });
+
+  document.getElementById('routeStopsOverlay').classList.add('show');
+  currentFontOverlayId = 'routeStopsOverlay';
+  applyRnFontScale(getRnFontScale());
+  body.scrollTop = 0;
+}
+
+function closeRouteStops(){
+  document.getElementById('routeStopsOverlay').classList.remove('show');
 }
 
 document.getElementById('deleteNoteConfirmBtn').onclick = ()=>{
