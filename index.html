@@ -1702,7 +1702,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.44 ｜ 更新日期：2026.07.27</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.49 ｜ 更新日期：2026.07.27</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -3116,11 +3116,11 @@ const routeTurnsData = {
       { afterStop: 20, text: "右轉瑞福路，右轉保泰路" },
       { afterStop: 21, text: "右轉永豐路（國泰世華銀行右轉）" },
       { afterStop: 22, text: "左轉崗山南街" },
-      { afterStop: 24, text: "右轉公正路，過武慶一路，左轉崗山中街回區隊；區隊出發，左轉康定路，右轉鎮海路，左轉中山路，右轉凱旋路北段，左轉賢明路，右轉英明一路，過二聖路，左轉英德街（沿線收運英德街一帶後）左轉廣州三街，左轉二聖路，過凱旋路，右轉公正路，左轉瑞義街，左轉武慶一路" },
+      { afterStop: 24, text: "右轉公正路，過武慶一路，左轉崗山中街回區隊" },
       { afterStop: 26, text: "右轉瑞北路" },
       { afterStop: 28, text: "右轉武慶一路" },
       { afterStop: 29, text: "右轉瑞和街" },
-      { afterStop: 31, text: "左轉公正路" },
+      { afterStop: 30, text: "左轉公正路" },
       { afterStop: 32, text: "過旺來昌立即左轉，左轉瑞義街（左轉進入保安宮牌樓）" },
       { afterStop: 34, text: "右轉武慶一路" },
       { afterStop: 37, text: "左轉崗山橫街" },
@@ -3174,7 +3174,7 @@ const routeTurnsData = {
     ],
   },
   "6": {
-    startInstructions: "左轉康定路，右轉鎮海路，左轉中山路，右轉光華路，右轉廣州三街",
+    startInstructions: "左轉康定路，右轉鎮海路，左轉中山路，右轉光華路，右轉二聖路，左轉廣州三街",
     turns: [
       { afterStop: 1, text: "右轉廣西路，右轉廣東三街" },
       { afterStop: 2, text: "左轉英德街，右轉和平路" },
@@ -3187,7 +3187,8 @@ const routeTurnsData = {
       { afterStop: 10, text: "右轉黃埔街，左轉南寧街" },
       { afterStop: 11, text: "左轉汕頭街，過光華二路" },
       { afterStop: 12, text: "左轉廣東三街" },
-      { afterStop: 13, text: "結束調頭，右轉汕頭街，左轉光華路；區隊出發，左轉康定路，右轉鎮海路，左轉中山路，右轉光華路，右轉汕頭街，右轉和平路" },
+      { afterStop: 13, text: "結束調頭，右轉汕頭街，左轉光華路（第一車結束）" },
+      { afterStop: 13, text: "區隊出發，左轉康定路，右轉鎮海路，左轉中山路，右轉光華路，右轉汕頭街，右轉和平路" },
       { afterStop: 15, text: "右轉一心一路" },
       { afterStop: 16, text: "右轉廣東三街" },
       { afterStop: 21, text: "右轉廣東三街152巷" },
@@ -5850,10 +5851,10 @@ function openRouteNav(zoneKey){
     if(ti === 0){
       html += `<div class="rn-start">🚦 ${turnsInfo.startInstructions}</div>`;
     } else {
-      // 上一車結尾之後的指引(通常是下一趟的「區隊出發...」),移到這一車車頭後面顯示
+      // 上一車結尾之後的「區隊出發」指引,移到這一車車頭後面顯示;其餘(如結束調頭)留在上一車結尾,已在上一輪迴圈畫出
       const boundaryNum = tripLastStopNum[ti - 1];
       if(turnsByStop[boundaryNum]){
-        turnsByStop[boundaryNum].forEach(text => { html += renderTurn(text); });
+        turnsByStop[boundaryNum].filter(text => text.includes('區隊出發')).forEach(text => { html += renderTurn(text); });
       }
     }
     tripStops.forEach(stop => {
@@ -5868,10 +5869,9 @@ function openRouteNav(zoneKey){
         </span>
         ${hasRealAddr ? `<button class="rn-nav-btn" type="button" data-addr="${addr.replace(/"/g,'&quot;')}">🧭</button>` : ''}
       </div>`;
-      // 這一車的最後一站,它的指引已經移到下一車開頭顯示了,這裡不重複顯示
-      const isTripBoundary = tripLastStopNum.includes(stopNum) && stopNum !== tripLastStopNum[tripLastStopNum.length - 1];
-      if(turnsByStop[stopNum] && !isTripBoundary){
-        turnsByStop[stopNum].forEach(text => { html += renderTurn(text); });
+      // 這一站如果是趟次邊界,只跳過「區隊出發」(已搬到下一車車頭顯示),其餘指引(如結束調頭)照常顯示在這裡
+      if(turnsByStop[stopNum]){
+        turnsByStop[stopNum].filter(text => !text.includes('區隊出發')).forEach(text => { html += renderTurn(text); });
       }
     });
   });
