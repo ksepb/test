@@ -1702,7 +1702,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.56 ｜ 更新日期：2026.08.10</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.57 ｜ 更新日期：2026.08.10</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -4430,6 +4430,7 @@ Object.keys(categories).forEach(cat=>{
 });
 
 function selectCategory(cat, btn){
+  discardUnsavedNoteEdit(); // 切換分頁前,先取消還沒儲存的備註編輯
   currentCategory = cat;
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
@@ -4903,6 +4904,19 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
 // ===== 時間編輯:修改存在手機(localStorage),原始資料不動 =====
 let editMode = false;
 let suppressTimeSave = false; // 還原過程中封鎖儲存,避免補發的事件把舊值寫回
+let openNoteEdit = null; // 目前正在編輯中(尚未儲存)的備註框,切換頁面時要自動取消
+
+// 切換頁面/路線時,若有備註正在編輯但還沒按「儲存」,自動視同取消(還原成上次存檔的內容),不留在畫面上半吊子的狀態
+function discardUnsavedNoteEdit(){
+  if(!openNoteEdit) return;
+  const { pnKey, viewEl, editBox, pnBlock, textarea } = openNoteEdit;
+  const saved = localStorage.getItem(pnKey);
+  if(textarea) textarea.value = saved || '';
+  if(editBox) editBox.style.display = 'none';
+  if(saved){ if(viewEl) viewEl.style.display = 'flex'; }
+  else if(pnBlock){ pnBlock.style.display = 'none'; }
+  openNoteEdit = null;
+}
 
 function ovStoreKey(cat, key){ return `timeOverride:${cat}|${key}`; }
 
@@ -4928,6 +4942,7 @@ function effTime(ov, tripIdx, which, original){
 }
 
 function selectItem(key, btn){
+  discardUnsavedNoteEdit(); // 切換路線/區域前,先取消還沒儲存的備註編輯
   // 每次手動選取都先清掉舊的「同組日期切換」提示,避免殘留
   const dsNote = document.getElementById('daySwitchNote');
   if(dsNote){ dsNote.style.display = 'none'; dsNote.innerHTML = ''; }
@@ -5320,6 +5335,7 @@ function selectItem(key, btn){
 
         const openEdit = (e)=>{
           e.stopPropagation();
+          discardUnsavedNoteEdit(); // 先取消其他還開著沒儲存的備註框,避免同時有多個編輯中
           pnBlock.style.display = ''; // 重新顯示區塊(可能原本因為沒內容而隱藏)
           viewEl.style.display = 'none';
           editBox.style.display = 'block';
@@ -5329,6 +5345,7 @@ function selectItem(key, btn){
           const len = textarea.value.length;
           textarea.setSelectionRange(len, len);
           textarea.scrollTop = textarea.scrollHeight;
+          openNoteEdit = { pnKey, viewEl, editBox, pnBlock, textarea }; // 記錄這個備註框正在編輯中,尚未儲存
         };
         if(pnIconBtn) pnIconBtn.onclick = openEdit;
 
@@ -5346,6 +5363,7 @@ function selectItem(key, btn){
             viewEl.style.display = 'none';
             pnBlock.style.display = 'none'; // 沒有內容,整個區塊收起來不佔版面
           }
+          if(openNoteEdit && openNoteEdit.pnKey === pnKey) openNoteEdit = null; // 已儲存,取消追蹤
         };
         pnBlock.querySelector('.pn-cancel-btn').onclick = (e)=>{
           e.stopPropagation();
@@ -5354,6 +5372,7 @@ function selectItem(key, btn){
           editBox.style.display = 'none';
           if(saved){ viewEl.style.display = 'flex'; }
           else{ pnBlock.style.display = 'none'; } // 原本就沒內容,取消後整個區塊收起來
+          if(openNoteEdit && openNoteEdit.pnKey === pnKey) openNoteEdit = null; // 已取消,取消追蹤
         };
         pnBlock.querySelector('.pn-delete-btn').onclick = (e)=>{
           e.stopPropagation();
