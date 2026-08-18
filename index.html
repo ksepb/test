@@ -1702,7 +1702,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.59 ｜ 更新日期：2026.08.10</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.60 ｜ 更新日期：2026.08.10</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -4644,18 +4644,18 @@ function renderTaskPicker(routeKey, taskGroup){
     btn.textContent = taskName;
     btn.onclick = ()=> selectTask(routeKey, taskName);
     tripsEl.appendChild(btn);
-
-    // 有謄打完整轉彎指引的配套路線(西配/籬配/草配),緊接在「定點收運」按鈕下方插入路線導航選項
-    if(hasNav && taskName.startsWith('定點')){
-      const navBtn = document.createElement('button');
-      navBtn.className = 'route-btn';
-      navBtn.style.width = '100%';
-      navBtn.style.marginBottom = '8px';
-      navBtn.textContent = '定點收運路線導航';
-      navBtn.onclick = () => openRouteNav(routeKey);
-      tripsEl.appendChild(navBtn);
-    }
   });
+
+  // 有謄打完整轉彎指引的配套路線(西配/籬配/草配),「定點收運路線導航」放在整個任務清單最後面
+  if(hasNav){
+    const navBtn = document.createElement('button');
+    navBtn.className = 'route-btn';
+    navBtn.style.width = '100%';
+    navBtn.style.marginBottom = '8px';
+    navBtn.textContent = '定點收運路線導航';
+    navBtn.onclick = () => openRouteNav(routeKey);
+    tripsEl.appendChild(navBtn);
+  }
 }
 
 // 選擇某個任務(定點收運 / 髒亂點),顯示該任務底下的地址清單
