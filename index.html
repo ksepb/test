@@ -1561,17 +1561,41 @@
     flex:1;
     padding:10px;
   }
-  .hidden-restore-bar{
-    text-align:center;
+  .hidden-restore-wrap{
+    margin-top:14px;
+    padding:12px;
+    border:1px dashed var(--line);
+    border-radius:12px;
+  }
+  .hidden-restore-title{
     font-size:13px;
     color:var(--text-dim);
-    padding:10px;
-    cursor:pointer;
-    border:1px dashed var(--line);
-    border-radius:10px;
-    margin-top:14px;
+    margin-bottom:8px;
   }
-  .hidden-restore-bar:active{opacity:0.6;}
+  .hidden-restore-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:8px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .hidden-restore-item:last-of-type{
+    border-bottom:none;
+  }
+  .hidden-restore-text{
+    flex:1;
+    min-width:0;
+    font-size:14px;
+    color:var(--text-dim);
+    text-decoration:line-through;
+    overflow-wrap:break-word;
+  }
+  .hidden-restore-one{
+    flex:none;
+    padding:6px 12px;
+    font-size:13px;
+  }
   .timeline{margin-top:2px;}
   .tl-item{
     position:relative;
@@ -1791,7 +1815,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.74 ｜ 更新日期：2026.08.10</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.77 ｜ 更新日期：2026.08.22</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -5103,14 +5127,14 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
 
   const resetBar = document.createElement('div');
   resetBar.className = 'reset-bar';
-  resetBar.innerHTML = `<button class="reset-btn order-btn">↕ 還原順序</button><button class="reset-btn">↺ 一鍵全恢復</button>`;
+  resetBar.innerHTML = `<button class="reset-btn order-btn">↕ 還原順序</button><button class="reset-btn">↺ 標記點一鍵全恢復</button>`;
   const btns = resetBar.querySelectorAll('.reset-btn');
   armConfirm(btns[0], '↕ 還原順序', '⚠ 再按一次確認還原順序', ()=>{
     order = addrList.slice();
     saveOrder();
     renderAddressList(masterList, storageKeyBase, onBack, readOnly);
   });
-  armConfirm(btns[1], '↺ 一鍵全恢復', '⚠ 再按一次清除全部勾選', ()=>{
+  armConfirm(btns[1], '↺ 標記點一鍵全恢復', '⚠ 再按一次清除全部勾選', ()=>{
     doneMap = {};
     saveDone();
     tripsEl.querySelectorAll('.addr-row').forEach(row=>{
@@ -5230,18 +5254,42 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
   if(!readOnly){
     tripsEl.appendChild(resetBar);
 
-    // 顯示已隱藏站點數量,可以整批復原(只影響這台手機)
-    const hiddenCount = Object.keys(hiddenSet).filter(k => hiddenSet[k]).length;
-    if(hiddenCount > 0){
-      const restoreBar = document.createElement('div');
-      restoreBar.className = 'hidden-restore-bar';
-      restoreBar.textContent = `🙈 已隱藏 ${hiddenCount} 筆　·　點這裡全部復原`;
-      restoreBar.onclick = ()=>{
-        hiddenSet = {};
-        saveHidden();
-        renderAddressList(masterList, storageKeyBase, onBack, readOnly);
-      };
-      tripsEl.appendChild(restoreBar);
+    // 顯示已隱藏的站點,可以個別選擇要不要復原(不用整批一次復原)
+    const hiddenAddrs = Object.keys(hiddenSet).filter(k => hiddenSet[k]);
+    if(hiddenAddrs.length > 0){
+      const restoreWrap = document.createElement('div');
+      restoreWrap.className = 'hidden-restore-wrap';
+      const restoreTitle = document.createElement('div');
+      restoreTitle.className = 'hidden-restore-title';
+      restoreTitle.textContent = `🙈 已隱藏 ${hiddenAddrs.length} 筆(只有我看不到)`;
+      restoreWrap.appendChild(restoreTitle);
+      hiddenAddrs.forEach(addr=>{
+        const info = normalizedAll.find(it => it.addr === addr);
+        const parsed = parseAddrType(info ? info.addr : addr);
+        const item = document.createElement('div');
+        item.className = 'hidden-restore-item';
+        item.innerHTML = `<span class="hidden-restore-text">${parsed.text}</span><button class="reset-btn hidden-restore-one">↺ 復原</button>`;
+        item.querySelector('.hidden-restore-one').onclick = ()=>{
+          delete hiddenSet[addr];
+          saveHidden();
+          renderAddressList(masterList, storageKeyBase, onBack, readOnly);
+        };
+        restoreWrap.appendChild(item);
+      });
+      if(hiddenAddrs.length > 1){
+        const restoreAllBtn = document.createElement('button');
+        restoreAllBtn.className = 'reset-btn';
+        restoreAllBtn.style.width = '100%';
+        restoreAllBtn.style.marginTop = '4px';
+        restoreAllBtn.textContent = '↺ 全部復原';
+        restoreAllBtn.onclick = ()=>{
+          hiddenSet = {};
+          saveHidden();
+          renderAddressList(masterList, storageKeyBase, onBack, readOnly);
+        };
+        restoreWrap.appendChild(restoreAllBtn);
+      }
+      tripsEl.appendChild(restoreWrap);
     }
 
     // 個人新增站點的表單(只存這台手機,不會同步給其他人)
