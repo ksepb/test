@@ -1483,6 +1483,95 @@
   .ord-btn:active{transform:scale(0.9); background:rgba(168,220,74,0.2);}
   .ord-btn:disabled{opacity:0.25; cursor:default;}
   .ord-btn:disabled:active{transform:none; background:rgba(168,220,74,0.08);}
+  /* ===== 配套地址清單:個人化字級縮放/隱藏/新增(只存這台手機,不影響原始資料跟其他人) ===== */
+  .addr-list-wrap{ --addr-scale:1; }
+  .addr-list-wrap .addr-row{ font-size:calc(18px * var(--addr-scale)); }
+  .addr-list-wrap .addr-check{ font-size:calc(19px * var(--addr-scale)); width:calc(40px * var(--addr-scale)); height:calc(40px * var(--addr-scale)); }
+  .addr-list-wrap .addr-line-note{ font-size:calc(14.5px * var(--addr-scale)); }
+  .addr-list-wrap .addr-time{ font-size:calc(13px * var(--addr-scale)); }
+  .addr-font-row{
+    display:flex;
+    justify-content:flex-end;
+    margin-bottom:13px;
+  }
+  .addr-font-ctrl{
+    flex:none;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    background:rgba(255,255,255,0.06);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:2px;
+  }
+  .hide-btn{
+    flex-shrink:0;
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--line);
+    color:var(--text-dim);
+    font-size:13px;
+    line-height:1;
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .hide-btn:active{transform:scale(0.9); background:rgba(255,255,255,0.12);}
+  .addr-row.custom-added .addr-check{
+    background:rgba(120,170,230,0.25);
+  }
+  .addr-add-form{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-top:14px;
+    padding:14px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+  }
+  .addr-add-form input{
+    background:rgba(255,255,255,0.05);
+    border:1px solid var(--line);
+    color:var(--text);
+    border-radius:9px;
+    padding:10px 12px;
+    font-size:15px;
+  }
+  .addr-add-time-label{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    font-size:13px;
+    color:var(--text-dim);
+  }
+  .addr-add-time-label input{
+    flex:none;
+    width:auto;
+  }
+  .addr-add-form .addr-add-actions{
+    display:flex;
+    gap:8px;
+  }
+  .addr-add-form .addr-add-actions button{
+    flex:1;
+    padding:10px;
+  }
+  .hidden-restore-bar{
+    text-align:center;
+    font-size:13px;
+    color:var(--text-dim);
+    padding:10px;
+    cursor:pointer;
+    border:1px dashed var(--line);
+    border-radius:10px;
+    margin-top:14px;
+  }
+  .hidden-restore-bar:active{opacity:0.6;}
   .timeline{margin-top:2px;}
   .tl-item{
     position:relative;
@@ -1702,7 +1791,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.71 ｜ 更新日期：2026.08.10</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.74 ｜ 更新日期：2026.08.10</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -4840,9 +4929,35 @@ function armConfirm(btn, normalLabel, confirmLabel, action){
   };
 }
 
+// ===== 配套地址清單:個人化字級縮放(只存這台手機) =====
+const ADDR_FONT_SCALE_KEY = 'addrFontScale';
+const ADDR_FONT_SCALE_MIN = 0.8;
+const ADDR_FONT_SCALE_MAX = 1.6;
+
+function getAddrFontScale(){
+  const v = parseFloat(localStorage.getItem(ADDR_FONT_SCALE_KEY));
+  return (!isNaN(v) && v >= ADDR_FONT_SCALE_MIN && v <= ADDR_FONT_SCALE_MAX) ? v : 1;
+}
+
+function applyAddrFontScale(scale){
+  const wrap = document.querySelector('.addr-list-wrap');
+  if(!wrap) return;
+  wrap.style.setProperty('--addr-scale', scale);
+  const pctEl = wrap.querySelector('.rn-font-pct');
+  if(pctEl) pctEl.textContent = Math.round(scale * 100) + '%';
+}
+
+function changeAddrFontScale(delta){
+  let scale = Math.round((getAddrFontScale() + delta) * 10) / 10;
+  scale = Math.min(ADDR_FONT_SCALE_MAX, Math.max(ADDR_FONT_SCALE_MIN, scale));
+  localStorage.setItem(ADDR_FONT_SCALE_KEY, String(scale));
+  applyAddrFontScale(scale);
+}
+
 function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
   const tripsEl = document.getElementById('trips');
   tripsEl.innerHTML = '';
+  tripsEl.classList.add('addr-list-wrap');
 
   const topbar = document.createElement('div');
   topbar.className = 'list-topbar';
@@ -4854,6 +4969,20 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
     topbar.appendChild(backBtn);
   }
   tripsEl.appendChild(topbar);
+  {
+    // 縮放是純顯示設定,不影響資料,唯讀模式(定點收運)也要能用
+    const fontRow = document.createElement('div');
+    fontRow.className = 'addr-font-row';
+    const fontCtrl = document.createElement('div');
+    fontCtrl.className = 'addr-font-ctrl';
+    fontCtrl.innerHTML = `<button class="rn-font-btn" type="button">縮小－</button><span class="rn-font-pct">${Math.round(getAddrFontScale()*100)}%</span><button class="rn-font-btn" type="button">放大＋</button>`;
+    const [minusBtn, , plusBtn] = fontCtrl.children;
+    minusBtn.onclick = ()=> changeAddrFontScale(-0.1);
+    plusBtn.onclick = ()=> changeAddrFontScale(0.1);
+    fontRow.appendChild(fontCtrl);
+    tripsEl.appendChild(fontRow);
+  }
+  applyAddrFontScale(getAddrFontScale());
 
   if(!masterList || masterList.length === 0){
     const empty = document.createElement('div');
@@ -4867,13 +4996,39 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
   // 將資料統一整理成 {addr, time, groupIndex, groupLabel} 格式
   // 支援兩種寫法:純字串(舊格式,無時間/無分段)、或 {addr, time, group} 物件(可標時間、可標分段標題)
   let groupIdx = 0;
-  const normalized = masterList.map(item=>{
+  const normalizedAll = masterList.map(item=>{
     let addr, time = '', group = null;
     if(typeof item === 'string'){ addr = item; }
     else { addr = item.addr; time = item.time || ''; group = item.group || null; }
     if(group) groupIdx++;
     return { addr, time, groupIndex: groupIdx, groupLabel: group };
   });
+
+  // 個人化:隱藏、自己新增的站點,只存這台手機的 localStorage,不動到原始資料、也不影響其他人
+  const hiddenKey = `addrHidden:${storageKeyBase}`;
+  const customKey = `addrCustom:${storageKeyBase}`;
+  let hiddenSet;
+  try{
+    hiddenSet = JSON.parse(localStorage.getItem(hiddenKey) || '{}');
+    if(typeof hiddenSet !== 'object' || hiddenSet === null) hiddenSet = {};
+  }catch(e){ hiddenSet = {}; }
+  let customItems;
+  try{
+    customItems = JSON.parse(localStorage.getItem(customKey) || '[]');
+    if(!Array.isArray(customItems)) customItems = [];
+  }catch(e){ customItems = []; }
+  if(readOnly){ hiddenSet = {}; customItems = []; }
+  function saveHidden(){ localStorage.setItem(hiddenKey, JSON.stringify(hiddenSet)); }
+  function saveCustom(){ localStorage.setItem(customKey, JSON.stringify(customItems)); }
+
+  const normalized = normalizedAll.filter(it => !hiddenSet[it.addr]);
+  // 自己新增的站點,併入清單「最後一個分組」而不是自成一組,這樣才能用▲往上排,一路排進官方站點裡混排,不會被卡在底部出不去
+  const mergeGroupIndex = normalized.length ? normalized[normalized.length - 1].groupIndex : 0;
+  if(customItems.length){
+    customItems.forEach(it=>{
+      normalized.push({ addr: it.addr, time: it.time || '', groupIndex: mergeGroupIndex, groupLabel: null, isCustom: true });
+    });
+  }
   const itemsByAddr = new Map(normalized.map(it=>[it.addr, it]));
   const addrList = normalized.map(it=>it.addr);
 
@@ -4942,7 +5097,7 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
   if(!readOnly){
     const hint = document.createElement('div');
     hint.className = 'list-hint' + (onBack ? '' : ' no-back');
-    hint.innerHTML = '<div>點一下可標記已收取</div><div>點 ▲▼ 可調整順序</div>';
+    hint.innerHTML = '<div>點一下可標記已收取</div><div>▲▼調順序 · 🙈隱藏 · 🗑刪除</div>';
     topbar.appendChild(hint);
   }
 
@@ -5004,7 +5159,6 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
     const isLastInGroup = !nextInfo || nextInfo.groupIndex !== info.groupIndex;
 
     const row = document.createElement('div');
-    row.className = 'addr-row' + (doneMap[addr] ? ' done' : '');
     row.setAttribute('data-addr', addr);
     const addrParts = parsedType.text.match(/^(.*?)\s*(\(.*\))\s*$/);
     const mainText = addrParts ? addrParts[1] : parsedType.text;
@@ -5016,13 +5170,30 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
       .replace(/(前|旁|尾|邊|對面)$/, ''));
     const isRealAddr = !mainText.startsWith('※') && /[路街巷弄號]/.test(mainText);
     const orderBtnsHtml = readOnly ? '' : `<span class="order-btns"><button class="ord-btn ord-up" ${isFirstInGroup ? 'disabled' : ''}>▲</button><button class="ord-btn ord-down" ${isLastInGroup ? 'disabled' : ''}>▼</button></span>`;
-    row.innerHTML = `${orderBtnsHtml}<span class="addr-check${parsedType.type === 'star' ? ' type-star' : ''}${parsedType.type === 'note' ? ' type-note' : ''}">${doneMap[addr] ? '✓' : displayNum}</span><div class="addr-content"><div class="addr-line-main">${mainText}</div>${noteText ? `<div class="addr-line-note">${noteText}</div>` : ''}${info.time ? `<div class="addr-time">${info.time}</div>` : ''}</div>${isRealAddr ? `<span class="nav-link nav-icon">🗺️</span>` : ''}`;
+    const hideBtnHtml = readOnly ? '' : `<button class="hide-btn" title="${info.isCustom ? '刪除這筆(自己新增的)' : '隱藏(只有我看不到,不影響原始資料)'}">${info.isCustom ? '🗑' : '🙈'}</button>`;
+    row.className = 'addr-row' + (doneMap[addr] ? ' done' : '') + (info.isCustom ? ' custom-added' : '');
+    row.innerHTML = `${orderBtnsHtml}<span class="addr-check${parsedType.type === 'star' ? ' type-star' : ''}${parsedType.type === 'note' ? ' type-note' : ''}">${doneMap[addr] ? '✓' : displayNum}</span><div class="addr-content"><div class="addr-line-main">${mainText}</div>${noteText ? `<div class="addr-line-note">${noteText}</div>` : ''}${info.time ? `<div class="addr-time">${info.time}</div>` : ''}</div>${isRealAddr ? `<span class="nav-link nav-icon">🗺️</span>` : ''}${hideBtnHtml}`;
     const checkEl = row.querySelector('.addr-check');
     const navEl = row.querySelector('.nav-link');
+    const hideEl = row.querySelector('.hide-btn');
 
     if(navEl) navEl.onclick = (e)=>{
       e.stopPropagation();
       window.open(mapUrl, '_blank');
+    };
+
+    if(hideEl) hideEl.onclick = (e)=>{
+      e.stopPropagation();
+      if(info.isCustom){
+        // 自己新增的,直接刪除這筆
+        customItems = customItems.filter(it => it.addr !== addr);
+        saveCustom();
+      } else {
+        // 官方站點,只是這台手機隱藏起來,原始資料不動
+        hiddenSet[addr] = true;
+        saveHidden();
+      }
+      renderAddressList(masterList, storageKeyBase, onBack, readOnly);
     };
 
     if(!readOnly){
@@ -5056,7 +5227,55 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
     tripsEl.appendChild(row);
   });
 
-  if(!readOnly) tripsEl.appendChild(resetBar);
+  if(!readOnly){
+    tripsEl.appendChild(resetBar);
+
+    // 顯示已隱藏站點數量,可以整批復原(只影響這台手機)
+    const hiddenCount = Object.keys(hiddenSet).filter(k => hiddenSet[k]).length;
+    if(hiddenCount > 0){
+      const restoreBar = document.createElement('div');
+      restoreBar.className = 'hidden-restore-bar';
+      restoreBar.textContent = `🙈 已隱藏 ${hiddenCount} 筆　·　點這裡全部復原`;
+      restoreBar.onclick = ()=>{
+        hiddenSet = {};
+        saveHidden();
+        renderAddressList(masterList, storageKeyBase, onBack, readOnly);
+      };
+      tripsEl.appendChild(restoreBar);
+    }
+
+    // 個人新增站點的表單(只存這台手機,不會同步給其他人)
+    const addBtn = document.createElement('button');
+    addBtn.className = 'reset-btn';
+    addBtn.style.width = '100%';
+    addBtn.style.marginTop = '10px';
+    addBtn.textContent = '＋ 新增站點(只有我看得到)';
+    const addForm = document.createElement('div');
+    addForm.className = 'addr-add-form';
+    addForm.style.display = 'none';
+    addForm.innerHTML = `<input type="text" class="addr-add-input" placeholder="地址,例如:前鎮街100號前">
+      <label class="addr-add-time-label">收運時間(選填)<input type="time" class="addr-add-time"></label>
+      <div class="addr-add-actions">
+        <button class="reset-btn addr-add-cancel">取消</button>
+        <button class="reset-btn order-btn addr-add-save">儲存</button>
+      </div>`;
+    addBtn.onclick = ()=>{
+      addForm.style.display = addForm.style.display === 'none' ? 'flex' : 'none';
+      if(addForm.style.display === 'flex') addForm.querySelector('.addr-add-input').focus();
+    };
+    addForm.querySelector('.addr-add-cancel').onclick = ()=>{ addForm.style.display = 'none'; };
+    addForm.querySelector('.addr-add-save').onclick = ()=>{
+      const inputEl = addForm.querySelector('.addr-add-input');
+      const timeEl = addForm.querySelector('.addr-add-time');
+      const addrVal = inputEl.value.trim();
+      if(!addrVal) { inputEl.focus(); return; }
+      customItems.push({ addr: addrVal, time: timeEl.value || '' });
+      saveCustom();
+      renderAddressList(masterList, storageKeyBase, onBack, readOnly);
+    };
+    tripsEl.appendChild(addBtn);
+    tripsEl.appendChild(addForm);
+  }
 
   updateProgress();
   filterAddressRows();
@@ -5918,7 +6137,7 @@ function closeImg(){
 }
 
 // ===== 備份與還原:只備份「使用者自己的編輯」(改過的時間/勾選進度/排序),不含路線本身資料 =====
-const BACKUP_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'personalNote:'];
+const BACKUP_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'personalNote:', 'addrHidden:', 'addrCustom:'];
 const BACKUP_HEADER = '【前鎮清運備份】';
 
 function utf8ToBase64(str){ return btoa(unescape(encodeURIComponent(str))); }
@@ -6019,7 +6238,7 @@ document.getElementById('doImportBtn').onclick = ()=>{
 };
 
 // ===== 清除所有本機資料:雙重確認,清除前引導先備份 =====
-const CLEAR_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'lastItem:', 'scrollPos:', 'personalNote:'];
+const CLEAR_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'lastItem:', 'scrollPos:', 'personalNote:', 'addrHidden:', 'addrCustom:'];
 const CLEAR_EXACT_KEYS = ['lastCategory'];
 
 document.getElementById('clearDataEntry').onclick = ()=>{
