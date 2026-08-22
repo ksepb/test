@@ -1520,6 +1520,38 @@
     justify-content:center;
   }
   .hide-btn:active{transform:scale(0.9); background:rgba(255,255,255,0.12);}
+  .confirm-modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.6);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:999;
+    padding:24px;
+  }
+  .confirm-modal-box{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:20px;
+    max-width:340px;
+    width:100%;
+  }
+  .confirm-modal-msg{
+    font-size:15.5px;
+    color:var(--text);
+    line-height:1.5;
+    margin-bottom:16px;
+  }
+  .confirm-modal-actions{
+    display:flex;
+    gap:10px;
+  }
+  .confirm-modal-actions button{
+    flex:1;
+    padding:11px;
+  }
   .addr-row.custom-added .addr-check{
     background:rgba(120,170,230,0.25);
   }
@@ -1572,6 +1604,7 @@
     color:var(--text-dim);
     margin-bottom:8px;
   }
+  .hidden-restore-title.collapsible:active{opacity:0.6;}
   .hidden-restore-item{
     display:flex;
     align-items:center;
@@ -1815,7 +1848,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.77 ｜ 更新日期：2026.08.22</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.82 ｜ 更新日期：2026.08.22</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -4926,6 +4959,30 @@ function selectTask(routeKey, taskName){
 // 顯示地址清單(可勾選完成、拖曳排序);onBack 不為 null 時會顯示「返回任務選單」按鈕
 
 // 按兩次確認:第一次按變成警示文字,3秒內再按才執行(不用系統彈窗,LINE內建瀏覽器也能用)
+// 自己畫的確認彈跳視窗(不是瀏覽器原生 confirm()) — LINE 內建瀏覽器會封鎖 window.confirm(),點了完全沒反應,
+// 所以危險動作(隱藏/刪除)一律用這個畫出來的浮層,在 LINE 裡也能正常運作
+function showConfirmModal(message, onConfirm){
+  const old = document.getElementById('confirmModalOverlay');
+  if(old) old.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'confirmModalOverlay';
+  overlay.className = 'confirm-modal-overlay';
+  overlay.innerHTML = `<div class="confirm-modal-box">
+    <div class="confirm-modal-msg">${message}</div>
+    <div class="confirm-modal-actions">
+      <button class="reset-btn confirm-modal-cancel">取消</button>
+      <button class="reset-btn order-btn confirm-modal-ok">確定</button>
+    </div>
+  </div>`;
+  overlay.onclick = (e)=>{ if(e.target === overlay) overlay.remove(); };
+  overlay.querySelector('.confirm-modal-cancel').onclick = ()=> overlay.remove();
+  overlay.querySelector('.confirm-modal-ok').onclick = ()=>{
+    overlay.remove();
+    onConfirm();
+  };
+  document.body.appendChild(overlay);
+}
+
 function armConfirm(btn, normalLabel, confirmLabel, action){
   // 確認狀態時隱藏同一列的其他按鈕,避免誤觸
   const siblings = ()=> btn.parentElement
@@ -5194,7 +5251,7 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
       .replace(/(前|旁|尾|邊|對面)$/, ''));
     const isRealAddr = !mainText.startsWith('※') && /[路街巷弄號]/.test(mainText);
     const orderBtnsHtml = readOnly ? '' : `<span class="order-btns"><button class="ord-btn ord-up" ${isFirstInGroup ? 'disabled' : ''}>▲</button><button class="ord-btn ord-down" ${isLastInGroup ? 'disabled' : ''}>▼</button></span>`;
-    const hideBtnHtml = readOnly ? '' : `<button class="hide-btn" title="${info.isCustom ? '刪除這筆(自己新增的)' : '隱藏(只有我看不到,不影響原始資料)'}">${info.isCustom ? '🗑' : '🙈'}</button>`;
+    const hideBtnHtml = readOnly ? '' : `<button class="hide-btn" title="${info.isCustom ? '刪除這筆(自己新增的)' : '隱藏(只有自己看不到,不影響原始資料)'}">${info.isCustom ? '🗑' : '🙈'}</button>`;
     row.className = 'addr-row' + (doneMap[addr] ? ' done' : '') + (info.isCustom ? ' custom-added' : '');
     row.innerHTML = `${orderBtnsHtml}<span class="addr-check${parsedType.type === 'star' ? ' type-star' : ''}${parsedType.type === 'note' ? ' type-note' : ''}">${doneMap[addr] ? '✓' : displayNum}</span><div class="addr-content"><div class="addr-line-main">${mainText}</div>${noteText ? `<div class="addr-line-note">${noteText}</div>` : ''}${info.time ? `<div class="addr-time">${info.time}</div>` : ''}</div>${isRealAddr ? `<span class="nav-link nav-icon">🗺️</span>` : ''}${hideBtnHtml}`;
     const checkEl = row.querySelector('.addr-check');
@@ -5208,16 +5265,19 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
 
     if(hideEl) hideEl.onclick = (e)=>{
       e.stopPropagation();
-      if(info.isCustom){
-        // 自己新增的,直接刪除這筆
-        customItems = customItems.filter(it => it.addr !== addr);
-        saveCustom();
-      } else {
-        // 官方站點,只是這台手機隱藏起來,原始資料不動
-        hiddenSet[addr] = true;
-        saveHidden();
-      }
-      renderAddressList(masterList, storageKeyBase, onBack, readOnly);
+      const actionLabel = info.isCustom ? '刪除這筆(自己新增的)' : '隱藏這個站點';
+      showConfirmModal(`確定要${actionLabel}嗎?`, ()=>{
+        if(info.isCustom){
+          // 自己新增的,直接刪除這筆
+          customItems = customItems.filter(it => it.addr !== addr);
+          saveCustom();
+        } else {
+          // 官方站點,只是這台手機隱藏起來,原始資料不動
+          hiddenSet[addr] = true;
+          saveHidden();
+        }
+        renderAddressList(masterList, storageKeyBase, onBack, readOnly);
+      });
     };
 
     if(!readOnly){
@@ -5254,50 +5314,12 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
   if(!readOnly){
     tripsEl.appendChild(resetBar);
 
-    // 顯示已隱藏的站點,可以個別選擇要不要復原(不用整批一次復原)
-    const hiddenAddrs = Object.keys(hiddenSet).filter(k => hiddenSet[k]);
-    if(hiddenAddrs.length > 0){
-      const restoreWrap = document.createElement('div');
-      restoreWrap.className = 'hidden-restore-wrap';
-      const restoreTitle = document.createElement('div');
-      restoreTitle.className = 'hidden-restore-title';
-      restoreTitle.textContent = `🙈 已隱藏 ${hiddenAddrs.length} 筆(只有我看不到)`;
-      restoreWrap.appendChild(restoreTitle);
-      hiddenAddrs.forEach(addr=>{
-        const info = normalizedAll.find(it => it.addr === addr);
-        const parsed = parseAddrType(info ? info.addr : addr);
-        const item = document.createElement('div');
-        item.className = 'hidden-restore-item';
-        item.innerHTML = `<span class="hidden-restore-text">${parsed.text}</span><button class="reset-btn hidden-restore-one">↺ 復原</button>`;
-        item.querySelector('.hidden-restore-one').onclick = ()=>{
-          delete hiddenSet[addr];
-          saveHidden();
-          renderAddressList(masterList, storageKeyBase, onBack, readOnly);
-        };
-        restoreWrap.appendChild(item);
-      });
-      if(hiddenAddrs.length > 1){
-        const restoreAllBtn = document.createElement('button');
-        restoreAllBtn.className = 'reset-btn';
-        restoreAllBtn.style.width = '100%';
-        restoreAllBtn.style.marginTop = '4px';
-        restoreAllBtn.textContent = '↺ 全部復原';
-        restoreAllBtn.onclick = ()=>{
-          hiddenSet = {};
-          saveHidden();
-          renderAddressList(masterList, storageKeyBase, onBack, readOnly);
-        };
-        restoreWrap.appendChild(restoreAllBtn);
-      }
-      tripsEl.appendChild(restoreWrap);
-    }
-
     // 個人新增站點的表單(只存這台手機,不會同步給其他人)
     const addBtn = document.createElement('button');
     addBtn.className = 'reset-btn';
     addBtn.style.width = '100%';
     addBtn.style.marginTop = '10px';
-    addBtn.textContent = '＋ 新增站點(只有我看得到)';
+    addBtn.textContent = '＋ 新增站點(只有自己看得到)';
     const addForm = document.createElement('div');
     addForm.className = 'addr-add-form';
     addForm.style.display = 'none';
@@ -5323,6 +5345,56 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
     };
     tripsEl.appendChild(addBtn);
     tripsEl.appendChild(addForm);
+
+    // 顯示已隱藏的站點,可以個別選擇要不要復原(不用整批一次復原);3筆以上自動摺疊,不然清單愈滾愈長
+    const hiddenAddrs = Object.keys(hiddenSet).filter(k => hiddenSet[k]);
+    if(hiddenAddrs.length > 0){
+      const restoreWrap = document.createElement('div');
+      restoreWrap.className = 'hidden-restore-wrap';
+      const collapsible = hiddenAddrs.length >= 1;
+      const restoreTitle = document.createElement('div');
+      restoreTitle.className = 'hidden-restore-title' + (collapsible ? ' collapsible' : '');
+      restoreTitle.textContent = `🙈 已隱藏 ${hiddenAddrs.length} 筆(只有自己看不到)${collapsible ? '　▾ 展開' : ''}`;
+      restoreWrap.appendChild(restoreTitle);
+      const itemsWrap = document.createElement('div');
+      if(collapsible) itemsWrap.style.display = 'none';
+      if(collapsible){
+        restoreTitle.style.cursor = 'pointer';
+        restoreTitle.onclick = ()=>{
+          const showing = itemsWrap.style.display !== 'none';
+          itemsWrap.style.display = showing ? 'none' : 'block';
+          restoreTitle.textContent = `🙈 已隱藏 ${hiddenAddrs.length} 筆(只有自己看不到)　${showing ? '▾ 展開' : '▴ 收起'}`;
+        };
+      }
+      hiddenAddrs.forEach(addr=>{
+        const info = normalizedAll.find(it => it.addr === addr);
+        const parsed = parseAddrType(info ? info.addr : addr);
+        const item = document.createElement('div');
+        item.className = 'hidden-restore-item';
+        item.innerHTML = `<span class="hidden-restore-text">${parsed.text}</span><button class="reset-btn hidden-restore-one">↺ 復原</button>`;
+        item.querySelector('.hidden-restore-one').onclick = ()=>{
+          delete hiddenSet[addr];
+          saveHidden();
+          renderAddressList(masterList, storageKeyBase, onBack, readOnly);
+        };
+        itemsWrap.appendChild(item);
+      });
+      if(hiddenAddrs.length > 1){
+        const restoreAllBtn = document.createElement('button');
+        restoreAllBtn.className = 'reset-btn';
+        restoreAllBtn.style.width = '100%';
+        restoreAllBtn.style.marginTop = '4px';
+        restoreAllBtn.textContent = '↺ 全部復原';
+        restoreAllBtn.onclick = ()=>{
+          hiddenSet = {};
+          saveHidden();
+          renderAddressList(masterList, storageKeyBase, onBack, readOnly);
+        };
+        itemsWrap.appendChild(restoreAllBtn);
+      }
+      restoreWrap.appendChild(itemsWrap);
+      tripsEl.appendChild(restoreWrap);
+    }
   }
 
   updateProgress();
