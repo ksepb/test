@@ -1055,6 +1055,18 @@
     font-size:calc(13px * var(--rn-scale));
     color:var(--text-dim);
     font-variant-numeric:tabular-nums;
+    margin-top:3px;
+  }
+  .stop-time-tag{
+    display:inline-block;
+    font-size:calc(14px * var(--rn-scale));
+    font-weight:700;
+    border-radius:7px;
+    padding:3px 9px;
+    white-space:nowrap;
+    letter-spacing:0.3px;
+    color:#c39bf0;
+    background:rgba(160,110,230,0.14);
   }
   .rn-stop-addr{
     font-size:calc(17px * var(--rn-scale));
@@ -1848,7 +1860,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v4.99 ｜ 更新日期：2026.09.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.2 ｜ 更新日期：2026.09.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -3618,7 +3630,7 @@ const routeTurnsData = {
       { afterStop: 8, text: "右轉明道路" },
       { afterStop: 9, text: "右轉南衙路" },
       { afterStop: 11, text: "直走經過草衙三路" },
-      { afterStop: 12, text: "右轉草衙中街（在朝陽亭等接駁）" },
+      { afterStop: 12, text: "右轉草衙中街（在朝陽寺等接駁）" },
       { afterStop: 13, text: "率性佛堂靠右走和誠街右轉" },
       { afterStop: 14, text: "左轉草衙二路" },
       { afterStop: 15, text: "過漁港路，右轉衙東街" },
@@ -6545,12 +6557,37 @@ function changeRnFontScale(delta){
   applyRnFontScale(scale);
 }
 
+// 沿線時刻的「到達-離開」時間,合併成一個藍色小標籤顯示(跟綠色的站點編號圈區分開,不會看混);
+// 舊格式只有單一時間(沒有"-")的話就直接顯示那個時間
+function renderStopTime(time){
+  const parts = String(time).split('-').map(s => s.trim()).filter(Boolean);
+  if(!parts.length) return '';
+  const label = parts.length >= 2 ? `${parts[0]}-${parts[1]}` : parts[0];
+  return `<span class="stop-time-tag">${label}</span>`;
+}
+
 function openRouteNav(zoneKey){
   const turnsInfo = routeTurnsData[zoneKey];
-  const official = officialLineData[zoneKey];
-  if(!turnsInfo || !official) return;
+  if(!turnsInfo) return;
 
   const isSupportRoute = ['西配','籬配','草配'].includes(zoneKey);
+
+  // 一般垃圾車分區(9~17)用 officialLineData(政府沿線時刻表);
+  // 西配/籬配/草配這種配套路線,官方沒有這份資料,要改用「定點收運」清單當作站點來源,
+  // 並把 {addr,time,group} 轉成跟 officialLineData 一樣的 [time, addr] 格式,同一套渲染邏輯才能共用
+  let stops, infoText;
+  if(isSupportRoute){
+    const src = addressData[zoneKey] && addressData[zoneKey]['定點收運'];
+    if(!src) return;
+    stops = src.map(item => [item.time || '', item.addr]);
+    infoText = '';
+  } else {
+    const official = officialLineData[zoneKey];
+    if(!official) return;
+    stops = official.stops;
+    infoText = official.info;
+  }
+
   const titlePrefix = isSupportRoute ? '' : '路線 ';
   const titleSuffix = isSupportRoute ? '定點收運路線導航' : '完整路線導航';
   document.getElementById('routeNavTitle').textContent = `${titlePrefix}${zoneKey} · ${titleSuffix}`;
@@ -6563,7 +6600,9 @@ function openRouteNav(zoneKey){
   });
 
   const tripLabels = ['第一車','第二車','第三車','第四車'];
-  const trips = splitOfficialTrips(official.stops);
+  // 配套路線(西配/籬配/草配)用 group 欄位切趟(有些站沒時間,不能單純用時間差判斷);
+  // 一般垃圾車分區照舊用時間差(相隔40分鐘以上視為新的一趟)
+  const trips = isSupportRoute ? splitByGroup(addressData[zoneKey]['定點收運']) : splitOfficialTrips(stops);
 
   // 算出每一車「最後一站」的連續編號,這些站後面的指引屬於「下一車的開頭」,不該算在這一車結尾
   const tripLastStopNum = [];
@@ -6583,7 +6622,10 @@ function openRouteNav(zoneKey){
   let stopNum = 0;
 
   trips.forEach((tripStops, ti) => {
-    html += `<div class="rn-trip-head"><span>${tripLabels[ti] || ('第'+(ti+1)+'車')}</span><span class="rn-trip-meta">${tripStops[0][0]}–${tripStops[tripStops.length-1][0]}　·　${tripStops.length}站</span></div>`;
+    const firstTime = (tripStops[0][0] || '').split('-')[0]; // 只取到達時間,避免跟離開時間擠成一串
+    const lastTime = (tripStops[tripStops.length-1][0] || '').split('-')[0];
+    const metaTime = (firstTime || lastTime) ? `${firstTime}–${lastTime}　·　` : '';
+    html += `<div class="rn-trip-head"><span>${tripLabels[ti] || ('第'+(ti+1)+'車')}</span><span class="rn-trip-meta">${metaTime}${tripStops.length}站</span></div>`;
     if(ti === 0){
       html += `<div class="rn-start">🚦 ${turnsInfo.startInstructions}</div>`;
     } else {
@@ -6600,8 +6642,8 @@ function openRouteNav(zoneKey){
       html += `<div class="rn-stop">
         <span class="rn-stop-num">${stopNum}</span>
         <span class="rn-stop-body">
-          <span class="rn-stop-time">${time}</span>
           <span class="rn-stop-addr">${addr}</span>
+          ${time ? `<span class="rn-stop-time">${renderStopTime(time)}</span>` : ''}
         </span>
         ${hasRealAddr ? `<button class="rn-nav-btn" type="button" data-addr="${addr.replace(/"/g,'&quot;')}">🧭</button>` : ''}
       </div>`;
@@ -6627,6 +6669,16 @@ function openRouteNav(zoneKey){
   body.scrollTop = 0;
 }
 
+// 配套路線(西配/籬配/草配)的「定點收運」清單用 group 欄位切趟:遇到新的 group 就視為新的一趟開始
+function splitByGroup(items){
+  const trips = [];
+  items.forEach((item, i) => {
+    if(i === 0 || item.group) trips.push([]);
+    trips[trips.length-1].push([item.time || '', item.addr]);
+  });
+  return trips;
+}
+
 function closeRouteNav(){
   document.getElementById('routeNavOverlay').classList.remove('show');
 }
@@ -6645,7 +6697,9 @@ function openRouteStops(zoneKey){
   let html = '';
   let stopNum = 0;
   trips.forEach((tripStops, ti) => {
-    html += `<div class="rn-trip-head"><span>${tripLabels[ti] || ('第'+(ti+1)+'車')}</span><span class="rn-trip-meta">${tripStops[0][0]}–${tripStops[tripStops.length-1][0]}　·　${tripStops.length}站</span></div>`;
+    const firstTime = (tripStops[0][0] || '').split('-')[0];
+    const lastTime = (tripStops[tripStops.length-1][0] || '').split('-')[0];
+    html += `<div class="rn-trip-head"><span>${tripLabels[ti] || ('第'+(ti+1)+'車')}</span><span class="rn-trip-meta">${firstTime}–${lastTime}　·　${tripStops.length}站</span></div>`;
     tripStops.forEach(stop => {
       stopNum++;
       const [time, addr] = stop;
@@ -6653,8 +6707,8 @@ function openRouteStops(zoneKey){
       html += `<div class="rn-stop">
         <span class="rn-stop-num">${stopNum}</span>
         <span class="rn-stop-body">
-          <span class="rn-stop-time">${time}</span>
           <span class="rn-stop-addr">${addr}</span>
+          ${time ? `<span class="rn-stop-time">${renderStopTime(time)}</span>` : ''}
         </span>
         ${hasRealAddr ? `<button class="rn-nav-btn" type="button" data-addr="${addr.replace(/"/g,'&quot;')}">🧭</button>` : ''}
       </div>`;
