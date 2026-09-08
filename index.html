@@ -1099,6 +1099,37 @@
     font-weight:400;
     color:var(--text-dim);
   }
+  .rn-view-toggle{
+    display:flex;
+    gap:8px;
+    margin-bottom:16px;
+  }
+  .rn-toggle-btn{
+    flex:1;
+    padding:9px;
+    font-size:14px;
+    font-weight:600;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,0.04);
+    color:var(--text-dim);
+  }
+  .rn-toggle-btn.active{
+    border-color:var(--accent);
+    background:rgba(168,220,74,0.14);
+    color:var(--accent);
+  }
+  .rn-toggle-btn:active{transform:scale(0.97);}
+  .rn-tripmap-block{
+    margin:10px 0 16px;
+  }
+  .rn-tripmap-img{
+    display:block;
+    width:100%;
+    height:auto;
+    border-radius:12px;
+    border:1px solid var(--line);
+  }
   .rn-photo-block{
     margin:0 0 20px;
   }
@@ -1860,7 +1891,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.2 ｜ 更新日期：2026.09.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.3 ｜ 更新日期：2026.09.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -3900,6 +3931,16 @@ const routeSketchData = {
       { src: "img/IMG_3173.jpeg", caption: "10-2車 · 出車 18:09" },
       { src: "img/IMG_3174.jpeg", caption: "10-3車 · 出車 20:43" },
     ],
+  },
+};
+
+// 車次地圖(電腦繪製的完整路線地圖,含站點編號/方向箭頭/時間),放在另一個資料夾 routemap/ 跟手繪路線圖(img/IMG_XXXX)的檔名分開,避免混淆或衝突
+// 格式: "區號": { 車次(1/2/3): [ { src: "routemap/檔名.jpg" }, ... ] }  一車可以放多張(跨頁)
+const routeTripMapData = {
+  "7": {
+    1: [{ src: "routemap/7-1.jpg" }],
+    2: [{ src: "routemap/7-2-1.jpg" }, { src: "routemap/7-2-2.jpg" }],
+    3: [{ src: "routemap/7-3.jpg" }],
   },
 };
 
@@ -6566,6 +6607,21 @@ function renderStopTime(time){
   return `<span class="stop-time-tag">${label}</span>`;
 }
 
+// 完整路線導航的「地圖／文字指引」開關,只存在這台手機,兩個都預設開(true)
+const RN_SHOW_MAP_KEY = 'rnShowMap';
+const RN_SHOW_TEXT_KEY = 'rnShowText';
+
+function getRnShowMap(){
+  const v = localStorage.getItem(RN_SHOW_MAP_KEY);
+  return v === null ? true : v === '1';
+}
+function setRnShowMap(v){ localStorage.setItem(RN_SHOW_MAP_KEY, v ? '1' : '0'); }
+function getRnShowText(){
+  const v = localStorage.getItem(RN_SHOW_TEXT_KEY);
+  return v === null ? true : v === '1';
+}
+function setRnShowText(v){ localStorage.setItem(RN_SHOW_TEXT_KEY, v ? '1' : '0'); }
+
 function openRouteNav(zoneKey){
   const turnsInfo = routeTurnsData[zoneKey];
   if(!turnsInfo) return;
@@ -6618,7 +6674,19 @@ function openRouteNav(zoneKey){
     return `<div class="rn-turn${cls}">${icon} ${text}</div>`;
   };
 
+  // 車次地圖(routeTripMapData)只有部分區有拍/繪製,沒有的話不顯示地圖開關,避免按了沒反應
+  const tripMaps = routeTripMapData[zoneKey];
+  const hasAnyMap = !!tripMaps;
+  const showMap = hasAnyMap && getRnShowMap();
+  const showText = getRnShowText();
+
   let html = '';
+  if(hasAnyMap){
+    html += `<div class="rn-view-toggle">
+      <button type="button" class="rn-toggle-btn${showMap ? ' active' : ''}" id="rnToggleMapBtn">🗺️ 地圖</button>
+      <button type="button" class="rn-toggle-btn${showText ? ' active' : ''}" id="rnToggleTextBtn">📝 文字指引</button>
+    </div>`;
+  }
   let stopNum = 0;
 
   trips.forEach((tripStops, ti) => {
@@ -6626,6 +6694,15 @@ function openRouteNav(zoneKey){
     const lastTime = (tripStops[tripStops.length-1][0] || '').split('-')[0];
     const metaTime = (firstTime || lastTime) ? `${firstTime}–${lastTime}　·　` : '';
     html += `<div class="rn-trip-head"><span>${tripLabels[ti] || ('第'+(ti+1)+'車')}</span><span class="rn-trip-meta">${metaTime}${tripStops.length}站</span></div>`;
+
+    if(showMap && tripMaps && tripMaps[ti+1]){
+      tripMaps[ti+1].forEach(img => {
+        html += `<div class="rn-tripmap-block"><img class="rn-tripmap-img" src="${encodeURI(img.src)}" alt="${zoneKey}第${ti+1}車路線地圖" loading="lazy"></div>`;
+      });
+    }
+
+    if(!showText) return; // 只看地圖,略過文字指引跟站點清單
+
     if(ti === 0){
       html += `<div class="rn-start">🚦 ${turnsInfo.startInstructions}</div>`;
     } else {
@@ -6653,8 +6730,13 @@ function openRouteNav(zoneKey){
       }
     });
   });
+  // showText為false時,stopNum在forEach裡用return跳過了不會累加,但因為是配合tripStops.length算車次編號用,不影響地圖顯示,不需額外處理
 
   body.innerHTML = html;
+  if(hasAnyMap){
+    document.getElementById('rnToggleMapBtn').onclick = () => { setRnShowMap(!getRnShowMap()); openRouteNav(zoneKey); };
+    document.getElementById('rnToggleTextBtn').onclick = () => { setRnShowText(!getRnShowText()); openRouteNav(zoneKey); };
+  }
   body.querySelectorAll('.rn-nav-btn').forEach(btn => {
     btn.onclick = () => {
       const addr = btn.getAttribute('data-addr');
