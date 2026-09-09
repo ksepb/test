@@ -918,6 +918,7 @@
     z-index:60;
     flex-direction:column;
     --rn-scale:1;
+    --img-scale:1;
   }
   .route-nav-overlay.show{display:flex;}
   .route-nav-head{
@@ -985,6 +986,7 @@
   .route-nav-body{
     flex:1;
     overflow-y:auto;
+    overflow-x:auto;
     padding:16px 16px calc(24px + env(safe-area-inset-bottom));
     -webkit-overflow-scrolling:touch;
   }
@@ -1121,6 +1123,7 @@
   }
   .rn-toggle-btn:active{transform:scale(0.97);}
   .rn-tripmap-block{
+    position:relative;
     margin:10px 0 16px;
   }
   .rn-tripmap-img{
@@ -1129,13 +1132,30 @@
     height:auto;
     border-radius:12px;
     border:1px solid var(--line);
+    cursor:pointer;
+  }
+  .rn-tripmap-img:active{opacity:0.85;}
+  .rn-tripmap-zoom-hint{
+    position:absolute;
+    right:10px;
+    bottom:10px;
+    background:rgba(0,0,0,0.55);
+    color:#fff;
+    font-size:12px;
+    padding:4px 9px;
+    border-radius:20px;
+    pointer-events:none;
+    display:flex;
+    align-items:center;
+    gap:4px;
   }
   .rn-photo-block{
     margin:0 0 20px;
   }
   .rn-photo-img{
     display:block;
-    width:100%;
+    width:calc(100% * var(--img-scale, 1));
+    max-width:none;
     height:auto;
     border-radius:12px;
     border:1px solid var(--line);
@@ -1891,7 +1911,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.11 ｜ 更新日期：2026.09.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.13 ｜ 更新日期：2026.09.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -1973,6 +1993,11 @@
   <div class="route-nav-overlay" id="routeSketchOverlay">
     <div class="route-nav-head">
       <div class="rn-title" id="routeSketchTitle">路線示意圖</div>
+      <div class="rn-font-ctrl">
+        <button class="rn-font-btn" type="button" onclick="changeRnImgScale(-0.2)">縮小－</button>
+        <span class="rn-img-pct">100%</span>
+        <button class="rn-font-btn" type="button" onclick="changeRnImgScale(0.2)">放大＋</button>
+      </div>
       <button class="route-nav-close" type="button" onclick="closeRouteSketch()">✕</button>
     </div>
     <div class="route-nav-body" id="routeSketchBody"></div>
@@ -4022,6 +4047,25 @@ function openRouteSketch(zoneKey){
     </div>
   `).join('');
   document.getElementById('routeSketchOverlay').classList.add('show');
+  applyRnImgScale(getRnImgScale());
+  body.scrollTop = 0;
+}
+
+// 點完整路線導航裡的車次地圖縮圖,跳出跟手繪路線圖同一套全螢幕檢視器,只顯示這一車次的圖(可能1張或跨頁多張),
+// 兩指縮放只會放大圖片本身,不會連文字按鈕一起被放大
+function openTripMap(zoneKey, tripNum){
+  const imgs = routeTripMapData[zoneKey] && routeTripMapData[zoneKey][tripNum];
+  if(!imgs || !imgs.length) return;
+  const tripLabels = ['第一車','第二車','第三車','第四車'];
+  document.getElementById('routeSketchTitle').textContent = `路線${zoneKey} · ${tripLabels[tripNum-1] || ('第'+tripNum+'車')}地圖`;
+  const body = document.getElementById('routeSketchBody');
+  body.innerHTML = imgs.map(img => `
+    <div class="rn-photo-block">
+      <img class="rn-photo-img" src="${encodeURI(img.src)}" alt="路線${zoneKey}第${tripNum}車地圖" loading="lazy">
+    </div>
+  `).join('');
+  document.getElementById('routeSketchOverlay').classList.add('show');
+  applyRnImgScale(getRnImgScale());
   body.scrollTop = 0;
 }
 
@@ -6664,6 +6708,32 @@ function changeRnFontScale(delta){
   applyRnFontScale(scale);
 }
 
+// 路線示意圖(手繪路線圖/車次地圖)全螢幕檢視的圖片縮放,獨立於文字字級縮放,只存這台手機;
+// 放大後圖片會超出螢幕寬度,靠 route-nav-body 的左右捲動來看放大後的細節
+const RN_IMG_SCALE_KEY = 'rnImgScale';
+const RN_IMG_SCALE_MIN = 0.6;
+const RN_IMG_SCALE_MAX = 3;
+
+function getRnImgScale(){
+  const v = parseFloat(localStorage.getItem(RN_IMG_SCALE_KEY));
+  return (!isNaN(v) && v >= RN_IMG_SCALE_MIN && v <= RN_IMG_SCALE_MAX) ? v : 1;
+}
+
+function applyRnImgScale(scale){
+  const overlay = document.getElementById('routeSketchOverlay');
+  if(!overlay) return;
+  overlay.style.setProperty('--img-scale', scale);
+  const pctEl = overlay.querySelector('.rn-img-pct');
+  if(pctEl) pctEl.textContent = Math.round(scale * 100) + '%';
+}
+
+function changeRnImgScale(delta){
+  let scale = Math.round((getRnImgScale() + delta) * 10) / 10;
+  scale = Math.min(RN_IMG_SCALE_MAX, Math.max(RN_IMG_SCALE_MIN, scale));
+  localStorage.setItem(RN_IMG_SCALE_KEY, String(scale));
+  applyRnImgScale(scale);
+}
+
 // 沿線時刻的「到達-離開」時間,合併成一個藍色小標籤顯示(跟綠色的站點編號圈區分開,不會看混);
 // 舊格式只有單一時間(沒有"-")的話就直接顯示那個時間
 function renderStopTime(time){
@@ -6763,7 +6833,7 @@ function openRouteNav(zoneKey){
 
     if(showMap && tripMaps && tripMaps[ti+1]){
       tripMaps[ti+1].forEach(img => {
-        html += `<div class="rn-tripmap-block"><img class="rn-tripmap-img" src="${encodeURI(img.src)}" alt="${zoneKey}第${ti+1}車路線地圖" loading="lazy"></div>`;
+        html += `<div class="rn-tripmap-block"><img class="rn-tripmap-img" src="${encodeURI(img.src)}" alt="${zoneKey}第${ti+1}車路線地圖" loading="lazy" data-zone="${zoneKey}" data-trip="${ti+1}"><span class="rn-tripmap-zoom-hint">🔍 點圖放大</span></div>`;
       });
     }
 
@@ -6803,6 +6873,11 @@ function openRouteNav(zoneKey){
     document.getElementById('rnToggleMapBtn').onclick = () => { setRnShowMap(!getRnShowMap()); openRouteNav(zoneKey); };
     document.getElementById('rnToggleTextBtn').onclick = () => { setRnShowText(!getRnShowText()); openRouteNav(zoneKey); };
   }
+  body.querySelectorAll('.rn-tripmap-img').forEach(img => {
+    img.onclick = () => {
+      openTripMap(img.getAttribute('data-zone'), +img.getAttribute('data-trip'));
+    };
+  });
   body.querySelectorAll('.rn-nav-btn').forEach(btn => {
     btn.onclick = () => {
       const addr = btn.getAttribute('data-addr');
