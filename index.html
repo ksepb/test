@@ -1149,6 +1149,114 @@
     align-items:center;
     gap:4px;
   }
+  /* ===== 浮動地圖小視窗:可拖曳,蓋在完整路線導航文字上方,不隨捲動消失 ===== */
+  .float-map-widget{
+    --floatmap-scale:1;
+    position:fixed;
+    right:14px;
+    bottom:14px;
+    width:calc(34vw * var(--floatmap-scale));
+    max-width:calc(180px * var(--floatmap-scale));
+    min-width:calc(100px * var(--floatmap-scale));
+    z-index:80;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    box-shadow:0 6px 24px rgba(0,0,0,0.45);
+    overflow:hidden;
+    touch-action:none;
+    user-select:none;
+  }
+  .float-map-widget.dragging{opacity:0.85;}
+  .float-map-head{
+    display:flex;
+    align-items:center;
+    gap:2px;
+    padding:5px 6px;
+    background:rgba(255,255,255,0.04);
+    border-bottom:1px solid var(--line);
+  }
+  .float-map-sizerow{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    padding:2px 4px;
+    background:rgba(255,255,255,0.02);
+    border-bottom:1px solid var(--line);
+  }
+  .float-map-sizerow .float-map-btn{
+    font-size:10px;
+    padding:3px 4px;
+    white-space:nowrap;
+  }
+  .float-map-sizelabel{
+    font-size:11px;
+    color:var(--text-dim);
+    min-width:30px;
+    text-align:center;
+    font-variant-numeric:tabular-nums;
+  }
+  .float-map-triplabel{
+    flex:1;
+    text-align:center;
+    font-size:12px;
+    font-weight:700;
+    color:var(--accent);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .float-map-btn{
+    flex:none;
+    background:transparent;
+    border:none;
+    color:var(--text-dim);
+    font-size:13px;
+    padding:3px 6px;
+    line-height:1;
+  }
+  .float-map-btn:active{opacity:0.6;}
+  .float-map-close{color:var(--text-dim); font-size:14px;}
+  .float-map-nav{
+    position:relative;
+    line-height:0;
+  }
+  .float-map-img{
+    display:block;
+    width:100%;
+    height:auto;
+    cursor:pointer;
+  }
+  .float-map-empty{
+    padding:24px 8px;
+    text-align:center;
+    font-size:12px;
+    color:var(--text-dim);
+  }
+  .float-map-pages{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    padding:4px 6px;
+    background:rgba(255,255,255,0.04);
+  }
+  .float-map-dots{
+    display:flex;
+    gap:4px;
+  }
+  .float-map-dot{
+    width:5px;
+    height:5px;
+    border-radius:50%;
+    background:var(--text-dim);
+    opacity:0.5;
+  }
+  .float-map-dot.active{
+    background:var(--accent);
+    opacity:1;
+  }
   .rn-photo-block{
     margin:0 0 20px;
   }
@@ -1911,7 +2019,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.13 ｜ 更新日期：2026.09.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.16 ｜ 更新日期：2026.09.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -4049,6 +4157,7 @@ function openRouteSketch(zoneKey){
   document.getElementById('routeSketchOverlay').classList.add('show');
   applyRnImgScale(getRnImgScale());
   body.scrollTop = 0;
+  hideFloatMapTemporarily();
 }
 
 // 點完整路線導航裡的車次地圖縮圖,跳出跟手繪路線圖同一套全螢幕檢視器,只顯示這一車次的圖(可能1張或跨頁多張),
@@ -4067,10 +4176,23 @@ function openTripMap(zoneKey, tripNum){
   document.getElementById('routeSketchOverlay').classList.add('show');
   applyRnImgScale(getRnImgScale());
   body.scrollTop = 0;
+  hideFloatMapTemporarily();
 }
 
 function closeRouteSketch(){
   document.getElementById('routeSketchOverlay').classList.remove('show');
+  restoreFloatMap();
+}
+
+// 全螢幕看圖(手繪路線圖/車次地圖)時,浮動地圖小視窗的 z-index 比全螢幕圖低,會被蓋住反而擋在中間很奇怪,
+// 所以全螢幕開著的時候先暫時藏起來,關閉全螢幕再恢復顯示,不影響浮動視窗原本的車次/頁碼狀態
+function hideFloatMapTemporarily(){
+  const el = document.getElementById('floatMapWidget');
+  if(el) el.style.display = 'none';
+}
+function restoreFloatMap(){
+  const el = document.getElementById('floatMapWidget');
+  if(el) el.style.display = '';
 }
 
 // 依時間斷層(>=40分鐘)把官方沿線清單切成三趟,回收車備註自動比對與垃圾車顯示共用
@@ -6734,6 +6856,138 @@ function changeRnImgScale(delta){
   applyRnImgScale(scale);
 }
 
+// 完整路線導航的「浮動地圖」開關,只存這台手機,預設關;有圖的區才會顯示這個開關
+const RN_SHOW_FLOATMAP_KEY = 'rnShowFloatMap';
+function getRnShowFloatMap(){ return localStorage.getItem(RN_SHOW_FLOATMAP_KEY) === '1'; }
+function setRnShowFloatMap(v){ localStorage.setItem(RN_SHOW_FLOATMAP_KEY, v ? '1' : '0'); }
+
+// 浮動地圖視窗大小:百分比縮放(60%~180%,每次±10%),只存這台手機,預設100%
+const RN_FLOATMAP_SCALE_KEY = 'rnFloatMapScale';
+const RN_FLOATMAP_SCALE_MIN = 0.6;
+const RN_FLOATMAP_SCALE_MAX = 1.8;
+function getRnFloatMapScale(){
+  const v = parseFloat(localStorage.getItem(RN_FLOATMAP_SCALE_KEY));
+  return (!isNaN(v) && v >= RN_FLOATMAP_SCALE_MIN && v <= RN_FLOATMAP_SCALE_MAX) ? v : 1;
+}
+function setRnFloatMapScale(v){ localStorage.setItem(RN_FLOATMAP_SCALE_KEY, String(v)); }
+function changeRnFloatMapScale(delta){
+  let scale = Math.round((getRnFloatMapScale() + delta) * 10) / 10;
+  scale = Math.min(RN_FLOATMAP_SCALE_MAX, Math.max(RN_FLOATMAP_SCALE_MIN, scale));
+  setRnFloatMapScale(scale);
+  renderFloatMap();
+}
+
+// 浮動地圖小視窗:可拖曳移動、車次用上排箭頭切換(固定顯示打開當下那一車,不隨捲動自動換)、
+// 該車次圖片超過1張時下排會出現頁碼點點跟左右箭頭切換跨頁;點圖片本身跳全螢幕(共用 openTripMap)
+let floatMapState = null; // { zoneKey, tripCount, curTrip, curPage }
+
+function closeFloatMap(){
+  const el = document.getElementById('floatMapWidget');
+  if(el) el.remove();
+  floatMapState = null;
+}
+
+function openFloatMap(zoneKey, tripCount, startTrip){
+  closeFloatMap();
+  const tripMaps = routeTripMapData[zoneKey];
+  if(!tripMaps) return;
+  floatMapState = { zoneKey, tripCount, curTrip: startTrip || 1, curPage: 0 };
+
+  const el = document.createElement('div');
+  el.id = 'floatMapWidget';
+  el.className = 'float-map-widget';
+  document.body.appendChild(el);
+  renderFloatMap();
+
+  // 拖曳:觸控/滑鼠都支援,限制在螢幕範圍內,放開後停在原地(不記憶位置,下次打開回到預設右下角)
+  let dragging = false, startX = 0, startY = 0, startLeft = 0, startTop = 0;
+  const onDown = e => {
+    if(e.target.closest('.float-map-btn') || e.target.closest('.float-map-nav')) return; // 按鈕/圖片本身不觸發拖曳
+    dragging = true;
+    const p = e.touches ? e.touches[0] : e;
+    startX = p.clientX; startY = p.clientY;
+    const rect = el.getBoundingClientRect();
+    startLeft = rect.left; startTop = rect.top;
+    el.classList.add('dragging');
+  };
+  const onMove = e => {
+    if(!dragging) return;
+    const p = e.touches ? e.touches[0] : e;
+    let newLeft = startLeft + (p.clientX - startX);
+    let newTop = startTop + (p.clientY - startY);
+    const w = el.offsetWidth, h = el.offsetHeight;
+    newLeft = Math.min(Math.max(0, newLeft), window.innerWidth - w);
+    newTop = Math.min(Math.max(0, newTop), window.innerHeight - h);
+    el.style.left = newLeft + 'px';
+    el.style.top = newTop + 'px';
+    el.style.right = 'auto';
+    el.style.bottom = 'auto';
+    e.preventDefault();
+  };
+  const onUp = () => { dragging = false; el.classList.remove('dragging'); };
+  el.addEventListener('mousedown', onDown);
+  el.addEventListener('touchstart', onDown, {passive:true});
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('touchmove', onMove, {passive:false});
+  window.addEventListener('mouseup', onUp);
+  window.addEventListener('touchend', onUp);
+}
+
+function renderFloatMap(){
+  const el = document.getElementById('floatMapWidget');
+  if(!el || !floatMapState) return;
+  const { zoneKey, tripCount, curTrip, curPage } = floatMapState;
+  const tripLabels = ['第一車','第二車','第三車','第四車'];
+  const imgs = (routeTripMapData[zoneKey] && routeTripMapData[zoneKey][curTrip]) || [];
+  const pageCount = imgs.length;
+  const img = imgs[curPage];
+  const curScale = getRnFloatMapScale();
+
+  el.className = 'float-map-widget';
+  el.style.setProperty('--floatmap-scale', curScale);
+  el.innerHTML = `
+    <div class="float-map-head">
+      <button class="float-map-btn" data-act="prevtrip">◀</button>
+      <span class="float-map-triplabel">${tripLabels[curTrip-1] || ('第'+curTrip+'車')}</span>
+      <button class="float-map-btn" data-act="nexttrip">▶</button>
+      <button class="float-map-btn float-map-close" data-act="close">✕</button>
+    </div>
+    <div class="float-map-sizerow">
+      <button class="float-map-btn" data-act="sizedown">縮小－</button>
+      <span class="float-map-sizelabel">${Math.round(curScale*100)}%</span>
+      <button class="float-map-btn" data-act="sizeup">放大＋</button>
+    </div>
+    <div class="float-map-nav">
+      ${img ? `<img class="float-map-img" src="${encodeURI(img.src)}" alt="${zoneKey}${tripLabels[curTrip-1]||''}地圖">` : `<div class="float-map-empty">這車沒有地圖</div>`}
+    </div>
+    ${pageCount > 1 ? `<div class="float-map-pages">
+      <button class="float-map-btn" data-act="prevpage">‹</button>
+      <span class="float-map-dots">${imgs.map((_,i)=>`<span class="float-map-dot${i===curPage?' active':''}"></span>`).join('')}</span>
+      <button class="float-map-btn" data-act="nextpage">›</button>
+    </div>` : ''}
+  `;
+
+  el.querySelector('[data-act="close"]').onclick = () => { setRnShowFloatMap(false); closeFloatMap(); };
+  el.querySelector('[data-act="sizedown"]').onclick = () => changeRnFloatMapScale(-0.1);
+  el.querySelector('[data-act="sizeup"]').onclick = () => changeRnFloatMapScale(0.1);
+  el.querySelector('[data-act="prevtrip"]').onclick = () => {
+    floatMapState.curTrip = curTrip <= 1 ? tripCount : curTrip - 1;
+    floatMapState.curPage = 0;
+    renderFloatMap();
+  };
+  el.querySelector('[data-act="nexttrip"]').onclick = () => {
+    floatMapState.curTrip = curTrip >= tripCount ? 1 : curTrip + 1;
+    floatMapState.curPage = 0;
+    renderFloatMap();
+  };
+  const prevPageBtn = el.querySelector('[data-act="prevpage"]');
+  const nextPageBtn = el.querySelector('[data-act="nextpage"]');
+  if(prevPageBtn) prevPageBtn.onclick = () => { floatMapState.curPage = curPage <= 0 ? pageCount-1 : curPage-1; renderFloatMap(); };
+  if(nextPageBtn) nextPageBtn.onclick = () => { floatMapState.curPage = curPage >= pageCount-1 ? 0 : curPage+1; renderFloatMap(); };
+  const imgEl = el.querySelector('.float-map-img');
+  if(imgEl) imgEl.onclick = () => openTripMap(zoneKey, curTrip);
+}
+
 // 沿線時刻的「到達-離開」時間,合併成一個藍色小標籤顯示(跟綠色的站點編號圈區分開,不會看混);
 // 舊格式只有單一時間(沒有"-")的話就直接顯示那個時間
 function renderStopTime(time){
@@ -6815,12 +7069,14 @@ function openRouteNav(zoneKey){
   const hasAnyMap = !!tripMaps;
   const showMap = hasAnyMap && getRnShowMap();
   const showText = getRnShowText();
+  const showFloatMap = hasAnyMap && getRnShowFloatMap();
 
   let html = '';
   if(hasAnyMap){
     html += `<div class="rn-view-toggle">
       <button type="button" class="rn-toggle-btn${showMap ? ' active' : ''}" id="rnToggleMapBtn">🗺️ 地圖</button>
       <button type="button" class="rn-toggle-btn${showText ? ' active' : ''}" id="rnToggleTextBtn">📝 文字指引</button>
+      <button type="button" class="rn-toggle-btn${showFloatMap ? ' active' : ''}" id="rnToggleFloatBtn">🎈 浮動地圖</button>
     </div>`;
   }
   let stopNum = 0;
@@ -6872,6 +7128,7 @@ function openRouteNav(zoneKey){
   if(hasAnyMap){
     document.getElementById('rnToggleMapBtn').onclick = () => { setRnShowMap(!getRnShowMap()); openRouteNav(zoneKey); };
     document.getElementById('rnToggleTextBtn').onclick = () => { setRnShowText(!getRnShowText()); openRouteNav(zoneKey); };
+    document.getElementById('rnToggleFloatBtn').onclick = () => { setRnShowFloatMap(!getRnShowFloatMap()); openRouteNav(zoneKey); };
   }
   body.querySelectorAll('.rn-tripmap-img').forEach(img => {
     img.onclick = () => {
@@ -6890,6 +7147,12 @@ function openRouteNav(zoneKey){
   currentFontOverlayId = 'routeNavOverlay';
   applyRnFontScale(getRnFontScale());
   body.scrollTop = 0;
+
+  if(showFloatMap){
+    openFloatMap(zoneKey, trips.length);
+  } else {
+    closeFloatMap();
+  }
 }
 
 // 配套路線(西配/籬配/草配)的「定點收運」清單用 group 欄位切趟:遇到新的 group 就視為新的一趟開始
@@ -6904,6 +7167,7 @@ function splitByGroup(items){
 
 function closeRouteNav(){
   document.getElementById('routeNavOverlay').classList.remove('show');
+  closeFloatMap();
 }
 
 // 沿線時刻獨立頁面:格式比照完整路線導航(rn-stop清單、字級縮放共用同一套),但只列站點不含轉彎指引
