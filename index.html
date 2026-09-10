@@ -2040,7 +2040,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.28 ｜ 更新日期：2026.09.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.29 ｜ 更新日期：2026.09.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -6984,7 +6984,12 @@ function renderFloatMap(){
     </div>` : ''}
   `;
 
-  el.querySelector('[data-act="close"]').onclick = () => { setRnShowFloatMap(false); closeFloatMap(); };
+  el.querySelector('[data-act="close"]').onclick = () => {
+    // 跟標題列的🎈開關按鈕做一樣的事:關掉浮動地圖、把內嵌地圖開回來、重新整理整個畫面讓開關按鈕的亮燈狀態同步更新
+    setRnShowFloatMap(false);
+    setRnShowMap(true);
+    openRouteNav(zoneKey);
+  };
   el.querySelector('[data-act="sizedown"]').onclick = () => changeRnFloatMapScale(-0.1);
   el.querySelector('[data-act="sizeup"]').onclick = () => changeRnFloatMapScale(0.1);
   el.querySelector('[data-act="prevtrip"]').onclick = () => {
