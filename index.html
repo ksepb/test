@@ -2019,7 +2019,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.18 ｜ 更新日期：2026.09.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.19 ｜ 更新日期：2026.09.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -6856,20 +6856,18 @@ function changeRnImgScale(delta){
   applyRnImgScale(scale);
 }
 
-// 完整路線導航的「浮動地圖」開關,只存這台手機,預設關;有圖的區才會顯示這個開關
-const RN_SHOW_FLOATMAP_KEY = 'rnShowFloatMap';
-function getRnShowFloatMap(){ return localStorage.getItem(RN_SHOW_FLOATMAP_KEY) === '1'; }
-function setRnShowFloatMap(v){ localStorage.setItem(RN_SHOW_FLOATMAP_KEY, v ? '1' : '0'); }
+// 完整路線導航的「浮動地圖」開關跟大小,只存在這次開著App的當下(記憶體變數),不寫進手機儲存空間,
+// 所以每次重新整理/重開App都會回到預設值(關閉、100%),不會記住上次的狀態
+let rnShowFloatMapState = false;
+function getRnShowFloatMap(){ return rnShowFloatMapState; }
+function setRnShowFloatMap(v){ rnShowFloatMapState = v; }
 
-// 浮動地圖視窗大小:百分比縮放(60%~180%,每次±10%),只存這台手機,預設100%
-const RN_FLOATMAP_SCALE_KEY = 'rnFloatMapScale';
+// 浮動地圖視窗大小:百分比縮放(60%~180%,每次±10%),同樣只存這次的記憶體變數,不記憶,預設100%
 const RN_FLOATMAP_SCALE_MIN = 0.6;
 const RN_FLOATMAP_SCALE_MAX = 1.8;
-function getRnFloatMapScale(){
-  const v = parseFloat(localStorage.getItem(RN_FLOATMAP_SCALE_KEY));
-  return (!isNaN(v) && v >= RN_FLOATMAP_SCALE_MIN && v <= RN_FLOATMAP_SCALE_MAX) ? v : 1;
-}
-function setRnFloatMapScale(v){ localStorage.setItem(RN_FLOATMAP_SCALE_KEY, String(v)); }
+let rnFloatMapScaleState = 1;
+function getRnFloatMapScale(){ return rnFloatMapScaleState; }
+function setRnFloatMapScale(v){ rnFloatMapScaleState = v; }
 function changeRnFloatMapScale(delta){
   let scale = Math.round((getRnFloatMapScale() + delta) * 10) / 10;
   scale = Math.min(RN_FLOATMAP_SCALE_MAX, Math.max(RN_FLOATMAP_SCALE_MIN, scale));
@@ -6899,7 +6897,8 @@ function openFloatMap(zoneKey, tripCount, startTrip){
   document.body.appendChild(el);
   renderFloatMap();
 
-  // 拖曳:觸控/滑鼠都支援,限制在螢幕範圍內,放開後停在原地(不記憶位置,下次打開回到預設右下角)
+  // 拖曳:觸控/滑鼠都支援,可以拖出螢幕外(不限制範圍);如果不小心拖不見了,把「🎈浮動地圖」開關關掉再開一次,
+  // 就會重新出現在預設的左上角位置(因為狀態不記憶,每次重開都是乾淨的預設值)
   let dragging = false, startX = 0, startY = 0, startLeft = 0, startTop = 0;
   const onDown = e => {
     if(e.target.closest('.float-map-btn') || e.target.closest('.float-map-nav')) return; // 按鈕/圖片本身不觸發拖曳
@@ -6913,11 +6912,8 @@ function openFloatMap(zoneKey, tripCount, startTrip){
   const onMove = e => {
     if(!dragging) return;
     const p = e.touches ? e.touches[0] : e;
-    let newLeft = startLeft + (p.clientX - startX);
-    let newTop = startTop + (p.clientY - startY);
-    const w = el.offsetWidth, h = el.offsetHeight;
-    newLeft = Math.min(Math.max(0, newLeft), window.innerWidth - w);
-    newTop = Math.min(Math.max(0, newTop), window.innerHeight - h);
+    const newLeft = startLeft + (p.clientX - startX);
+    const newTop = startTop + (p.clientY - startY);
     el.style.left = newLeft + 'px';
     el.style.top = newTop + 'px';
     el.style.right = 'auto';
