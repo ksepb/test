@@ -1160,9 +1160,9 @@
     min-width:100px;
     z-index:80;
     background:var(--panel);
-    border:1px solid var(--line);
+    border:2px solid var(--accent);
     border-radius:14px;
-    box-shadow:0 6px 24px rgba(0,0,0,0.45);
+    box-shadow:0 8px 28px rgba(0,0,0,0.6), 0 0 0 4px rgba(168,220,74,0.15);
     overflow:hidden;
     touch-action:none;
     user-select:none;
@@ -1172,9 +1172,14 @@
     display:flex;
     align-items:center;
     gap:2px;
-    padding:5px 6px;
+    padding:6px 6px;
     background:rgba(255,255,255,0.04);
     border-bottom:1px solid var(--line);
+  }
+  .float-map-head .float-map-btn{
+    font-size:18px;
+    font-weight:700;
+    padding:6px 10px;
   }
   .float-map-sizerow{
     display:flex;
@@ -1186,21 +1191,27 @@
     border-bottom:1px solid var(--line);
   }
   .float-map-sizerow .float-map-btn{
-    font-size:10px;
-    padding:3px 4px;
+    font-size:14px;
+    font-weight:700;
+    padding:7px 12px;
     white-space:nowrap;
+    color:var(--accent);
+    background:rgba(168,220,74,0.12);
+    border:1px solid rgba(168,220,74,0.4);
+    border-radius:8px;
   }
+  .float-map-sizerow .float-map-btn:active{background:rgba(168,220,74,0.25);}
   .float-map-sizelabel{
-    font-size:11px;
+    font-size:14px;
     color:var(--text-dim);
-    min-width:30px;
+    min-width:38px;
     text-align:center;
     font-variant-numeric:tabular-nums;
   }
   .float-map-triplabel{
     flex:1;
     text-align:center;
-    font-size:12px;
+    font-size:15px;
     font-weight:700;
     color:var(--accent);
     white-space:nowrap;
@@ -1213,11 +1224,11 @@
     border:none;
     color:var(--text-dim);
     font-size:13px;
-    padding:3px 6px;
+    padding:6px 9px;
     line-height:1;
   }
   .float-map-btn:active{opacity:0.6;}
-  .float-map-close{color:var(--text-dim); font-size:14px;}
+  .float-map-head .float-map-close{color:var(--text-dim); font-size:26px; font-weight:700; padding:2px 8px;}
   .float-map-nav{
     position:relative;
     line-height:0;
@@ -2019,7 +2030,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.19 ｜ 更新日期：2026.09.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.24 ｜ 更新日期：2026.09.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -3983,7 +3994,7 @@ const routeSketchData = {
   "5": {
     images: [
       { src: "img/IMG_3157.jpeg", caption: "5-1車 · 出車 15:37" },
-      { src: "img/IMG_3158.jpeg", caption: "5-2車 · 出車 18:16" },
+      { src: "img/IMG_3158.jpeg", caption: "5-2車 · 出車 18:16（起點缺少英德街5個點）" },
       { src: "img/IMG_3159.jpeg", caption: "5-3車 · 路線1 · 出車 20:30" },
       { src: "img/IMG 3203.jpeg", caption: "5-3車 · 路線2" },
     ],
@@ -4047,7 +4058,7 @@ const routeSketchData = {
   "8": {
     images: [
       { src: "img/IMG_3166.jpeg", caption: "8-1車 · 出車 15:40" },
-      { src: "img/IMG_3167.jpeg", caption: "8-2車 · 出車 18:00" },
+      { src: "img/IMG_3167.jpeg", caption: "8-2車 · 出車 18:00（起點英德街5個點已取消）" },
       { src: "img/IMG_3168.jpeg", caption: "8-3車 · 出車 20:25" },
     ],
   },
