@@ -1160,9 +1160,9 @@
     min-width:100px;
     z-index:80;
     background:var(--panel);
-    border:2px solid var(--accent);
+    border:2px solid #e6a23c;
     border-radius:14px;
-    box-shadow:0 8px 28px rgba(0,0,0,0.6), 0 0 0 4px rgba(168,220,74,0.15);
+    box-shadow:0 8px 28px rgba(0,0,0,0.6), 0 0 0 4px rgba(230,162,60,0.18);
     overflow:hidden;
     touch-action:none;
     user-select:none;
@@ -1249,17 +1249,27 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    gap:6px;
-    padding:4px 6px;
+    gap:8px;
+    padding:6px 6px;
     background:rgba(255,255,255,0.04);
   }
+  .float-map-pages .float-map-btn{
+    font-size:20px;
+    font-weight:700;
+    padding:6px 14px;
+    color:var(--accent);
+    background:rgba(168,220,74,0.12);
+    border:1px solid rgba(168,220,74,0.4);
+    border-radius:8px;
+  }
+  .float-map-pages .float-map-btn:active{background:rgba(168,220,74,0.25);}
   .float-map-dots{
     display:flex;
-    gap:4px;
+    gap:5px;
   }
   .float-map-dot{
-    width:5px;
-    height:5px;
+    width:7px;
+    height:7px;
     border-radius:50%;
     background:var(--text-dim);
     opacity:0.5;
@@ -2030,7 +2040,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.24 ｜ 更新日期：2026.09.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.27 ｜ 更新日期：2026.09.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -7133,9 +7143,21 @@ function openRouteNav(zoneKey){
 
   body.innerHTML = html;
   if(hasAnyMap){
-    document.getElementById('rnToggleMapBtn').onclick = () => { setRnShowMap(!getRnShowMap()); openRouteNav(zoneKey); };
+    // 內嵌地圖(🗺️)跟浮動地圖(🎈)兩個都是看圖用的,同時開會兩邊重複顯示同一張圖、畫面雜亂,
+    // 所以做成互斥:開其中一個,另一個自動關掉;📝文字指引維持獨立不受影響
+    document.getElementById('rnToggleMapBtn').onclick = () => {
+      const next = !getRnShowMap();
+      setRnShowMap(next);
+      if(next) setRnShowFloatMap(false);
+      openRouteNav(zoneKey);
+    };
     document.getElementById('rnToggleTextBtn').onclick = () => { setRnShowText(!getRnShowText()); openRouteNav(zoneKey); };
-    document.getElementById('rnToggleFloatBtn').onclick = () => { setRnShowFloatMap(!getRnShowFloatMap()); openRouteNav(zoneKey); };
+    document.getElementById('rnToggleFloatBtn').onclick = () => {
+      const next = !getRnShowFloatMap();
+      setRnShowFloatMap(next);
+      if(next) setRnShowMap(false);
+      openRouteNav(zoneKey);
+    };
   }
   body.querySelectorAll('.rn-tripmap-img').forEach(img => {
     img.onclick = () => {
