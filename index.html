@@ -2040,7 +2040,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.27 ｜ 更新日期：2026.09.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.28 ｜ 更新日期：2026.09.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -7144,7 +7144,8 @@ function openRouteNav(zoneKey){
   body.innerHTML = html;
   if(hasAnyMap){
     // 內嵌地圖(🗺️)跟浮動地圖(🎈)兩個都是看圖用的,同時開會兩邊重複顯示同一張圖、畫面雜亂,
-    // 所以做成互斥:開其中一個,另一個自動關掉;📝文字指引維持獨立不受影響
+    // 所以做成互斥:開其中一個,另一個自動關掉;關掉浮動地圖時,把內嵌地圖開回來,避免兩個都關掉、完全看不到圖;
+    // 📝文字指引維持獨立不受影響
     document.getElementById('rnToggleMapBtn').onclick = () => {
       const next = !getRnShowMap();
       setRnShowMap(next);
@@ -7156,6 +7157,7 @@ function openRouteNav(zoneKey){
       const next = !getRnShowFloatMap();
       setRnShowFloatMap(next);
       if(next) setRnShowMap(false);
+      else setRnShowMap(true);
       openRouteNav(zoneKey);
     };
   }
