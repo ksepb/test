@@ -2040,7 +2040,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.31 ｜ 更新日期：2026.09.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.33 ｜ 更新日期：2026.09.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -2146,6 +2146,34 @@
   </div>
 
 <script>
+// 記住「司機專用」裡沿線時刻/完整路線導航/手繪路線圖,最後一次是哪一區被打開,
+// 關閉時用這個清掉該區的 lastSubView 記憶(關掉=看完了,下次重開App不會自動跳出來)。
+// 手繪路線圖(openRouteSketch)跟車次地圖縮圖(openTripMap)共用同一個全螢幕看圖畫面,
+// 但後者是從「完整路線導航」裡面點出來的暫時性動作,關掉不該影響外層nav的記憶,
+// 所以手繪路線圖用自己獨立的追蹤變數,不跟openRouteNav/openRouteStops共用。
+// 這兩個變數放在整個script最前面宣告,避免「重開App自動跳回上次畫面」這個邏輯
+// 在頁面初次載入、還沒執行到宣告那一行時就搶先呼叫到用這些變數的函式,導致還沒初始化就出錯(TDZ錯誤)
+let lastOpenedSubViewZone = null;
+let sketchDirectOpenZone = null;
+// 浮動地圖(完整路線導航裡的🎈功能)相關的狀態變數,同樣提前宣告,原因跟上面兩個一樣:
+// 避免「重開App自動跳回上次畫面」邏輯在頁面初次載入、還沒跑到原本宣告那一行時就搶先呼叫到用這些變數的函式而出錯
+let rnShowFloatMapState = false;
+const RN_FLOATMAP_SCALE_MIN = 0.6;
+const RN_FLOATMAP_SCALE_MAX = 1.8;
+let rnFloatMapScaleState = 1;
+let floatMapState = null; // { zoneKey, tripCount, curTrip, curPage }
+// 完整路線導航跟沿線時刻/手繪路線圖用到的字級/圖片縮放、地圖顯示開關的相關常數跟變數,
+// 同樣理由提前宣告,避免自動跳回上次畫面時TDZ出錯
+const RN_FONT_SCALE_KEY = 'rnFontScale';
+const RN_FONT_SCALE_MIN = 0.8;
+const RN_FONT_SCALE_MAX = 1.6;
+let currentFontOverlayId = 'routeNavOverlay';
+const RN_IMG_SCALE_KEY = 'rnImgScale';
+const RN_IMG_SCALE_MIN = 0.6;
+const RN_IMG_SCALE_MAX = 3;
+const RN_SHOW_MAP_KEY = 'rnShowMap';
+const RN_SHOW_TEXT_KEY = 'rnShowText';
+
 // 垃圾車 / 回收車共用: route -> [ [depart, arrive, note?], ... 三趟 ]
 const truckData = {
   "1":  [["15:55","16:08"], ["18:20","18:37"], ["20:20","20:45"]],
@@ -6399,17 +6427,9 @@ function selectItem(key, btn){
       moreToggle.innerHTML = '<span class="ol-label"><span class="ol-emoji">📚</span>路線資訊 (司機專用)</span><span class="shuttle-arrow" style="margin-left:auto;">▸</span>';
       const moreBody = document.createElement('div');
       moreBody.className = 'ol-more-body';
-      // 這個「路線資訊(司機專用)」展開鈕記住上次開/關的狀態,每區分開記,下次回來這區還是原本的樣子
-      const moreOpenKey = `moreOpen:${key}`;
-      const wasOpen = localStorage.getItem(moreOpenKey) === '1';
-      if(wasOpen){
-        moreBody.classList.add('show');
-        moreToggle.querySelector('.shuttle-arrow').textContent = '▾';
-      }
       moreToggle.onclick = ()=>{
         const isOpen = moreBody.classList.toggle('show');
         moreToggle.querySelector('.shuttle-arrow').textContent = isOpen ? '▾' : '▸';
-        localStorage.setItem(moreOpenKey, isOpen ? '1' : '0');
       };
       moreWrap.appendChild(moreToggle);
       moreWrap.appendChild(moreBody);
@@ -6827,7 +6847,7 @@ document.getElementById('doImportBtn').onclick = ()=>{
 };
 
 // ===== 清除所有本機資料:雙重確認,清除前引導先備份 =====
-const CLEAR_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'lastItem:', 'scrollPos:', 'personalNote:', 'addrHidden:', 'addrCustom:', 'moreOpen:', 'lastSubView:'];
+const CLEAR_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'lastItem:', 'scrollPos:', 'personalNote:', 'addrHidden:', 'addrCustom:', 'lastSubView:'];
 const CLEAR_EXACT_KEYS = ['lastCategory'];
 
 document.getElementById('clearDataEntry').onclick = ()=>{
@@ -6846,18 +6866,6 @@ function closeDeleteNote(){
 }
 
 // 完整路線導航:把官方沿線站點跟謄打好的轉彎指引交錯排列顯示,只用來閱讀不影響原本的資料判斷邏輯
-const RN_FONT_SCALE_KEY = 'rnFontScale';
-const RN_FONT_SCALE_MIN = 0.8;
-const RN_FONT_SCALE_MAX = 1.6;
-
-let currentFontOverlayId = 'routeNavOverlay';
-// 記住「司機專用」裡沿線時刻/完整路線導航/手繪路線圖,最後一次是哪一區被打開,
-// 關閉時用這個清掉該區的 lastSubView 記憶(關掉=看完了,下次重開App不會自動跳出來)。
-// 手繪路線圖(openRouteSketch)跟車次地圖縮圖(openTripMap)共用同一個全螢幕看圖畫面,
-// 但後者是從「完整路線導航」裡面點出來的暫時性動作,關掉不該影響外層nav的記憶,
-// 所以手繪路線圖用自己獨立的追蹤變數,不跟openRouteNav/openRouteStops共用
-let lastOpenedSubViewZone = null;
-let sketchDirectOpenZone = null;
 
 function getRnFontScale(){
   const v = parseFloat(localStorage.getItem(RN_FONT_SCALE_KEY));
@@ -6881,9 +6889,6 @@ function changeRnFontScale(delta){
 
 // 路線示意圖(手繪路線圖/車次地圖)全螢幕檢視的圖片縮放,獨立於文字字級縮放,只存這台手機;
 // 放大後圖片會超出螢幕寬度,靠 route-nav-body 的左右捲動來看放大後的細節
-const RN_IMG_SCALE_KEY = 'rnImgScale';
-const RN_IMG_SCALE_MIN = 0.6;
-const RN_IMG_SCALE_MAX = 3;
 
 function getRnImgScale(){
   const v = parseFloat(localStorage.getItem(RN_IMG_SCALE_KEY));
@@ -6907,14 +6912,10 @@ function changeRnImgScale(delta){
 
 // 完整路線導航的「浮動地圖」開關跟大小,只存在這次開著App的當下(記憶體變數),不寫進手機儲存空間,
 // 所以每次重新整理/重開App都會回到預設值(關閉、100%),不會記住上次的狀態
-let rnShowFloatMapState = false;
 function getRnShowFloatMap(){ return rnShowFloatMapState; }
 function setRnShowFloatMap(v){ rnShowFloatMapState = v; }
 
 // 浮動地圖視窗大小:百分比縮放(60%~180%,每次±10%),同樣只存這次的記憶體變數,不記憶,預設100%
-const RN_FLOATMAP_SCALE_MIN = 0.6;
-const RN_FLOATMAP_SCALE_MAX = 1.8;
-let rnFloatMapScaleState = 1;
 function getRnFloatMapScale(){ return rnFloatMapScaleState; }
 function setRnFloatMapScale(v){ rnFloatMapScaleState = v; }
 function changeRnFloatMapScale(delta){
@@ -6926,8 +6927,6 @@ function changeRnFloatMapScale(delta){
 
 // 浮動地圖小視窗:可拖曳移動、車次用上排箭頭切換(固定顯示打開當下那一車,不隨捲動自動換)、
 // 該車次圖片超過1張時下排會出現頁碼點點跟左右箭頭切換跨頁;點圖片本身跳全螢幕(共用 openTripMap)
-let floatMapState = null; // { zoneKey, tripCount, curTrip, curPage }
-
 function closeFloatMap(){
   const el = document.getElementById('floatMapWidget');
   if(el) el.remove();
@@ -7048,8 +7047,6 @@ function renderStopTime(time){
 }
 
 // 完整路線導航的「地圖／文字指引」開關,只存在這台手機,兩個都預設開(true)
-const RN_SHOW_MAP_KEY = 'rnShowMap';
-const RN_SHOW_TEXT_KEY = 'rnShowText';
 
 function getRnShowMap(){
   const v = localStorage.getItem(RN_SHOW_MAP_KEY);
