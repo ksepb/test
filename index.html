@@ -2040,7 +2040,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.29 ｜ 更新日期：2026.09.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.31 ｜ 更新日期：2026.09.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -4167,6 +4167,7 @@ const routeTripMapData = {
 function openRouteSketch(zoneKey){
   const data = routeSketchData[zoneKey];
   if(!data || !data.images || !data.images.length) return;
+  sketchDirectOpenZone = zoneKey;
   document.getElementById('routeSketchTitle').textContent = `路線${zoneKey} · 手繪路線圖`;
   const body = document.getElementById('routeSketchBody');
   body.innerHTML = data.images.map(img => `
@@ -4203,6 +4204,9 @@ function openTripMap(zoneKey, tripNum){
 function closeRouteSketch(){
   document.getElementById('routeSketchOverlay').classList.remove('show');
   restoreFloatMap();
+  // 只有「手繪路線圖」直接開的才清記憶;如果這次全螢幕是從完整路線導航裡點車次地圖縮圖開的(openTripMap),
+  // sketchDirectOpenZone 不會被設定,這裡就不會誤清掉外層完整路線導航的 lastSubView 記憶
+  if(sketchDirectOpenZone){ localStorage.removeItem('lastSubView:' + sketchDirectOpenZone); sketchDirectOpenZone = null; }
 }
 
 // 全螢幕看圖(手繪路線圖/車次地圖)時,浮動地圖小視窗的 z-index 比全螢幕圖低,會被蓋住反而擋在中間很奇怪,
@@ -5297,6 +5301,15 @@ function renderPicker(){
             if(card) card.scrollIntoView({ behavior:'smooth', block:'start' });
           }
         }, 250);
+        // 垃圾車分區的「司機專用」清單(沿線時刻/完整路線導航/手繪路線圖):
+        // 只有剛打開App、重新整理頁面這種「第一次進來」的時機才自動跳回上次看的那個畫面,
+        // 手動切區、切任務不會被這個邏輯觸發;關掉(✕)那個畫面時記憶就清掉了,不會下次又跳出來
+        if(!q && currentCategory === '垃圾車'){
+          const savedSubView = localStorage.getItem('lastSubView:' + targetKey);
+          if(savedSubView === 'stops') openRouteStops(targetKey);
+          else if(savedSubView === 'nav') openRouteNav(targetKey);
+          else if(savedSubView === 'sketch') openRouteSketch(targetKey);
+        }
       }
       // 顯示「已切換至同組」提示,可點擊改看原本那區
       if(daySwitchFrom){
@@ -6386,9 +6399,17 @@ function selectItem(key, btn){
       moreToggle.innerHTML = '<span class="ol-label"><span class="ol-emoji">📚</span>路線資訊 (司機專用)</span><span class="shuttle-arrow" style="margin-left:auto;">▸</span>';
       const moreBody = document.createElement('div');
       moreBody.className = 'ol-more-body';
+      // 這個「路線資訊(司機專用)」展開鈕記住上次開/關的狀態,每區分開記,下次回來這區還是原本的樣子
+      const moreOpenKey = `moreOpen:${key}`;
+      const wasOpen = localStorage.getItem(moreOpenKey) === '1';
+      if(wasOpen){
+        moreBody.classList.add('show');
+        moreToggle.querySelector('.shuttle-arrow').textContent = '▾';
+      }
       moreToggle.onclick = ()=>{
         const isOpen = moreBody.classList.toggle('show');
         moreToggle.querySelector('.shuttle-arrow').textContent = isOpen ? '▾' : '▸';
+        localStorage.setItem(moreOpenKey, isOpen ? '1' : '0');
       };
       moreWrap.appendChild(moreToggle);
       moreWrap.appendChild(moreBody);
@@ -6398,7 +6419,7 @@ function selectItem(key, btn){
       stopsBtn.className = 'ol-toggle ol-toggle-sub';
       stopsBtn.type = 'button';
       stopsBtn.innerHTML = `<span class="ol-label"><span class="ol-emoji">📍</span>沿線時刻(${od.stops.length}站)</span>`;
-      stopsBtn.onclick = () => openRouteStops(key);
+      stopsBtn.onclick = () => { localStorage.setItem('lastSubView:' + key, 'stops'); openRouteStops(key); };
       moreBody.appendChild(stopsBtn);
 
       // 完整路線導航(手寫路線腳本謄打,只有部分區有資料)
@@ -6408,7 +6429,7 @@ function selectItem(key, btn){
         navBtn.type = 'button';
         navBtn.style.marginTop = '8px';
         navBtn.innerHTML = '<span class="ol-label"><span class="ol-emoji">🗺️</span>完整路線導航</span>';
-        navBtn.onclick = () => openRouteNav(key);
+        navBtn.onclick = () => { localStorage.setItem('lastSubView:' + key, 'nav'); openRouteNav(key); };
         moreBody.appendChild(navBtn);
       }
 
@@ -6419,7 +6440,7 @@ function selectItem(key, btn){
         sketchBtn.type = 'button';
         sketchBtn.style.marginTop = '8px';
         sketchBtn.innerHTML = '<span class="ol-label"><span class="ol-emoji">📷</span>手繪路線圖</span>';
-        sketchBtn.onclick = () => openRouteSketch(key);
+        sketchBtn.onclick = () => { localStorage.setItem('lastSubView:' + key, 'sketch'); openRouteSketch(key); };
         moreBody.appendChild(sketchBtn);
       }
     }
@@ -6806,7 +6827,7 @@ document.getElementById('doImportBtn').onclick = ()=>{
 };
 
 // ===== 清除所有本機資料:雙重確認,清除前引導先備份 =====
-const CLEAR_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'lastItem:', 'scrollPos:', 'personalNote:', 'addrHidden:', 'addrCustom:'];
+const CLEAR_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'lastItem:', 'scrollPos:', 'personalNote:', 'addrHidden:', 'addrCustom:', 'moreOpen:', 'lastSubView:'];
 const CLEAR_EXACT_KEYS = ['lastCategory'];
 
 document.getElementById('clearDataEntry').onclick = ()=>{
@@ -6830,6 +6851,13 @@ const RN_FONT_SCALE_MIN = 0.8;
 const RN_FONT_SCALE_MAX = 1.6;
 
 let currentFontOverlayId = 'routeNavOverlay';
+// 記住「司機專用」裡沿線時刻/完整路線導航/手繪路線圖,最後一次是哪一區被打開,
+// 關閉時用這個清掉該區的 lastSubView 記憶(關掉=看完了,下次重開App不會自動跳出來)。
+// 手繪路線圖(openRouteSketch)跟車次地圖縮圖(openTripMap)共用同一個全螢幕看圖畫面,
+// 但後者是從「完整路線導航」裡面點出來的暫時性動作,關掉不該影響外層nav的記憶,
+// 所以手繪路線圖用自己獨立的追蹤變數,不跟openRouteNav/openRouteStops共用
+let lastOpenedSubViewZone = null;
+let sketchDirectOpenZone = null;
 
 function getRnFontScale(){
   const v = parseFloat(localStorage.getItem(RN_FONT_SCALE_KEY));
@@ -7037,6 +7065,7 @@ function setRnShowText(v){ localStorage.setItem(RN_SHOW_TEXT_KEY, v ? '1' : '0')
 function openRouteNav(zoneKey){
   const turnsInfo = routeTurnsData[zoneKey];
   if(!turnsInfo) return;
+  lastOpenedSubViewZone = zoneKey;
 
   const isSupportRoute = ['西配','籬配','草配'].includes(zoneKey);
 
@@ -7204,12 +7233,14 @@ function splitByGroup(items){
 function closeRouteNav(){
   document.getElementById('routeNavOverlay').classList.remove('show');
   closeFloatMap();
+  if(lastOpenedSubViewZone){ localStorage.removeItem('lastSubView:' + lastOpenedSubViewZone); lastOpenedSubViewZone = null; }
 }
 
 // 沿線時刻獨立頁面:格式比照完整路線導航(rn-stop清單、字級縮放共用同一套),但只列站點不含轉彎指引
 function openRouteStops(zoneKey){
   const official = officialLineData[zoneKey];
   if(!official) return;
+  lastOpenedSubViewZone = zoneKey;
 
   document.getElementById('routeStopsTitle').textContent = `路線 ${zoneKey} · 沿線時刻`;
   const body = document.getElementById('routeStopsBody');
@@ -7256,6 +7287,7 @@ function openRouteStops(zoneKey){
 
 function closeRouteStops(){
   document.getElementById('routeStopsOverlay').classList.remove('show');
+  if(lastOpenedSubViewZone){ localStorage.removeItem('lastSubView:' + lastOpenedSubViewZone); lastOpenedSubViewZone = null; }
 }
 
 document.getElementById('deleteNoteConfirmBtn').onclick = ()=>{
