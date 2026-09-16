@@ -2040,7 +2040,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.33 ｜ 更新日期：2026.09.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.34 ｜ 更新日期：2026.09.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -2155,6 +2155,14 @@
 // 在頁面初次載入、還沒執行到宣告那一行時就搶先呼叫到用這些變數的函式,導致還沒初始化就出錯(TDZ錯誤)
 let lastOpenedSubViewZone = null;
 let sketchDirectOpenZone = null;
+// 沿線時刻/完整路線導航/手繪路線圖各自的捲動位置記憶,用「類型+區號」當key,關閉時存、打開時還原
+function saveSubViewScrollPos(type, zoneKey, scrollTop){
+  localStorage.setItem('subViewScroll:' + type + ':' + zoneKey, String(scrollTop));
+}
+function getSubViewScrollPos(type, zoneKey){
+  const v = parseInt(localStorage.getItem('subViewScroll:' + type + ':' + zoneKey), 10);
+  return isNaN(v) ? 0 : v;
+}
 // 浮動地圖(完整路線導航裡的🎈功能)相關的狀態變數,同樣提前宣告,原因跟上面兩個一樣:
 // 避免「重開App自動跳回上次畫面」邏輯在頁面初次載入、還沒跑到原本宣告那一行時就搶先呼叫到用這些變數的函式而出錯
 let rnShowFloatMapState = false;
@@ -4206,10 +4214,9 @@ function openRouteSketch(zoneKey){
   `).join('');
   document.getElementById('routeSketchOverlay').classList.add('show');
   applyRnImgScale(getRnImgScale());
-  body.scrollTop = 0;
+  body.scrollTop = getSubViewScrollPos('sketch', zoneKey);
   hideFloatMapTemporarily();
 }
-
 // 點完整路線導航裡的車次地圖縮圖,跳出跟手繪路線圖同一套全螢幕檢視器,只顯示這一車次的圖(可能1張或跨頁多張),
 // 兩指縮放只會放大圖片本身,不會連文字按鈕一起被放大
 function openTripMap(zoneKey, tripNum){
@@ -4230,6 +4237,10 @@ function openTripMap(zoneKey, tripNum){
 }
 
 function closeRouteSketch(){
+  const body = document.getElementById('routeSketchBody');
+  // 只有「手繪路線圖」直接開的才存捲動位置;車次地圖縮圖(openTripMap)開的是暫時性瀏覽,不記憶位置,
+  // 避免覆蓋掉手繪路線圖原本的捲動記憶
+  if(sketchDirectOpenZone) saveSubViewScrollPos('sketch', sketchDirectOpenZone, body.scrollTop);
   document.getElementById('routeSketchOverlay').classList.remove('show');
   restoreFloatMap();
   // 只有「手繪路線圖」直接開的才清記憶;如果這次全螢幕是從完整路線導航裡點車次地圖縮圖開的(openTripMap),
@@ -6847,7 +6858,7 @@ document.getElementById('doImportBtn').onclick = ()=>{
 };
 
 // ===== 清除所有本機資料:雙重確認,清除前引導先備份 =====
-const CLEAR_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'lastItem:', 'scrollPos:', 'personalNote:', 'addrHidden:', 'addrCustom:', 'lastSubView:'];
+const CLEAR_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'lastItem:', 'scrollPos:', 'personalNote:', 'addrHidden:', 'addrCustom:', 'lastSubView:', 'subViewScroll:'];
 const CLEAR_EXACT_KEYS = ['lastCategory'];
 
 document.getElementById('clearDataEntry').onclick = ()=>{
@@ -7208,7 +7219,7 @@ function openRouteNav(zoneKey){
   document.getElementById('routeNavOverlay').classList.add('show');
   currentFontOverlayId = 'routeNavOverlay';
   applyRnFontScale(getRnFontScale());
-  body.scrollTop = 0;
+  body.scrollTop = getSubViewScrollPos('nav', zoneKey);
 
   if(showFloatMap){
     openFloatMap(zoneKey, trips.length);
@@ -7228,6 +7239,8 @@ function splitByGroup(items){
 }
 
 function closeRouteNav(){
+  const body = document.getElementById('routeNavBody');
+  if(lastOpenedSubViewZone) saveSubViewScrollPos('nav', lastOpenedSubViewZone, body.scrollTop);
   document.getElementById('routeNavOverlay').classList.remove('show');
   closeFloatMap();
   if(lastOpenedSubViewZone){ localStorage.removeItem('lastSubView:' + lastOpenedSubViewZone); lastOpenedSubViewZone = null; }
@@ -7279,10 +7292,12 @@ function openRouteStops(zoneKey){
   document.getElementById('routeStopsOverlay').classList.add('show');
   currentFontOverlayId = 'routeStopsOverlay';
   applyRnFontScale(getRnFontScale());
-  body.scrollTop = 0;
+  body.scrollTop = getSubViewScrollPos('stops', zoneKey);
 }
 
 function closeRouteStops(){
+  const body = document.getElementById('routeStopsBody');
+  if(lastOpenedSubViewZone) saveSubViewScrollPos('stops', lastOpenedSubViewZone, body.scrollTop);
   document.getElementById('routeStopsOverlay').classList.remove('show');
   if(lastOpenedSubViewZone){ localStorage.removeItem('lastSubView:' + lastOpenedSubViewZone); lastOpenedSubViewZone = null; }
 }
