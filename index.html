@@ -2040,7 +2040,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.35 ｜ 更新日期：2026.09.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.36 ｜ 更新日期：2026.09.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -2162,6 +2162,11 @@ function saveSubViewScrollPos(type, zoneKey, scrollTop){
 function getSubViewScrollPos(type, zoneKey){
   const v = parseInt(localStorage.getItem('subViewScroll:' + type + ':' + zoneKey), 10);
   return isNaN(v) ? 0 : v;
+}
+// 按✕正式關閉=看完了,清掉捲動記憶,下次點開重新從頭看;
+// 只有「沒按✕、直接關掉整個網頁分頁」這種情況,才靠即時存的捲動位置(watchSubViewScroll)保留記憶
+function clearSubViewScrollPos(type, zoneKey){
+  localStorage.removeItem('subViewScroll:' + type + ':' + zoneKey);
 }
 // 即時存捲動位置(邊滑邊存,debounce 200ms),而不是只在按✕關閉時才存一次:
 // 如果使用者是直接關掉整個網頁分頁/瀏覽器(沒有先點✕),原本只在關閉時存的做法就完全存不到,
@@ -4257,10 +4262,9 @@ function openTripMap(zoneKey, tripNum){
 }
 
 function closeRouteSketch(){
-  const body = document.getElementById('routeSketchBody');
-  // 只有「手繪路線圖」直接開的才存捲動位置;車次地圖縮圖(openTripMap)開的是暫時性瀏覽,不記憶位置,
-  // 避免覆蓋掉手繪路線圖原本的捲動記憶
-  if(sketchDirectOpenZone) saveSubViewScrollPos('sketch', sketchDirectOpenZone, body.scrollTop);
+  // 按✕=看完了,清掉捲動記憶(不是存);只有「手繪路線圖」直接開的才清,
+  // 車次地圖縮圖(openTripMap)開的是暫時性瀏覽,不動手繪路線圖原本的記憶
+  if(sketchDirectOpenZone) clearSubViewScrollPos('sketch', sketchDirectOpenZone);
   document.getElementById('routeSketchOverlay').classList.remove('show');
   restoreFloatMap();
   // 只有「手繪路線圖」直接開的才清記憶;如果這次全螢幕是從完整路線導航裡點車次地圖縮圖開的(openTripMap),
@@ -7259,8 +7263,8 @@ function splitByGroup(items){
 }
 
 function closeRouteNav(){
-  const body = document.getElementById('routeNavBody');
-  if(lastOpenedSubViewZone) saveSubViewScrollPos('nav', lastOpenedSubViewZone, body.scrollTop);
+  // 按✕=看完了,清掉捲動記憶(不是存)
+  if(lastOpenedSubViewZone) clearSubViewScrollPos('nav', lastOpenedSubViewZone);
   document.getElementById('routeNavOverlay').classList.remove('show');
   closeFloatMap();
   if(lastOpenedSubViewZone){ localStorage.removeItem('lastSubView:' + lastOpenedSubViewZone); lastOpenedSubViewZone = null; }
@@ -7316,8 +7320,8 @@ function openRouteStops(zoneKey){
 }
 
 function closeRouteStops(){
-  const body = document.getElementById('routeStopsBody');
-  if(lastOpenedSubViewZone) saveSubViewScrollPos('stops', lastOpenedSubViewZone, body.scrollTop);
+  // 按✕=看完了,清掉捲動記憶(不是存)
+  if(lastOpenedSubViewZone) clearSubViewScrollPos('stops', lastOpenedSubViewZone);
   document.getElementById('routeStopsOverlay').classList.remove('show');
   if(lastOpenedSubViewZone){ localStorage.removeItem('lastSubView:' + lastOpenedSubViewZone); lastOpenedSubViewZone = null; }
 }
