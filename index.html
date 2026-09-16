@@ -2040,7 +2040,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.34 ｜ 更新日期：2026.09.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.35 ｜ 更新日期：2026.09.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -2155,7 +2155,7 @@
 // 在頁面初次載入、還沒執行到宣告那一行時就搶先呼叫到用這些變數的函式,導致還沒初始化就出錯(TDZ錯誤)
 let lastOpenedSubViewZone = null;
 let sketchDirectOpenZone = null;
-// 沿線時刻/完整路線導航/手繪路線圖各自的捲動位置記憶,用「類型+區號」當key,關閉時存、打開時還原
+// 沿線時刻/完整路線導航/手繪路線圖各自的捲動位置記憶,用「類型+區號」當key,打開時還原
 function saveSubViewScrollPos(type, zoneKey, scrollTop){
   localStorage.setItem('subViewScroll:' + type + ':' + zoneKey, String(scrollTop));
 }
@@ -2163,6 +2163,26 @@ function getSubViewScrollPos(type, zoneKey){
   const v = parseInt(localStorage.getItem('subViewScroll:' + type + ':' + zoneKey), 10);
   return isNaN(v) ? 0 : v;
 }
+// 即時存捲動位置(邊滑邊存,debounce 200ms),而不是只在按✕關閉時才存一次:
+// 如果使用者是直接關掉整個網頁分頁/瀏覽器(沒有先點✕),原本只在關閉時存的做法就完全存不到,
+// 這裡改成跟App其他地方(定點收運清單)一樣的做法,不管怎麼離開都能存到最新位置
+function watchSubViewScroll(bodyId, type, getZoneKey){
+  const el = document.getElementById(bodyId);
+  if(!el) return;
+  let timer = null;
+  el.addEventListener('scroll', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const zoneKey = getZoneKey();
+      if(zoneKey) saveSubViewScrollPos(type, zoneKey, el.scrollTop);
+    }, 200);
+  }, { passive: true });
+}
+watchSubViewScroll('routeStopsBody', 'stops', () => lastOpenedSubViewZone);
+watchSubViewScroll('routeNavBody', 'nav', () => lastOpenedSubViewZone);
+// 手繪路線圖跟車次地圖縮圖(openTripMap)共用同一個 routeSketchBody,車次地圖是暫時性瀏覽,
+// 只有 sketchDirectOpenZone 有值(代表現在開著的是手繪路線圖本人)時才存,避免互相覆蓋位置記憶
+watchSubViewScroll('routeSketchBody', 'sketch', () => sketchDirectOpenZone);
 // 浮動地圖(完整路線導航裡的🎈功能)相關的狀態變數,同樣提前宣告,原因跟上面兩個一樣:
 // 避免「重開App自動跳回上次畫面」邏輯在頁面初次載入、還沒跑到原本宣告那一行時就搶先呼叫到用這些變數的函式而出錯
 let rnShowFloatMapState = false;
