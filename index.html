@@ -317,7 +317,7 @@
     position:relative;
   }
   .trip:last-child{margin-bottom:0;}
-  .trip.tp-past{opacity:0.4;cursor:pointer;}
+  .trip.tp-past{opacity:0.55;cursor:pointer;}
   .trip.tp-past:active{opacity:0.6;}
   .trip.tp-past .trip-label::after{content:' · 已過站'; font-size:10px;}
   .trip.tp-active{
@@ -972,15 +972,23 @@
     color:var(--text-dim);
     font-variant-numeric:tabular-nums;
   }
+  .rn-img-pct{
+    flex:none;
+    min-width:34px;
+    text-align:center;
+    font-size:11px;
+    color:var(--text-dim);
+    font-variant-numeric:tabular-nums;
+  }
   .route-nav-close{
     flex:none;
     background:rgba(255,255,255,0.08);
     border:1px solid var(--line);
     color:var(--text);
     border-radius:50%;
-    width:34px;
-    height:34px;
-    font-size:16px;
+    width:40px;
+    height:40px;
+    font-size:18px;
     cursor:pointer;
   }
   .route-nav-body{
@@ -2040,7 +2048,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.36 ｜ 更新日期：2026.09.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.46 ｜ 更新日期：2026.09.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -2195,6 +2203,9 @@ const RN_FLOATMAP_SCALE_MIN = 0.6;
 const RN_FLOATMAP_SCALE_MAX = 1.8;
 let rnFloatMapScaleState = 1;
 let floatMapState = null; // { zoneKey, tripCount, curTrip, curPage }
+// 浮動地圖拖曳用的 window 級監聽器參照,openFloatMap時建立、closeFloatMap時要用同一個函式參照才能正確removeEventListener,
+// 不然每次開關浮動地圖都會在window上疊加新的一份監聽器,越疊越多(記憶體洩漏、效能變差)
+let floatMapDragHandlers = null; // { onMove, onUp }
 // 完整路線導航跟沿線時刻/手繪路線圖用到的字級/圖片縮放、地圖顯示開關的相關常數跟變數,
 // 同樣理由提前宣告,避免自動跳回上次畫面時TDZ出錯
 const RN_FONT_SCALE_KEY = 'rnFontScale';
@@ -5150,7 +5161,6 @@ function todayZoneGroup(){
 let autoScrollOnOpen = true; // 開啟網頁時若有上次選取,自動捲到時間卡片(僅一次)
 let currentCategory = localStorage.getItem('lastCategory') || "垃圾車";
 if(!categories[currentCategory]) currentCategory = "垃圾車";
-if(!categories[currentCategory]) currentCategory = "垃圾車";
 
 let currentSelectedKey = null;
 let currentTaskName = null; // 記錄目前在「任務群組」路線(如日配套的西配)底下,選的是哪個任務(定點收運/髒亂點/工作流程)
@@ -5161,6 +5171,11 @@ function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 }
 let countdownTimer = null;
+// 手機鎖螢幕/切到背景時,瀏覽器通常會自動降低計時器頻率省電,倒數數字可能會有點過時;
+// 使用者重新打開/解鎖回來看到畫面的當下,立刻刷新一次,不用等下一次計時器自然觸發
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden && countdownTimer) updateCountdown();
+});
 let wokenTrips = new Set(); // 記錄使用者手動點擊「喚醒」過的趟次索引(該路線底下),點擊變暗的卡片可單獨恢復亮度
 let lastNextIdx = undefined; // 記錄上一次計算出的「下一趟索引」,沒變就不重新套用變暗/高亮,避免每秒閃爍
 let lastWokenSize = 0;
@@ -5253,6 +5268,11 @@ Object.keys(categories).forEach(cat=>{
 
 function selectCategory(cat, btn){
   discardUnsavedNoteEdit(); // 切換分頁前,先取消還沒儲存的備註編輯
+  // 編輯時間模式是每個分頁各自獨立的,不應該帶到別的分頁去:
+  // 如果在垃圾車分頁按了「編輯時間」沒按「完成」就切去廚餘車分頁(廚餘車也是可編輯類型),
+  // editMode沒重置的話廚餘車一開就會直接是編輯狀態,使用者根本沒點過編輯按鈕,
+  // 這種「不知不覺處於編輯模式」的畫面很容易不小心誤觸改到時間、或誤以為自己在瀏覽而已
+  editMode = false;
   currentCategory = cat;
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
@@ -5777,7 +5797,7 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
     const orderBtnsHtml = readOnly ? '' : `<span class="order-btns"><button class="ord-btn ord-up" ${isFirstInGroup ? 'disabled' : ''}>▲</button><button class="ord-btn ord-down" ${isLastInGroup ? 'disabled' : ''}>▼</button></span>`;
     const hideBtnHtml = readOnly ? '' : `<button class="hide-btn" title="${info.isCustom ? '刪除這筆(自己新增的)' : '隱藏(只有自己看不到,不影響原始資料)'}">${info.isCustom ? '🗑' : '🙈'}</button>`;
     row.className = 'addr-row' + (doneMap[addr] ? ' done' : '') + (info.isCustom ? ' custom-added' : '');
-    row.innerHTML = `${orderBtnsHtml}<span class="addr-check${parsedType.type === 'star' ? ' type-star' : ''}${parsedType.type === 'note' ? ' type-note' : ''}">${doneMap[addr] ? '✓' : displayNum}</span><div class="addr-content"><div class="addr-line-main">${mainText}</div>${noteText ? `<div class="addr-line-note">${noteText}</div>` : ''}${info.time ? `<div class="addr-time">${info.time}</div>` : ''}</div>${isRealAddr ? `<span class="nav-link nav-icon">🗺️</span>` : ''}${hideBtnHtml}`;
+    row.innerHTML = `${orderBtnsHtml}<span class="addr-check${parsedType.type === 'star' ? ' type-star' : ''}${parsedType.type === 'note' ? ' type-note' : ''}">${doneMap[addr] ? '✓' : displayNum}</span><div class="addr-content"><div class="addr-line-main">${escapeHtml(mainText)}</div>${noteText ? `<div class="addr-line-note">${escapeHtml(noteText)}</div>` : ''}${info.time ? `<div class="addr-time">${escapeHtml(info.time)}</div>` : ''}</div>${isRealAddr ? `<span class="nav-link nav-icon">🗺️</span>` : ''}${hideBtnHtml}`;
     const checkEl = row.querySelector('.addr-check');
     const navEl = row.querySelector('.nav-link');
     const hideEl = row.querySelector('.hide-btn');
@@ -5847,7 +5867,7 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
     const addForm = document.createElement('div');
     addForm.className = 'addr-add-form';
     addForm.style.display = 'none';
-    addForm.innerHTML = `<input type="text" class="addr-add-input" placeholder="地址,例如:前鎮街100號前">
+    addForm.innerHTML = `<input type="text" class="addr-add-input" placeholder="地址,例如:前鎮街100號前" autocomplete="off" autocorrect="off" autocapitalize="off">
       <label class="addr-add-time-label">收運時間(選填)<input type="time" class="addr-add-time"></label>
       <div class="addr-add-actions">
         <button class="reset-btn addr-add-cancel">取消</button>
@@ -5895,7 +5915,7 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
         const parsed = parseAddrType(info ? info.addr : addr);
         const item = document.createElement('div');
         item.className = 'hidden-restore-item';
-        item.innerHTML = `<span class="hidden-restore-text">${parsed.text}</span><button class="reset-btn hidden-restore-one">↺ 復原</button>`;
+        item.innerHTML = `<span class="hidden-restore-text">${escapeHtml(parsed.text)}</span><button class="reset-btn hidden-restore-one">↺ 復原</button>`;
         item.querySelector('.hidden-restore-one').onclick = ()=>{
           delete hiddenSet[addr];
           saveHidden();
@@ -6013,6 +6033,9 @@ function selectItem(key, btn){
       currentTaskName = null;
       renderTaskPicker(key, rawData);
     } else {
+      // 這裡也要清空:如果上一個選的路線是任務群組(例如西配→工作流程),currentTaskName會殘留舊值,
+      // 這個區不是任務群組卻還帶著舊的任務名稱,會讓捲動位置存取的key被污染(存/讀到不相干的task後綴)
+      currentTaskName = null;
       renderAddressList(rawData, `${currentCategory}:${key}`, null, currentCategory === '接駁車');
     }
   } else if(cfg.type === 'truck'){
@@ -6882,7 +6905,7 @@ document.getElementById('doImportBtn').onclick = ()=>{
 };
 
 // ===== 清除所有本機資料:雙重確認,清除前引導先備份 =====
-const CLEAR_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'lastItem:', 'scrollPos:', 'personalNote:', 'addrHidden:', 'addrCustom:', 'lastSubView:', 'subViewScroll:'];
+const CLEAR_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'lastItem:', 'scrollPos:', 'personalNote:', 'addrHidden:', 'addrCustom:', 'lastSubView:', 'subViewScroll:', 'lastTask:'];
 const CLEAR_EXACT_KEYS = ['lastCategory'];
 
 document.getElementById('clearDataEntry').onclick = ()=>{
@@ -6966,6 +6989,14 @@ function closeFloatMap(){
   const el = document.getElementById('floatMapWidget');
   if(el) el.remove();
   floatMapState = null;
+  // 把上一次openFloatMap綁在window上的拖曳監聽器移除,避免每次開關都疊加一份
+  if(floatMapDragHandlers){
+    window.removeEventListener('mousemove', floatMapDragHandlers.onMove);
+    window.removeEventListener('touchmove', floatMapDragHandlers.onMove);
+    window.removeEventListener('mouseup', floatMapDragHandlers.onUp);
+    window.removeEventListener('touchend', floatMapDragHandlers.onUp);
+    floatMapDragHandlers = null;
+  }
 }
 
 function openFloatMap(zoneKey, tripCount, startTrip){
@@ -7010,6 +7041,7 @@ function openFloatMap(zoneKey, tripCount, startTrip){
   window.addEventListener('touchmove', onMove, {passive:false});
   window.addEventListener('mouseup', onUp);
   window.addEventListener('touchend', onUp);
+  floatMapDragHandlers = { onMove, onUp };
 }
 
 function renderFloatMap(){
