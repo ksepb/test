@@ -2048,7 +2048,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.46 ｜ 更新日期：2026.09.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.48 ｜ 更新日期：2026.09.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -7129,6 +7129,15 @@ function setRnShowText(v){ localStorage.setItem(RN_SHOW_TEXT_KEY, v ? '1' : '0')
 function openRouteNav(zoneKey){
   const turnsInfo = routeTurnsData[zoneKey];
   if(!turnsInfo) return;
+  // 換到不同區時,浮動地圖開關要重置回預設關閉,不要把上一個區的開關狀態帶過來
+  // (這個狀態雖然不寫進手機記憶體,但同一次瀏覽網頁期間是共用的全域變數,换區不重置的話看起來就像被記住了一樣)
+  // 用跟上次是不是同一區來判斷:同一區(例如自己按浮動地圖開關觸發的重新整理)不重置,才不會蓋掉剛按的開關動作
+  if(lastOpenedSubViewZone !== zoneKey){
+    // 上一區如果浮動地圖是開著的,內嵌地圖(🗺️)當時會被互斥關掉;
+    // 這裡重置浮動地圖時也要把內嵌地圖開回來,不然兩個都關掉,新開的這區會完全看不到地圖
+    rnShowFloatMapState = false;
+    setRnShowMap(true);
+  }
   lastOpenedSubViewZone = zoneKey;
 
   const isSupportRoute = ['西配','籬配','草配'].includes(zoneKey);
