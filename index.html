@@ -2015,6 +2015,122 @@
     font-size:14px;
   }
   .cat-note-seq b{color:var(--accent);}
+
+  /* ===== 今日天氣(Open-Meteo)===== */
+  .wx-wrap{
+    width:100%;
+    max-width:420px;
+    margin:-4px 0 12px;
+  }
+  .wx-bar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    width:100%;
+    padding:8px 12px;
+    background:rgba(255,255,255,0.03);
+    border:1px solid var(--line);
+    border-radius:10px;
+    color:var(--text);
+    font:inherit;
+    font-size:14px;
+    text-align:left;
+    cursor:pointer;
+    font-variant-numeric:tabular-nums;
+  }
+  .wx-bar:focus-visible, .wx-alert-x:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .wx-bar .wx-ico{font-size:20px; line-height:1;}
+  .wx-bar .wx-temp{font-size:17px; font-weight:800;}
+  .wx-bar .wx-feel{color:var(--text-dim); font-size:12px;}
+  .wx-bar .wx-rain{color:#7fbfee; font-weight:700;}
+  .wx-bar .wx-upd{margin-left:auto; color:var(--text-dim); font-size:11px; white-space:nowrap;}
+  .wx-bar .wx-caret{color:var(--text-dim); font-size:11px; transition:transform .2s ease;}
+  .wx-wrap.open .wx-caret{transform:rotate(180deg);}
+  .wx-bar.wx-muted{color:var(--text-dim); font-size:13px;}
+
+  .wx-hours{
+    display:none;
+    gap:6px;
+    overflow-x:auto;
+    padding:8px 2px 4px;
+    scrollbar-width:thin;
+    -webkit-overflow-scrolling:touch;
+  }
+  .wx-wrap.open .wx-hours{display:flex;}
+  .wx-h{
+    flex:0 0 auto;
+    min-width:52px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+    padding:6px 4px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:rgba(255,255,255,0.02);
+    font-size:12px;
+    font-variant-numeric:tabular-nums;
+  }
+  .wx-h .wx-h-t{color:var(--text-dim); font-size:11px;}
+  .wx-h .wx-h-i{font-size:18px; line-height:1.2;}
+  .wx-h .wx-h-c{font-weight:700;}
+  .wx-h .wx-h-r{color:#7fbfee; font-size:11px;}
+  .wx-h .wx-h-r.low{color:var(--text-dim);}
+  .wx-h.is-now{border-color:var(--accent-dim);}
+  .wx-h.is-trip{border-color:rgba(168,220,74,0.6); background:rgba(168,220,74,0.07);}
+  .wx-h.is-trip .wx-h-t{color:var(--accent);}
+
+  .wx-alert{
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    margin-top:8px;
+    padding:9px 10px 9px 12px;
+    border-radius:10px;
+    font-size:14px;
+    font-weight:700;
+    line-height:1.45;
+  }
+  .wx-alert.rain{background:rgba(95,165,230,0.12); border:1px solid rgba(95,165,230,0.45); color:#9ccdf3;}
+  .wx-alert.heat{background:rgba(240,150,60,0.12); border:1px solid rgba(240,150,60,0.45); color:#f4b877;}
+  .wx-alert.storm{background:rgba(230,90,90,0.12); border:1px solid rgba(230,90,90,0.5); color:#f19a9a;}
+  .wx-alert-txt{flex:1;}
+  .wx-alert-txt div + div{margin-top:3px;}
+  .wx-alert-x{
+    flex:none;
+    background:none;
+    border:0;
+    color:inherit;
+    opacity:0.7;
+    font-size:16px;
+    line-height:1;
+    padding:2px 4px;
+    cursor:pointer;
+  }
+
+  /* 每趟卡片上的天氣小標籤 */
+  .wx-chip{
+    flex:none;
+    display:inline-flex;
+    align-items:center;
+    gap:3px;
+    padding:2px 7px;
+    border:1px solid var(--line);
+    border-radius:999px;
+    background:rgba(255,255,255,0.03);
+    color:var(--text-dim);
+    font-size:12px;
+    font-weight:700;
+    white-space:nowrap;
+    font-variant-numeric:tabular-nums;
+  }
+  .wx-chip .wx-chip-i{font-size:14px;}
+  .wx-chip.rain{color:#9ccdf3; border-color:rgba(95,165,230,0.5); background:rgba(95,165,230,0.1);}
+  .wx-chip.heat{color:#f4b877; border-color:rgba(240,150,60,0.5); background:rgba(240,150,60,0.1);}
+  .wx-chip.storm{color:#f19a9a; border-color:rgba(230,90,90,0.55); background:rgba(230,90,90,0.1);}
+  .time-pair > .wx-chip{margin-left:4px;}
+  .trip-toprow > .wx-break{flex-basis:100%; height:0;}
+  @media (prefers-reduced-motion: reduce){ .wx-bar .wx-caret{transition:none;} }
 </style>
 </head>
 <body>
@@ -2048,7 +2164,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.48 ｜ 更新日期：2026.09.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.49 ｜ 更新日期：2026.09.23</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -6905,8 +7021,8 @@ document.getElementById('doImportBtn').onclick = ()=>{
 };
 
 // ===== 清除所有本機資料:雙重確認,清除前引導先備份 =====
-const CLEAR_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'lastItem:', 'scrollPos:', 'personalNote:', 'addrHidden:', 'addrCustom:', 'lastSubView:', 'subViewScroll:', 'lastTask:'];
-const CLEAR_EXACT_KEYS = ['lastCategory'];
+const CLEAR_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'lastItem:', 'scrollPos:', 'personalNote:', 'addrHidden:', 'addrCustom:', 'lastSubView:', 'subViewScroll:', 'lastTask:', 'wxDismiss:'];
+const CLEAR_EXACT_KEYS = ['lastCategory', 'wxCache'];
 
 document.getElementById('clearDataEntry').onclick = ()=>{
   document.getElementById('clearDataOverlay').classList.add('show');
@@ -7426,6 +7542,309 @@ function showUpdateBanner(){
   document.body.appendChild(banner);
   banner.querySelector('button').onclick = () => window.location.reload();
 }
+</script>
+<script>
+// ===== 今日天氣:Open-Meteo(免 key、支援跨域)=====
+// 快取 key 用 'wxCache' / 'wxDismiss:' 開頭,刻意不在 BACKUP_PREFIXES 白名單內,
+// 所以不會被匯出到備份、也不會被還原蓋掉。
+(function(){
+  const WX_LAT = 22.5955, WX_LON = 120.3073; // 前鎮區
+  const WX_CACHE_KEY = 'wxCache';
+  const WX_TTL = 30 * 60 * 1000;             // 30 分鐘內不重抓
+  const WX_URL = 'https://api.open-meteo.com/v1/forecast'
+    + `?latitude=${WX_LAT}&longitude=${WX_LON}`
+    + '&current=temperature_2m,apparent_temperature,weather_code'
+    + '&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code'
+    + '&timezone=Asia%2FTaipei&forecast_days=2';
+  const RAIN_WARN = 60;   // 降雨機率 ≥ 60% 提醒
+  const HEAT_WARN = 36;   // 體感 ≥ 36° 提醒
+  const CHIP_RAIN = 50;   // 卡片標籤轉藍色的門檻
+
+  // 天氣代碼 → 圖示 + 中文
+  function wxDesc(code, hour){
+    const night = hour != null && (hour >= 18 || hour < 6);
+    if(code === 0) return [night ? '🌙' : '☀️', '晴'];
+    if(code === 1) return [night ? '🌙' : '🌤️', '晴時多雲'];
+    if(code === 2) return [night ? '☁️' : '⛅', '多雲'];
+    if(code === 3) return ['☁️', '陰'];
+    if(code === 45 || code === 48) return ['🌫️', '霧'];
+    if(code >= 51 && code <= 57) return ['🌦️', '毛毛雨'];
+    if(code >= 61 && code <= 67) return ['🌧️', code >= 65 ? '大雨' : '雨'];
+    if(code >= 80 && code <= 82) return ['🌦️', code === 82 ? '強陣雨' : '陣雨'];
+    if(code >= 95) return ['⛈️', '雷雨'];
+    return ['🌡️', ''];
+  }
+  const isStorm = code => code >= 95 || code === 65 || code === 82;
+
+  const pad = n => String(n).padStart(2, '0');
+  const dayKey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const hourKey = d => `${dayKey(d)}T${pad(d.getHours())}:00`;
+  const hhmm = ts => { const d = new Date(ts); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+
+  let wx = null;          // { t: 抓取時間, data: API 回傳 }
+  let wxFailed = false;   // 最近一次抓取失敗
+  let wxLoading = false;
+
+  function readCache(){
+    try{
+      const c = JSON.parse(localStorage.getItem(WX_CACHE_KEY));
+      if(c && c.data && c.data.hourly) return c;
+    }catch(e){}
+    return null;
+  }
+
+  async function loadWeather(force){
+    if(!wx) wx = readCache();
+    const fresh = wx && (Date.now() - wx.t < WX_TTL);
+    if(fresh && !force){ renderAll(); return; }
+    if(wxLoading) return;
+    wxLoading = true;
+    if(!wx) renderBar(); // 顯示「讀取中」
+    try{
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 10000);
+      const res = await fetch(WX_URL, { signal: ctrl.signal, cache: 'no-store' });
+      clearTimeout(timer);
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if(!data.hourly || !data.current) throw new Error('資料格式不對');
+      wx = { t: Date.now(), data };
+      wxFailed = false;
+      try{ localStorage.setItem(WX_CACHE_KEY, JSON.stringify(wx)); }catch(e){}
+    }catch(e){
+      wxFailed = true;
+      console.warn('天氣抓取失敗', e);
+    }finally{
+      wxLoading = false;
+      renderAll();
+    }
+  }
+
+  // 取某個整點的預報
+  function hourAt(key){
+    if(!wx) return null;
+    const h = wx.data.hourly;
+    const i = h.time.indexOf(key);
+    if(i < 0) return null;
+    return {
+      time: h.time[i],
+      hour: parseInt(h.time[i].slice(11, 13), 10),
+      temp: h.temperature_2m[i],
+      feel: h.apparent_temperature[i],
+      rain: h.precipitation_probability[i],
+      code: h.weather_code[i]
+    };
+  }
+
+  // 目前畫面上各趟的出發整點(給逐時條標記用)
+  function tripHours(){
+    const set = new Set();
+    document.querySelectorAll('#trips .trip .depart').forEach(el => {
+      const m = el.textContent.trim().match(/^(\d{1,2}):\d{2}$/);
+      if(m) set.add(parseInt(m[1], 10));
+    });
+    return set;
+  }
+
+  // ---- 1. 標題下方的天氣列 ----
+  function renderBar(){
+    const wrap = document.getElementById('wxWrap');
+    if(!wrap) return;
+    const bar = wrap.querySelector('.wx-bar');
+    const hoursEl = wrap.querySelector('.wx-hours');
+
+    if(!wx){
+      bar.className = 'wx-bar wx-muted';
+      bar.innerHTML = wxLoading ? '⏳ 天氣讀取中…' : '天氣暫時無法取得，點這裡重試';
+      hoursEl.innerHTML = '';
+      return;
+    }
+    const cur = wx.data.current;
+    const now = new Date();
+    const nowH = hourAt(hourKey(now));
+    const [ico, txt] = wxDesc(cur.weather_code, now.getHours());
+    const rain = nowH ? nowH.rain : null;
+    const stale = Date.now() - wx.t > WX_TTL;
+    const updTxt = (wxFailed || stale) ? `離線 · ${hhmm(wx.t)} 資料` : `${hhmm(wx.t)} 更新`;
+
+    bar.className = 'wx-bar';
+    bar.innerHTML = `
+      <span class="wx-ico" aria-hidden="true">${ico}</span>
+      <span class="wx-temp">${Math.round(cur.temperature_2m)}°</span>
+      <span class="wx-feel">${txt}${txt ? '，' : ''}體感 ${Math.round(cur.apparent_temperature)}°</span>
+      ${rain != null ? `<span class="wx-rain">☔${rain}%</span>` : ''}
+      <span class="wx-upd">${updTxt}</span>
+      <span class="wx-caret" aria-hidden="true">▼</span>`;
+
+    // 逐時預報:從現在起 12 小時
+    const tripSet = tripHours();
+    let cells = '';
+    for(let k = 0; k < 12; k++){
+      const d = new Date(now);
+      d.setMinutes(0, 0, 0);
+      d.setHours(d.getHours() + k);
+      const h = hourAt(hourKey(d));
+      if(!h) continue;
+      const [hi] = wxDesc(h.code, h.hour);
+      const isTrip = dayKey(d) === dayKey(now) && tripSet.has(h.hour);
+      cells += `<div class="wx-h${k === 0 ? ' is-now' : ''}${isTrip ? ' is-trip' : ''}">
+        <span class="wx-h-t">${k === 0 ? '現在' : h.hour + '時'}</span>
+        <span class="wx-h-i" aria-hidden="true">${hi}</span>
+        <span class="wx-h-c">${Math.round(h.temp)}°</span>
+        <span class="wx-h-r${h.rain < 30 ? ' low' : ''}">${h.rain}%</span>
+      </div>`;
+    }
+    hoursEl.innerHTML = cells;
+  }
+
+  // ---- 3. 條件式警示(只看今天剩下的時段)----
+  function renderAlert(){
+    const el = document.getElementById('wxAlert');
+    if(!el) return;
+    const now = new Date();
+    const today = dayKey(now);
+    if(!wx || localStorage.getItem('wxDismiss:' + today)){
+      el.style.display = 'none';
+      return;
+    }
+    const h = wx.data.hourly;
+    const rainHours = [], heatHours = [], stormHours = [];
+    let maxRain = 0, maxFeel = -99;
+    for(let i = 0; i < h.time.length; i++){
+      if(h.time[i].slice(0, 10) !== today) continue;
+      const hr = parseInt(h.time[i].slice(11, 13), 10);
+      if(hr < now.getHours()) continue;
+      if(h.precipitation_probability[i] >= RAIN_WARN){ rainHours.push(hr); maxRain = Math.max(maxRain, h.precipitation_probability[i]); }
+      if(h.apparent_temperature[i] >= HEAT_WARN){ heatHours.push(hr); maxFeel = Math.max(maxFeel, h.apparent_temperature[i]); }
+      if(isStorm(h.weather_code[i])) stormHours.push(hr);
+    }
+    // 連續整點合併成時段:[13,14,15,18] → 13–16時、18–19時
+    const ranges = arr => {
+      const out = [];
+      arr.forEach(x => {
+        const last = out[out.length - 1];
+        if(last && x === last[1] + 1) last[1] = x; else out.push([x, x]);
+      });
+      return out.map(([a, b]) => `${a}–${b + 1}時`).join('、');
+    };
+    const lines = [];
+    let level = '';
+    if(stormHours.length){ lines.push(`⛈️ ${ranges(stormHours)} 可能有雷雨或大雨，注意行車安全`); level = 'storm'; }
+    if(rainHours.length){ lines.push(`🌧️ ${ranges(rainHours)} 降雨機率最高 ${maxRain}%，出車記得帶雨具`); level = level || 'rain'; }
+    if(heatHours.length){ lines.push(`🥵 ${ranges(heatHours)} 體感最高 ${Math.round(maxFeel)}°，多補充水分`); level = level || 'heat'; }
+
+    if(!lines.length){ el.style.display = 'none'; return; }
+    el.className = 'wx-alert ' + level;
+    el.innerHTML = `<div class="wx-alert-txt">${lines.map(l => `<div>${l}</div>`).join('')}</div>
+      <button type="button" class="wx-alert-x" aria-label="今天不再提醒">✕</button>`;
+    el.style.display = '';
+    el.querySelector('.wx-alert-x').onclick = () => {
+      try{ localStorage.setItem('wxDismiss:' + today, '1'); }catch(e){}
+      el.style.display = 'none';
+    };
+  }
+
+  // ---- 2. 每趟卡片的天氣標籤 ----
+  let decorating = false;
+  function decorateTrips(){
+    if(decorating) return;
+    decorating = true;
+    try{
+      document.querySelectorAll('#trips .wx-chip, #trips .wx-break').forEach(c => c.remove());
+      if(!wx) return;
+      const today = new Date();
+      document.querySelectorAll('#trips .trip').forEach(row => {
+        const dep = row.querySelector('.time-pair .depart'); // 編輯模式下沒有 .depart,自動不顯示
+        if(!dep) return;
+        const m = dep.textContent.trim().match(/^(\d{1,2}):(\d{2})$/);
+        if(!m) return;
+        const d = new Date(today);
+        d.setHours(parseInt(m[1], 10), 0, 0, 0);
+        const h = hourAt(hourKey(d));
+        if(!h) return;
+        const [ico, txt] = wxDesc(h.code, h.hour);
+        const chip = document.createElement('span');
+        let cls = 'wx-chip';
+        if(isStorm(h.code)) cls += ' storm';
+        else if(h.rain >= CHIP_RAIN) cls += ' rain';
+        else if(h.feel >= HEAT_WARN) cls += ' heat';
+        chip.className = cls;
+        chip.title = `${m[1]}時預報：${txt} ${Math.round(h.temp)}°，體感 ${Math.round(h.feel)}°，降雨 ${h.rain}%`;
+        chip.innerHTML = `<span class="wx-chip-i" aria-hidden="true">${ico}</span>`
+          + (h.rain >= 30 ? `${h.rain}%` : '')
+          + `${h.rain >= 30 ? ' ' : ''}${Math.round(h.temp)}°`;
+        const tp = dep.closest('.time-pair');
+        if(tp.parentElement && tp.parentElement.classList.contains('trip-toprow')){
+          // 垃圾車/回收車:固定換到第二行,和「+備註」同一行(標籤靠左、備註靠右)
+          const br = document.createElement('span');
+          br.className = 'wx-break';
+          tp.insertAdjacentElement('afterend', br);
+          br.insertAdjacentElement('afterend', chip);
+        }else{
+          tp.appendChild(chip);                         // 廚餘等:放進時間列裡
+        }
+      });
+    }finally{
+      decorating = false;
+    }
+  }
+
+  function renderAll(){
+    renderBar();
+    renderAlert();
+    decorateTrips();
+  }
+
+  // ---- 掛上畫面 ----
+  function mount(){
+    const tabs = document.getElementById('tabs');
+    if(!tabs || document.getElementById('wxWrap')) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'wx-wrap';
+    wrap.id = 'wxWrap';
+    wrap.innerHTML = `<button type="button" class="wx-bar wx-muted" aria-expanded="false">⏳ 天氣讀取中…</button>
+      <div class="wx-hours"></div>
+      <div class="wx-alert" id="wxAlert" style="display:none;"></div>`;
+    tabs.parentNode.insertBefore(wrap, tabs);
+
+    const bar = wrap.querySelector('.wx-bar');
+    bar.onclick = () => {
+      if(!wx){ loadWeather(true); return; }
+      const open = wrap.classList.toggle('open');
+      bar.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if(open){
+        renderBar();
+        if(Date.now() - wx.t > WX_TTL) loadWeather(true);
+      }
+    };
+
+    // 路線/分頁切換時 #trips 會整個重畫 → 重新貼上天氣標籤
+    const trips = document.getElementById('trips');
+    if(trips && 'MutationObserver' in window){
+      let pending = false;
+      new MutationObserver(() => {
+        if(decorating || pending) return;
+        pending = true;
+        requestAnimationFrame(() => {
+          pending = false;
+          decorateTrips();
+          if(wrap.classList.contains('open')) renderBar();
+        });
+      }).observe(trips, { childList: true, subtree: true });
+    }
+
+    // 回到前景、或每 10 分鐘檢查一次是否過期
+    document.addEventListener('visibilitychange', () => {
+      if(document.visibilityState === 'visible') loadWeather(false);
+    });
+    setInterval(() => loadWeather(false), 10 * 60 * 1000);
+
+    loadWeather(false);
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
+  else mount();
+})();
 </script>
 </body>
 </html>
