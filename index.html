@@ -2025,57 +2025,58 @@
   .wx-bar{
     display:flex;
     align-items:center;
-    gap:8px;
+    gap:10px;
     width:100%;
-    padding:8px 12px;
+    padding:10px 14px;
     background:rgba(255,255,255,0.03);
     border:1px solid var(--line);
-    border-radius:10px;
+    border-radius:12px;
     color:var(--text);
     font:inherit;
-    font-size:14px;
+    font-size:15px;
     text-align:left;
     cursor:pointer;
     font-variant-numeric:tabular-nums;
   }
   .wx-bar:focus-visible, .wx-alert-x:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
-  .wx-bar .wx-ico{font-size:20px; line-height:1;}
-  .wx-bar .wx-temp{font-size:17px; font-weight:800;}
-  .wx-bar .wx-feel{color:var(--text-dim); font-size:12px;}
-  .wx-bar .wx-rain{color:#7fbfee; font-weight:700;}
-  .wx-bar .wx-upd{margin-left:auto; color:var(--text-dim); font-size:11px; white-space:nowrap;}
-  .wx-bar .wx-caret{color:var(--text-dim); font-size:11px; transition:transform .2s ease;}
+  .wx-bar .wx-ico{font-size:30px; line-height:1; flex:none;}
+  .wx-bar .wx-temp{font-size:28px; font-weight:800; line-height:1; flex:none;}
+  .wx-bar .wx-mid{display:flex; flex-direction:column; gap:3px; min-width:0; flex:1;}
+  .wx-bar .wx-feel{color:var(--text); font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .wx-bar .wx-upd{color:var(--text-dim); font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .wx-bar .wx-rain{color:#7fbfee; font-size:18px; font-weight:800; white-space:nowrap; flex:none;}
+  .wx-bar .wx-caret{color:var(--text-dim); font-size:12px; flex:none; transition:transform .2s ease;}
   .wx-wrap.open .wx-caret{transform:rotate(180deg);}
-  .wx-bar.wx-muted{color:var(--text-dim); font-size:13px;}
+  .wx-bar.wx-muted{color:var(--text-dim); font-size:14px;}
 
   .wx-hours{
     display:none;
-    gap:6px;
+    gap:8px;
     overflow-x:auto;
-    padding:8px 2px 4px;
+    padding:10px 2px 4px;
     scrollbar-width:thin;
     -webkit-overflow-scrolling:touch;
   }
   .wx-wrap.open .wx-hours{display:flex;}
   .wx-h{
     flex:0 0 auto;
-    min-width:52px;
+    min-width:64px;
     display:flex;
     flex-direction:column;
     align-items:center;
-    gap:2px;
-    padding:6px 4px;
+    gap:4px;
+    padding:9px 6px;
     border:1px solid var(--line);
-    border-radius:8px;
+    border-radius:10px;
     background:rgba(255,255,255,0.02);
-    font-size:12px;
+    font-size:14px;
     font-variant-numeric:tabular-nums;
   }
-  .wx-h .wx-h-t{color:var(--text-dim); font-size:11px;}
-  .wx-h .wx-h-i{font-size:18px; line-height:1.2;}
-  .wx-h .wx-h-c{font-weight:700;}
-  .wx-h .wx-h-r{color:#7fbfee; font-size:11px;}
-  .wx-h .wx-h-r.low{color:var(--text-dim);}
+  .wx-h .wx-h-t{color:var(--text-dim); font-size:13px;}
+  .wx-h .wx-h-i{font-size:26px; line-height:1.15;}
+  .wx-h .wx-h-c{font-size:17px; font-weight:800;}
+  .wx-h .wx-h-r{color:#7fbfee; font-size:14px; font-weight:700;}
+  .wx-h .wx-h-r.low{color:var(--text-dim); font-weight:400;}
   .wx-h.is-now{border-color:var(--accent-dim);}
   .wx-h.is-trip{border-color:rgba(168,220,74,0.6); background:rgba(168,220,74,0.07);}
   .wx-h.is-trip .wx-h-t{color:var(--accent);}
@@ -7713,9 +7714,11 @@ function showUpdateBanner(){
     bar.innerHTML = `
       <span class="wx-ico" aria-hidden="true">${ico}</span>
       <span class="wx-temp">${Math.round(cur.temperature_2m)}°</span>
-      <span class="wx-feel">${txt}${txt ? '，' : ''}體感 ${Math.round(cur.apparent_temperature)}°</span>
+      <span class="wx-mid">
+        <span class="wx-feel">${txt}${txt ? '，' : ''}體感 ${Math.round(cur.apparent_temperature)}°</span>
+        <span class="wx-upd">${updTxt}</span>
+      </span>
       ${rain != null ? `<span class="wx-rain">☔${rain}%</span>` : ''}
-      <span class="wx-upd">${updTxt}</span>
       <span class="wx-caret" aria-hidden="true">▼</span>`;
 
     // 逐時預報:從現在起 12 小時
