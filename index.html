@@ -2081,33 +2081,44 @@
   .wx-h.is-trip{border-color:rgba(168,220,74,0.6); background:rgba(168,220,74,0.07);}
   .wx-h.is-trip .wx-h-t{color:var(--accent);}
 
-  .wx-alert{
+  .wx-alert, .wx-card-alert{
     display:flex;
     align-items:flex-start;
     gap:8px;
-    margin-top:8px;
-    padding:9px 10px 9px 12px;
-    border-radius:10px;
-    font-size:14px;
+    padding:11px 10px 11px 13px;
+    border-radius:12px;
+    font-size:16px;
     font-weight:700;
-    line-height:1.45;
+    line-height:1.5;
   }
-  .wx-alert.rain{background:rgba(95,165,230,0.12); border:1px solid rgba(95,165,230,0.45); color:#9ccdf3;}
-  .wx-alert.heat{background:rgba(240,150,60,0.12); border:1px solid rgba(240,150,60,0.45); color:#f4b877;}
-  .wx-alert.storm{background:rgba(230,90,90,0.12); border:1px solid rgba(230,90,90,0.5); color:#f19a9a;}
-  .wx-alert-txt{flex:1;}
-  .wx-alert-txt div + div{margin-top:3px;}
+  .wx-alert{margin-top:8px;}
+  .wx-card-alert{margin:-4px 0 14px;}  /* 路線卡片裡:標題分隔線下面、第一趟上面 */
+  .wx-alert.rain, .wx-card-alert.rain{background:rgba(95,165,230,0.12); border:1px solid rgba(95,165,230,0.45); color:#9ccdf3;}
+  .wx-alert.heat, .wx-card-alert.heat{background:rgba(240,150,60,0.12); border:1px solid rgba(240,150,60,0.45); color:#f4b877;}
+  .wx-alert.storm, .wx-card-alert.storm{background:rgba(230,90,90,0.12); border:1px solid rgba(230,90,90,0.5); color:#f19a9a;}
+  .wx-alert-txt{flex:1; min-width:0;}
+  .wx-alert-txt div + div{margin-top:4px;}
+  .wx-card-alert .wx-num{font-size:18px; font-weight:800;}
+  /* 關閉鈕:32px 圓形、實心底色,手指好按也看得清楚 */
   .wx-alert-x{
     flex:none;
-    background:none;
-    border:0;
+    width:32px;
+    height:32px;
+    margin:-4px -2px -4px 0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:50%;
+    border:1.5px solid currentColor;
+    background:rgba(0,0,0,0.3);
     color:inherit;
-    opacity:0.7;
-    font-size:16px;
+    font-size:17px;
+    font-weight:800;
     line-height:1;
-    padding:2px 4px;
+    padding:0;
     cursor:pointer;
   }
+  .wx-alert-x:active{background:rgba(255,255,255,0.12);}
 
   /* 每趟卡片上的天氣小標籤 */
   .wx-chip{
@@ -2150,7 +2161,7 @@
   .trip.wx-rain  > .wx-ico{color:#5fa5e6;}
   .trip.wx-heat  > .wx-ico{color:#f0963c;}
   .trip.wx-storm > .wx-ico{color:#e65a5a;}
-  .trip > .wx-line{font-size:14px; font-weight:700; line-height:1.45;}
+  .trip > .wx-line{font-size:16px; font-weight:700; line-height:1.45;}
   .trip > .wx-line.rain{color:#9ccdf3;}
   .trip > .wx-line.storm{color:#f19a9a;}
   .wx-lg{display:none;}
@@ -2186,6 +2197,7 @@
       <div class="card-title" id="cardTitle">路線</div>
       <button class="edit-btn" id="editBtn" type="button" style="display:none;">✏️編輯時間</button>
     </div>
+    <div class="wx-card-alert" id="wxCardAlert" style="display:none;"></div>
     <div class="day-switch-note" id="daySwitchNote" style="display:none;"></div>
     <div id="trips"></div>
     <div class="legend" id="legendBox">
@@ -7743,15 +7755,18 @@ function showUpdateBanner(){
   }
 
   // ---- 3. 條件式警示(只看今天剩下的時段)----
+  // 沒選路線 → 頂部天氣列下面(完整版)
+  // 垃圾車／回收車選了路線(卡片出現、頁面會自動捲下去)→ 改放路線卡片裡(精簡版),頂部收起來
+  // 其他車種 → 一律留在頂部
+  // 同一時間只出現一個;按 ✕ 兩邊一起關,當天不再提醒
   function renderAlert(){
-    const el = document.getElementById('wxAlert');
-    if(!el) return;
+    const topEl = document.getElementById('wxAlert');
+    const cardEl = document.getElementById('wxCardAlert');
+    if(!topEl) return;
+    const hide = () => { topEl.style.display = 'none'; if(cardEl) cardEl.style.display = 'none'; };
     const now = new Date();
     const today = dayKey(now);
-    if(!wx || localStorage.getItem('wxDismiss:' + today)){
-      el.style.display = 'none';
-      return;
-    }
+    if(!wx || localStorage.getItem('wxDismiss:' + today)){ hide(); return; }
     const h = wx.data.hourly;
     const rainHours = [], heatHours = [], stormHours = [];
     let maxRain = 0, maxFeel = -99;
@@ -7773,21 +7788,45 @@ function showUpdateBanner(){
       });
       return out.map(([a, b]) => `${a}–${b + 1}時`).join('、');
     };
-    const lines = [];
+    const items = [];   // { full: 頂部完整版, short: 卡片精簡版 }
     let level = '';
-    if(stormHours.length){ lines.push(`⛈️ ${ranges(stormHours)} 可能有雷雨或大雨，注意行車安全`); level = 'storm'; }
-    if(rainHours.length){ lines.push(`🌧️ ${ranges(rainHours)} 降雨機率最高 ${maxRain}%，出車記得帶雨具`); level = level || 'rain'; }
-    if(heatHours.length){ lines.push(`🥵 ${ranges(heatHours)} 體感最高 ${Math.round(maxFeel)}°，多補充水分`); level = level || 'heat'; }
+    if(stormHours.length){
+      items.push({ full:`⛈️ ${ranges(stormHours)} 可能有雷雨或大雨，注意行車安全`, short:`⛈️ ${ranges(stormHours)} 雷雨` });
+      level = 'storm';
+    }
+    if(rainHours.length){
+      items.push({ full:`🌧️ ${ranges(rainHours)} 降雨機率最高 ${maxRain}%，出車記得帶雨具`, short:`🌧️ ${ranges(rainHours)} 降雨最高 ${maxRain}%` });
+      level = level || 'rain';
+    }
+    if(heatHours.length){
+      const f = Math.round(maxFeel);
+      items.push({ full:`🥵 ${ranges(heatHours)} 體感最高 ${f}°，多補充水分`, short:`🥵 ${ranges(heatHours)} 體感最高 ${f}°` });
+      level = level || 'heat';
+    }
+    if(!items.length){ hide(); return; }
 
-    if(!lines.length){ el.style.display = 'none'; return; }
-    el.className = 'wx-alert ' + level;
-    el.innerHTML = `<div class="wx-alert-txt">${lines.map(l => `<div>${l}</div>`).join('')}</div>
+    const card = document.getElementById('card');
+    const cat = (typeof currentCategory !== 'undefined') ? currentCategory : '';
+    const inCard = !!cardEl && !!card && card.classList.contains('show') && WX_TRIP_CATS.includes(cat);
+    const el = inCard ? cardEl : topEl;
+    const other = inCard ? topEl : cardEl;
+    if(other) other.style.display = 'none';
+
+    const hl = t => t.replace(/(\d+–\d+時|\d+%|\d+°)/g, '<span class="wx-num">$1</span>');
+    const html = `<div class="wx-alert-txt">${items.map(it => `<div>${inCard ? hl(it.short) : it.full}</div>`).join('')}</div>
       <button type="button" class="wx-alert-x" aria-label="今天不再提醒">✕</button>`;
+    const cls = (inCard ? 'wx-card-alert ' : 'wx-alert ') + level;
+    // 內容沒變就不動 DOM
+    if(el.className !== cls) el.className = cls;
+    if(el.dataset.html !== html){
+      el.dataset.html = html;
+      el.innerHTML = html;
+      el.querySelector('.wx-alert-x').onclick = () => {
+        try{ localStorage.setItem('wxDismiss:' + today, '1'); }catch(e){}
+        hide();
+      };
+    }
     el.style.display = '';
-    el.querySelector('.wx-alert-x').onclick = () => {
-      try{ localStorage.setItem('wxDismiss:' + today, '1'); }catch(e){}
-      el.style.display = 'none';
-    };
   }
 
   // ---- 2. 每趟卡片:左側天氣色條 + 很嚴重時多一行字(只有垃圾車、回收車)----
@@ -7815,7 +7854,7 @@ function showUpdateBanner(){
           if(storm) lv = 'storm';
           else if(h.rain >= CHIP_RAIN) lv = 'rain';
           else if(h.feel >= HEAT_WARN) lv = 'heat';
-          if(storm) line = 'storm|⛈️ 出車時可能雷雨或大雨，注意行車安全';
+          if(storm) line = 'storm|⛈️ 出車時可能雷雨，注意安全';
           else if(h.rain >= LINE_RAIN) line = `rain|🌧 出車時降雨 ${h.rain}%，記得帶雨具`;
           const [, txt] = wxDesc(h.code, h.hour);
           tip = `${m[1]}時預報：${txt} ${Math.round(h.temp)}°，體感 ${Math.round(h.feel)}°，降雨 ${h.rain}%`;
@@ -7892,6 +7931,7 @@ function showUpdateBanner(){
         requestAnimationFrame(() => {
           pending = false;
           decorateTrips();
+          renderAlert();
           if(wrap.classList.contains('open')) renderBar();
         });
       }).observe(trips, { childList: true, subtree: true });
@@ -7901,6 +7941,12 @@ function showUpdateBanner(){
     document.addEventListener('visibilitychange', () => {
       if(document.visibilityState === 'visible') loadWeather(false);
     });
+    // 選路線／換車種時卡片會顯示或隱藏 → 提醒跟著換位置
+    const cardBox = document.getElementById('card');
+    if(cardBox && 'MutationObserver' in window){
+      new MutationObserver(() => renderAlert()).observe(cardBox, { attributes: true, attributeFilter: ['class'] });
+    }
+
     // App 在背景時不做事(不連線、不重畫)
     setInterval(() => { if(!document.hidden) loadWeather(false); }, 10 * 60 * 1000);
     // 網路恢復時抓一次(一樣要過期才真的抓)
