@@ -1,7 +1,7 @@
 // 前鎮清運 離線快取
 // 邏輯:每次連網都嘗試抓最新版(4秒內),成功就更新快取;
 //      超時或完全沒訊號就退回手機裡存好的舊版,確保App一定打得開
-const CACHE_NAME = 'qianzhen-cleanup-v5.48';
+const CACHE_NAME = 'qianzhen-cleanup-v5.50';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -29,6 +29,10 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   // 只處理 GET 請求(頁面本身、圖示等),不快取其他動作
   if (event.request.method !== 'GET') return;
+  // 外部網站的請求(例如天氣 API)不經過這裡,直接交給瀏覽器;
+  // 天氣的離線備援由 index.html 自己用 localStorage 處理,
+  // 避免逾時時拿到舊天氣卻被當成新資料,或拿到 index.html 被當成天氣資料
+  if (new URL(event.request.url).origin !== self.location.origin) return;
 
   event.respondWith(
     new Promise((resolve) => {

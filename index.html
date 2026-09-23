@@ -2129,7 +2129,10 @@
   .wx-chip.heat{color:#f4b877; border-color:rgba(240,150,60,0.5); background:rgba(240,150,60,0.1);}
   .wx-chip.storm{color:#f19a9a; border-color:rgba(230,90,90,0.55); background:rgba(230,90,90,0.1);}
   .time-pair > .wx-chip{margin-left:4px;}
-  .trip-toprow > .wx-break{flex-basis:100%; height:0;}
+  .wx-chip.wx-head{font-size:12px; padding:2px 7px; gap:2px; margin-left:auto;}
+  .wx-chip.wx-head .wx-chip-i{font-size:13px;}
+  .wx-head .wx-head-rain{color:#7fbfee; margin-left:4px;}
+  .wx-head .wx-head-rain i{font-style:normal; font-size:10px; margin-right:1px;}
   @media (prefers-reduced-motion: reduce){ .wx-bar .wx-caret{transition:none;} }
 </style>
 </head>
@@ -2154,6 +2157,7 @@
   <div class="card" id="card">
     <div class="card-head">
       <div class="card-title" id="cardTitle">路線</div>
+      <span class="wx-chip wx-head" id="wxHead" style="display:none;"></span>
       <button class="edit-btn" id="editBtn" type="button" style="display:none;">✏️編輯時間</button>
     </div>
     <div class="day-switch-note" id="daySwitchNote" style="display:none;"></div>
@@ -2164,7 +2168,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.49 ｜ 更新日期：2026.09.23</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.50 ｜ 更新日期：2026.09.23</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -7744,55 +7748,32 @@ function showUpdateBanner(){
     };
   }
 
-  // ---- 2. 每趟卡片的天氣標籤 ----
-  let decorating = false;
-  function decorateTrips(){
-    if(decorating) return;
-    decorating = true;
-    try{
-      document.querySelectorAll('#trips .wx-chip, #trips .wx-break').forEach(c => c.remove());
-      if(!wx) return;
-      const today = new Date();
-      document.querySelectorAll('#trips .trip').forEach(row => {
-        const dep = row.querySelector('.time-pair .depart'); // 編輯模式下沒有 .depart,自動不顯示
-        if(!dep) return;
-        const m = dep.textContent.trim().match(/^(\d{1,2}):(\d{2})$/);
-        if(!m) return;
-        const d = new Date(today);
-        d.setHours(parseInt(m[1], 10), 0, 0, 0);
-        const h = hourAt(hourKey(d));
-        if(!h) return;
-        const [ico, txt] = wxDesc(h.code, h.hour);
-        const chip = document.createElement('span');
-        let cls = 'wx-chip';
-        if(isStorm(h.code)) cls += ' storm';
-        else if(h.rain >= CHIP_RAIN) cls += ' rain';
-        else if(h.feel >= HEAT_WARN) cls += ' heat';
-        chip.className = cls;
-        chip.title = `${m[1]}時預報：${txt} ${Math.round(h.temp)}°，體感 ${Math.round(h.feel)}°，降雨 ${h.rain}%`;
-        chip.innerHTML = `<span class="wx-chip-i" aria-hidden="true">${ico}</span>`
-          + (h.rain >= 30 ? `${h.rain}%` : '')
-          + `${h.rain >= 30 ? ' ' : ''}${Math.round(h.temp)}°`;
-        const tp = dep.closest('.time-pair');
-        if(tp.parentElement && tp.parentElement.classList.contains('trip-toprow')){
-          // 垃圾車/回收車:固定換到第二行,和「+備註」同一行(標籤靠左、備註靠右)
-          const br = document.createElement('span');
-          br.className = 'wx-break';
-          tp.insertAdjacentElement('afterend', br);
-          br.insertAdjacentElement('afterend', chip);
-        }else{
-          tp.appendChild(chip);                         // 廚餘等:放進時間列裡
-        }
-      });
-    }finally{
-      decorating = false;
-    }
+  // ---- 2. 路線卡片標題列的天氣(目前氣溫 + 降雨機率)----
+  function renderHead(){
+    const el = document.getElementById('wxHead');
+    if(!el) return;
+    if(!wx){ el.style.display = 'none'; return; }
+    const now = new Date();
+    const cur = wx.data.current;
+    const nowH = hourAt(hourKey(now));
+    const rain = nowH ? nowH.rain : null;
+    const [ico, txt] = wxDesc(cur.weather_code, now.getHours());
+    let cls = 'wx-chip wx-head';
+    if(isStorm(cur.weather_code)) cls += ' storm';
+    else if(rain != null && rain >= CHIP_RAIN) cls += ' rain';
+    else if(cur.apparent_temperature >= HEAT_WARN) cls += ' heat';
+    el.className = cls;
+    el.title = `目前${txt} ${Math.round(cur.temperature_2m)}°，體感 ${Math.round(cur.apparent_temperature)}°` + (rain != null ? `，降雨機率 ${rain}%` : '');
+    // 手機 375 寬度下標題列放不下天氣圖示,只留溫度 + 降雨(天氣圖示在上方天氣列)
+    el.innerHTML = `${Math.round(cur.temperature_2m)}°`
+      + (rain != null ? `<span class="wx-head-rain"><i aria-hidden="true">☔</i>${rain}%</span>` : '');
+    el.style.display = '';
   }
 
   function renderAll(){
     renderBar();
     renderAlert();
-    decorateTrips();
+    renderHead();
   }
 
   // ---- 掛上畫面 ----
@@ -7823,11 +7804,10 @@ function showUpdateBanner(){
     if(trips && 'MutationObserver' in window){
       let pending = false;
       new MutationObserver(() => {
-        if(decorating || pending) return;
+        if(pending) return;
         pending = true;
         requestAnimationFrame(() => {
           pending = false;
-          decorateTrips();
           if(wrap.classList.contains('open')) renderBar();
         });
       }).observe(trips, { childList: true, subtree: true });
