@@ -2209,7 +2209,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.51 ｜ 更新日期：2026.09.25</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.52 ｜ 更新日期：2026.09.26</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -7632,10 +7632,22 @@ function showUpdateBanner(){
   let wxLastFail = 0;     // 上次抓取失敗的時間
   const WX_RETRY_GAP = 5 * 60 * 1000;
 
+  // 檢查天氣資料是否完整:少欄位、長度對不上、目前氣溫不是數字 → 當作抓取失敗,不存、不顯示
+  // (避免 API 偶發異常時畫面卡在「讀取中」或顯示假的 0°)
+  const isNum = v => typeof v === 'number' && isFinite(v);
+  function validData(d){
+    if(!d || !d.current || !d.hourly) return false;
+    const c = d.current, h = d.hourly;
+    if(!isNum(c.temperature_2m) || !isNum(c.apparent_temperature)) return false;
+    if(!Array.isArray(h.time) || !h.time.length) return false;
+    return ['temperature_2m', 'apparent_temperature', 'precipitation_probability', 'weather_code']
+      .every(k => Array.isArray(h[k]) && h[k].length === h.time.length);
+  }
+
   function readCache(){
     try{
       const c = JSON.parse(localStorage.getItem(WX_CACHE_KEY));
-      if(c && c.data && c.data.hourly) return c;
+      if(c && isNum(c.t) && validData(c.data)) return c;
     }catch(e){}
     return null;
   }
@@ -7657,7 +7669,7 @@ function showUpdateBanner(){
       const res = await fetch(WX_URL, { signal: ctrl.signal, cache: 'no-store' });
       if(!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
-      if(!data.hourly || !data.current) throw new Error('資料格式不對');
+      if(!validData(data)) throw new Error('資料格式不對');
       wx = { t: Date.now(), data };
       wxFailed = false;
       wxLastFail = 0;
@@ -7679,6 +7691,8 @@ function showUpdateBanner(){
     const h = wx.data.hourly;
     const i = h.time.indexOf(key);
     if(i < 0) return null;
+    // 這個整點沒有氣溫資料 → 當作沒有預報,不顯示假的 0°
+    if(!isNum(h.temperature_2m[i]) || !isNum(h.apparent_temperature[i])) return null;
     return {
       time: h.time[i],
       hour: parseInt(h.time[i].slice(11, 13), 10),
@@ -7956,6 +7970,55 @@ function showUpdateBanner(){
     loadWeather(false);
   }
 
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
+  else mount();
+})();
+</script>
+<script>
+// ===== 導航時螢幕不自動關(Screen Wake Lock)=====
+// 只在「沿線時刻」「完整路線導航」「手繪路線圖」打開時保持螢幕亮著,關掉畫面就恢復,平常不影響耗電。
+// 用 MutationObserver 監看兩個畫面的 class(show),不管從按鈕打開、或重開 App 自動跳回,都會生效。
+// 手機不支援時什麼都不做,不會出錯。
+(function(){
+  if(!('wakeLock' in navigator)) return;
+  const IDS = ['routeNavOverlay', 'routeStopsOverlay', 'routeSketchOverlay'];
+  let lock = null;
+  let requesting = false;
+
+  const wanted = () => IDS.some(id => {
+    const el = document.getElementById(id);
+    return el && el.classList.contains('show');
+  });
+
+  async function sync(){
+    const want = wanted() && document.visibilityState === 'visible';
+    if(want && !lock && !requesting){
+      requesting = true;
+      try{
+        lock = await navigator.wakeLock.request('screen');
+        lock.addEventListener('release', () => { lock = null; });
+        // 等待期間畫面已經關掉 → 馬上放開
+        if(!wanted()){ lock.release().catch(()=>{}); lock = null; }
+      }catch(e){
+        lock = null; // 省電模式等情況可能被拒絕,就維持原本行為
+      }finally{
+        requesting = false;
+      }
+    }else if(!want && lock){
+      const l = lock; lock = null;
+      l.release().catch(()=>{});
+    }
+  }
+
+  function mount(){
+    IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if(el) new MutationObserver(sync).observe(el, { attributes: true, attributeFilter: ['class'] });
+    });
+    // 切到別的 App 或鎖屏時,系統會自動放開;回到 App 再重新要
+    document.addEventListener('visibilitychange', sync);
+    sync();
+  }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
   else mount();
 })();
