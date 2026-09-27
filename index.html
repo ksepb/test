@@ -1990,6 +1990,30 @@
     color:var(--accent);
   }
   .zone-col.off{opacity:0.55;}
+
+  /* ===== 回收車每月輪值 ===== */
+  .rot-box{
+    margin-top:10px;
+    padding:10px 12px;
+    background:rgba(255,255,255,0.03);
+    border:1px solid var(--line);
+    border-radius:10px;
+  }
+  .rot-title{color:var(--accent); font-weight:700; font-size:13px; letter-spacing:1px; margin-bottom:8px;}
+  .rot-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .rot-row label{color:var(--text-dim); font-size:14px;}
+  .rot-select{
+    flex:1; min-width:150px;
+    font:inherit; font-size:16px; font-weight:700;
+    color:var(--text);
+    background:rgba(255,255,255,0.05);
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:8px 10px;
+  }
+  .rot-select:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .rot-info{margin-top:8px; font-size:13px; color:var(--text-dim); line-height:1.6;}
+  .rot-info b{color:var(--accent);}
   .today-tag{
     display:inline-block;
     margin-left:6px;
@@ -2209,7 +2233,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.53 ｜ 更新日期：2026.09.27</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.54 ｜ 更新日期：2026.09.28</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -5319,6 +5343,76 @@ function todayZoneGroup(){
   return null; // 三、六、日不限定,不自動切換
 }
 
+// ===== 回收車每月輪值 =====
+// 每月 1 號照這個順序換到下一組:一組兩區,星期一四跑前面那區、星期二五跑後面那區
+// 設定只存在這支手機(localStorage 'recycleRotation'),格式 {idx: 第幾組, ym: "設定當月 YYYY-MM"}
+const RECYCLE_ROTATION = [["1","5"],["2","6"],["3","7"],["4","8"],["9","13"],["10","14"],["11","15"],["12","16"]];
+const ROTATION_KEY = 'recycleRotation';
+function getRotation(){
+  try{
+    const r = JSON.parse(localStorage.getItem(ROTATION_KEY));
+    if(r && Number.isInteger(r.idx) && r.idx >= 0 && r.idx < RECYCLE_ROTATION.length && /^\d{4}-\d{2}$/.test(r.ym)) return r;
+  }catch(e){}
+  return null;
+}
+// 指定日期那個月輪到哪一組(沒設定就回傳 null)
+function rotationPairFor(date){
+  const r = getRotation();
+  if(!r) return null;
+  const [y, m] = r.ym.split('-').map(Number);
+  const diff = (date.getFullYear() - y) * 12 + (date.getMonth() + 1 - m);
+  const n = RECYCLE_ROTATION.length;
+  const idx = ((r.idx + diff) % n + n) % n;
+  return { idx, pair: RECYCLE_ROTATION[idx] };
+}
+// 今天該跑哪一區:星期一四 → 前面那區;星期二五 → 後面那區;其他天先用前面那區
+function rotationZoneToday(){
+  const p = rotationPairFor(new Date());
+  if(!p) return null;
+  const g = todayZoneGroup();
+  return { zone: g === 'tueFri' ? p.pair[1] : p.pair[0], pair: p.pair };
+}
+function setRotation(v){
+  if(v === '' || v === null){
+    localStorage.removeItem(ROTATION_KEY);
+  }else{
+    const d = new Date();
+    const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    localStorage.setItem(ROTATION_KEY, JSON.stringify({ idx: parseInt(v, 10), ym }));
+  }
+  // 重畫提示區(保持展開),並直接跳到今天該跑的那區
+  renderCategoryNote();
+  const wrap = document.getElementById('categoryNote');
+  const body = wrap && wrap.querySelector('.cat-note-body');
+  if(body){ body.classList.add('show'); const ar = wrap.querySelector('.shuttle-arrow'); if(ar) ar.textContent = '▾'; }
+  if(currentCategory === '回收車'){
+    localStorage.removeItem('lastItem:回收車');
+    renderPicker();
+  }
+}
+function buildRotationBox(){
+  const now = new Date();
+  const cur = rotationPairFor(now);
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const nxt = rotationPairFor(nextMonth);
+  const opts = RECYCLE_ROTATION.map((p, i) =>
+    `<option value="${i}" ${cur && cur.idx === i ? 'selected' : ''}>${p[0]}區／${p[1]}區</option>`).join('');
+  const info = cur
+    ? `今天跑 <b>${rotationZoneToday().zone}區</b>(一四 ${cur.pair[0]}區、二五 ${cur.pair[1]}區)<br>${nextMonth.getMonth() + 1}月1日起自動換成 <b>${nxt.pair[0]}區／${nxt.pair[1]}區</b>`
+    : '設定後,每月1號自動換到下一組,打開 App 會直接跳到今天該跑的區';
+  return `
+    <div class="rot-box">
+      <div class="rot-title">🔄 我的每月輪值</div>
+      <div class="rot-row">
+        <label for="rotSelect">${now.getMonth() + 1}月是</label>
+        <select id="rotSelect" class="rot-select" onchange="setRotation(this.value)">
+          <option value="" ${cur ? '' : 'selected'}>不使用輪值</option>${opts}
+        </select>
+      </div>
+      <div class="rot-info">${info}</div>
+    </div>`;
+}
+
 let autoScrollOnOpen = true; // 開啟網頁時若有上次選取,自動捲到時間卡片(僅一次)
 let currentCategory = localStorage.getItem('lastCategory') || "垃圾車";
 if(!categories[currentCategory]) currentCategory = "垃圾車";
@@ -5371,8 +5465,8 @@ function buildZoneTable(){
 // 各分頁頂部的注意事項(收合式提示列)
 const categoryNotes = {
   "回收車": {
-    title: "📌 責任區順序",
-    html: buildZoneTable
+    title: "📌 責任區順序・每月輪值",
+    html: () => buildZoneTable() + buildRotationBox()
   },
   "三配套": {
     title: "📌 星期三配套注意事項",
@@ -5506,7 +5600,13 @@ function renderPicker(){
   // 回收車限定:若上次選的區今天不是對應日(星期一四/二五),且僅在剛開啟網頁時,自動切換到同組
   let targetKey = !q ? localStorage.getItem('lastItem:' + currentCategory) : currentSelectedKey;
   let daySwitchFrom = null;
-  if(!q && autoScrollOnOpen && currentCategory === '回收車' && targetKey && zonePairs[targetKey]){
+  // 回收車每月輪值:有設定時,剛打開 App、或切到回收車分頁還沒選區時,直接跳到今天該跑的區
+  let rotationInfo = null;
+  if(!q && currentCategory === '回收車' && (autoScrollOnOpen || !targetKey)){
+    const rz = rotationZoneToday();
+    if(rz){ targetKey = rz.zone; rotationInfo = rz; }
+  }
+  if(!rotationInfo && !q && autoScrollOnOpen && currentCategory === '回收車' && targetKey && zonePairs[targetKey]){
     const today = todayZoneGroup();
     const zoneGroup = zoneDayGroup(targetKey);
     if(today && zoneGroup && zoneGroup !== today){
@@ -5553,6 +5653,15 @@ function renderPicker(){
           if(savedSubView === 'stops') openRouteStops(targetKey);
           else if(savedSubView === 'nav') openRouteNav(targetKey);
           else if(savedSubView === 'sketch') openRouteSketch(targetKey);
+        }
+      }
+      // 顯示「本月輪值」提示
+      if(rotationInfo){
+        const noteEl = document.getElementById('daySwitchNote');
+        if(noteEl){
+          const m = new Date().getMonth() + 1;
+          noteEl.style.display = 'flex';
+          noteEl.innerHTML = `🔄 ${m}月輪值 ${rotationInfo.pair[0]}區／${rotationInfo.pair[1]}區,今天跑 ${targetKey}區`;
         }
       }
       // 顯示「已切換至同組」提示,可點擊改看原本那區
@@ -6833,6 +6942,22 @@ updateSearchVisibility();
 renderCategoryNote();
 renderPicker();
 
+// 隔天從背景叫回 App(iPhone 常常沒有重新整理,畫面停在昨天)時,當成重新打開:
+// 重選今天該跑的區(每月輪值、一四／二五自動換區)、更新責任區表的「今天」標示
+let renderedDay = new Date().toDateString();
+document.addEventListener('visibilitychange', () => {
+  if(document.hidden) return;
+  const today = new Date().toDateString();
+  if(today === renderedDay) return;
+  // 正在看沿線時刻／導航等全螢幕畫面、或正在打備註時先不打擾,下次回來再換
+  if(document.querySelector('.route-nav-overlay.show')) return;
+  if(typeof openNoteEdit !== 'undefined' && openNoteEdit) return;
+  renderedDay = today;
+  autoScrollOnOpen = true;
+  renderCategoryNote();
+  renderPicker();
+});
+
 
 
 
@@ -6971,7 +7096,7 @@ function closeImg(){
 }
 
 // ===== 備份與還原:只備份「使用者自己的編輯」(改過的時間/勾選進度/排序),不含路線本身資料 =====
-const BACKUP_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'personalNote:', 'addrHidden:', 'addrCustom:'];
+const BACKUP_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'personalNote:', 'addrHidden:', 'addrCustom:', 'recycleRotation'];
 const BACKUP_HEADER = '【前鎮清運備份】';
 
 function utf8ToBase64(str){ return btoa(unescape(encodeURIComponent(str))); }
@@ -7072,7 +7197,7 @@ document.getElementById('doImportBtn').onclick = ()=>{
 };
 
 // ===== 清除所有本機資料:雙重確認,清除前引導先備份 =====
-const CLEAR_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'lastItem:', 'scrollPos:', 'personalNote:', 'addrHidden:', 'addrCustom:', 'lastSubView:', 'subViewScroll:', 'lastTask:', 'wxDismiss:'];
+const CLEAR_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'lastItem:', 'scrollPos:', 'personalNote:', 'addrHidden:', 'addrCustom:', 'lastSubView:', 'subViewScroll:', 'lastTask:', 'wxDismiss:', 'recycleRotation'];
 const CLEAR_EXACT_KEYS = ['lastCategory', 'wxCache'];
 
 document.getElementById('clearDataEntry').onclick = ()=>{
