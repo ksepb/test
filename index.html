@@ -1991,6 +1991,43 @@
   }
   .zone-col.off{opacity:0.55;}
 
+
+  /* ===== 中間彈跳提醒 ===== */
+  .toast-layer{
+    position:fixed; inset:0; z-index:9000;
+    display:flex; align-items:center; justify-content:center;
+    padding:24px; pointer-events:none;
+  }
+  .toast-layer.on{pointer-events:auto;}
+  .toast-layer::before{
+    content:''; position:absolute; inset:0;
+    background:rgba(6,8,5,0.55);
+    -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    opacity:0; transition:opacity .22s ease;
+  }
+  .toast-layer.on::before{opacity:1;}
+  .toast{
+    position:relative;
+    width:min(240px, 100%);
+    padding:20px 20px 16px;
+    border-radius:22px;
+    text-align:center;
+    background:#262d20;
+    border:1.5px solid rgba(168,220,74,0.55);
+    box-shadow:0 18px 50px rgba(0,0,0,0.6), 0 0 0 4px rgba(168,220,74,0.08);
+    opacity:0; transform:scale(0.94);
+    transition:opacity .22s ease, transform .22s ease;
+  }
+  .toast-layer.on .toast{opacity:1; transform:none;}
+  .toast-tl{display:flex; align-items:center; justify-content:center; gap:8px;}
+  .toast-ic{font-size:24px; line-height:1;}
+  .toast-tt{font-size:24px; font-weight:800; letter-spacing:1px; color:var(--text);}
+  .toast-ss{margin-top:6px; font-size:16px; color:var(--accent); font-weight:700;}
+  .toast-bar{height:3px; border-radius:2px; background:rgba(255,255,255,0.12); margin:14px 12px 0; overflow:hidden;}
+  .toast-bar i{display:block; height:100%; width:100%; background:var(--accent); transform-origin:left;}
+  @media (prefers-reduced-motion: reduce){
+    .toast, .toast-layer::before{transition:none; transform:none;}
+  }
   /* ===== 回收車每月輪值 ===== */
   .rot-box{
     margin-top:10px;
@@ -2233,7 +2270,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.54 ｜ 更新日期：2026.09.28</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.56 ｜ 更新日期：2026.09.28</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -5372,6 +5409,65 @@ function rotationZoneToday(){
   const g = todayZoneGroup();
   return { zone: g === 'tueFri' ? p.pair[1] : p.pair[0], pair: p.pair };
 }
+// ===== 中間彈跳提醒(2 秒自動消失)=====
+let toastTimer = null;
+function showToast(icon, title, sub, ms = 2000){
+  let layer = document.getElementById('toastLayer');
+  if(!layer){
+    layer = document.createElement('div');
+    layer.id = 'toastLayer';
+    layer.className = 'toast-layer';
+    layer.innerHTML = `<div class="toast" role="status" aria-live="polite">
+        <div class="toast-tl"><span class="toast-ic" aria-hidden="true"></span><span class="toast-tt"></span></div>
+        <div class="toast-ss"></div>
+        <div class="toast-bar"><i></i></div>
+      </div>`;
+    document.body.appendChild(layer);
+    layer.addEventListener('click', hideToast);
+    document.addEventListener('keydown', e => { if(e.key === 'Escape') hideToast(); });
+  }
+  layer.querySelector('.toast-ic').textContent = icon;
+  layer.querySelector('.toast-tt').textContent = title;
+  layer.querySelector('.toast-ss').textContent = sub || '';
+  const bar = layer.querySelector('.toast-bar i');
+  bar.style.transition = 'none'; bar.style.transform = 'scaleX(1)';
+  layer.classList.add('on');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    bar.style.transition = `transform ${ms}ms linear`; bar.style.transform = 'scaleX(0)';
+  }));
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, ms);
+}
+function hideToast(){
+  clearTimeout(toastTimer);
+  const layer = document.getElementById('toastLayer');
+  if(layer) layer.classList.remove('on');
+}
+// 同一天同一種提醒只跳一次(記在 localStorage 'toastSeen:種類' = 日期)
+function showToastOncePerDay(kind, icon, title, sub){
+  const d = new Date();
+  const day = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  const k = 'toastSeen:' + kind;
+  try{
+    if(localStorage.getItem(k) === day) return;
+    localStorage.setItem(k, day);
+  }catch(e){}   // 手機儲存空間異常時照樣提醒,不影響其他畫面
+  showToast(icon, title, sub);
+}
+
+// 新月份第一次打開的那一天回傳 true(整天都算),之後就不再提醒
+// 記錄在 localStorage 'recycleRotationNotice' = "YYYY-MM|YYYY-MM-DD"(已提醒的月份|提醒的日期)
+function isRotationNewMonthDay(){
+  const d = new Date();
+  const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  const day = `${ym}-${String(d.getDate()).padStart(2, '0')}`;
+  let seen = '';
+  try{ seen = localStorage.getItem('recycleRotationNotice') || ''; }catch(e){}
+  const [seenYm, seenDay] = String(seen).split('|');
+  if(seenYm === ym) return seenDay === day;
+  try{ localStorage.setItem('recycleRotationNotice', `${ym}|${day}`); }catch(e){}
+  return true;
+}
 function setRotation(v){
   if(v === '' || v === null){
     localStorage.removeItem(ROTATION_KEY);
@@ -5379,6 +5475,8 @@ function setRotation(v){
     const d = new Date();
     const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     localStorage.setItem(ROTATION_KEY, JSON.stringify({ idx: parseInt(v, 10), ym }));
+    // 剛設定的這個月不用再跳「換組」提醒
+    localStorage.setItem('recycleRotationNotice', `${ym}|`);
   }
   // 重畫提示區(保持展開),並直接跳到今天該跑的那區
   renderCategoryNote();
@@ -5601,10 +5699,18 @@ function renderPicker(){
   let targetKey = !q ? localStorage.getItem('lastItem:' + currentCategory) : currentSelectedKey;
   let daySwitchFrom = null;
   // 回收車每月輪值:有設定時,剛打開 App、或切到回收車分頁還沒選區時,直接跳到今天該跑的區
-  let rotationInfo = null;
+  let rotationInfo = null, rotationNewMonth = false;
   if(!q && currentCategory === '回收車' && (autoScrollOnOpen || !targetKey)){
     const rz = rotationZoneToday();
-    if(rz){ targetKey = rz.zone; rotationInfo = rz; }
+    if(rz){
+      const prevKey = targetKey;
+      targetKey = rz.zone; rotationInfo = rz;
+      rotationNewMonth = isRotationNewMonthDay();
+      // 一四／二五換區提醒維持:上次看的是同組另一區(例如昨天 9區、今天星期二換 13區)就照舊提醒
+      if(!rotationNewMonth && prevKey && prevKey !== targetKey && zonePairs[prevKey] === targetKey && todayZoneGroup()){
+        daySwitchFrom = prevKey;
+      }
+    }
   }
   if(!rotationInfo && !q && autoScrollOnOpen && currentCategory === '回收車' && targetKey && zonePairs[targetKey]){
     const today = todayZoneGroup();
@@ -5655,28 +5761,14 @@ function renderPicker(){
           else if(savedSubView === 'sketch') openRouteSketch(targetKey);
         }
       }
-      // 顯示「本月輪值」提示
-      if(rotationInfo){
-        const noteEl = document.getElementById('daySwitchNote');
-        if(noteEl){
-          const m = new Date().getMonth() + 1;
-          noteEl.style.display = 'flex';
-          noteEl.innerHTML = `🔄 ${m}月輪值 ${rotationInfo.pair[0]}區／${rotationInfo.pair[1]}區,今天跑 ${targetKey}區`;
-        }
-      }
-      // 顯示「已切換至同組」提示,可點擊改看原本那區
-      if(daySwitchFrom){
-        const noteEl = document.getElementById('daySwitchNote');
-        if(noteEl){
-          const dayLabel = todayZoneGroup() === 'monThu' ? '星期一、四' : '星期二、五';
-          noteEl.style.display = 'flex';
-          noteEl.innerHTML = `🔁 已切換至${targetKey}區(今日對應${dayLabel})<span class="day-switch-link">→ 返回查看${daySwitchFrom}區</span>`;
-          const link = noteEl.querySelector('.day-switch-link');
-          link.onclick = ()=>{
-            const backBtn = Array.from(picker.querySelectorAll('.route-btn')).find(b => b.dataset.key === daySwitchFrom);
-            if(backBtn) selectItem(daySwitchFrom, backBtn);
-          };
-        }
+      // 換組／換區提醒改成中間彈跳視窗(2 秒自動消失,點任何地方可提早關)
+      // 兩個同時成立時(每月1號剛好也換區),只跳「換組」那一個
+      if(rotationInfo && rotationNewMonth){
+        const m = new Date().getMonth() + 1;
+        showToastOncePerDay('rotMonth', '🔄', `${m}月換組`, `${rotationInfo.pair[0]}／${rotationInfo.pair[1]} 區`);
+      }else if(daySwitchFrom){
+        const dayLabel = todayZoneGroup() === 'monThu' ? '星期一、四' : '星期二、五';
+        showToast('🔁', `換到 ${targetKey} 區`, dayLabel);
       }
     }
   }
@@ -6260,6 +6352,18 @@ function selectItem(key, btn){
   // 每次手動選取都先清掉舊的「同組日期切換」提示,避免殘留
   const dsNote = document.getElementById('daySwitchNote');
   if(dsNote){ dsNote.style.display = 'none'; dsNote.innerHTML = ''; }
+  // 每月輪值:正在看的不是今天該跑的區 → 提醒並可一鍵回去
+  if(dsNote && currentCategory === '回收車'){
+    const rz = rotationZoneToday();
+    if(rz && key !== rz.zone){
+      dsNote.style.display = 'flex';
+      dsNote.innerHTML = `🔄 今天輪值跑 ${rz.zone}區<span class="day-switch-link">→ 回到${rz.zone}區</span>`;
+      dsNote.querySelector('.day-switch-link').onclick = ()=>{
+        const back = Array.from(document.querySelectorAll('#picker .route-btn')).find(b => b.dataset.key === rz.zone);
+        if(back) selectItem(rz.zone, back);
+      };
+    }
+  }
 
   // 高亮直接依路線名稱比對,即使沒有傳入按鈕也能正確重繪
   document.querySelectorAll('.route-btn').forEach(b=>
@@ -7197,7 +7301,7 @@ document.getElementById('doImportBtn').onclick = ()=>{
 };
 
 // ===== 清除所有本機資料:雙重確認,清除前引導先備份 =====
-const CLEAR_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'lastItem:', 'scrollPos:', 'personalNote:', 'addrHidden:', 'addrCustom:', 'lastSubView:', 'subViewScroll:', 'lastTask:', 'wxDismiss:', 'recycleRotation'];
+const CLEAR_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'lastItem:', 'scrollPos:', 'personalNote:', 'addrHidden:', 'addrCustom:', 'lastSubView:', 'subViewScroll:', 'lastTask:', 'wxDismiss:', 'recycleRotation', 'toastSeen:'];
 const CLEAR_EXACT_KEYS = ['lastCategory', 'wxCache'];
 
 document.getElementById('clearDataEntry').onclick = ()=>{
