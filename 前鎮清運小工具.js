@@ -81,7 +81,7 @@ function parseObject(src, name){
 }
 
 async function loadSchedule(cache){
-  const fresh = cache.sched && (Date.now() - cache.sched.t < DATA_TTL);
+  const fresh = cache.sched && cache.sched.data && cache.sched.data.ends && (Date.now() - cache.sched.t < DATA_TTL);
   if(fresh) return { data: cache.sched.data, offline: false };
   try{
     const req = new Request(DATA_URL + "?t=" + Date.now());
@@ -93,6 +93,28 @@ async function loadSchedule(cache){
       kitchen: parseObject(html, "kitchenData"),
       pairs: parseObject(html, "zonePairs"),
     };
+    // 沿線時刻表:每區每趟「最後一站」的時間(算出車在外面的時段,天氣看整段)
+    data.ends = {};
+    try{
+      const line = parseObject(html, "officialLineData");
+      const toMin = s => { const m = String(s).match(/(\d{1,2}):(\d{2})/); return m ? (+m[1]) * 60 + (+m[2]) : null; };
+      for(const z in line){
+        const trips = []; let last = null;
+        (line[z].stops || []).forEach((st, i) => {
+          const cur = toMin(st[0]);
+          if(i === 0 || (cur !== null && last !== null && cur - last >= 40)) trips.push([]);
+          trips[trips.length - 1].push(st);
+          if(cur !== null) last = cur;
+        });
+        data.ends[z] = trips.map(tr => {
+          for(let k = tr.length - 1; k >= 0; k--){
+            const ts = String(tr[k][0]).match(/\d{1,2}:\d{2}/g);
+            if(ts) return ts[ts.length - 1];
+          }
+          return null;
+        });
+      }
+    }catch(e){}
     // 只留時間,備註不需要(檔案小一點)
     for(const k of ["truck", "recycle"]){
       for(const z in data[k]) data[k][z] = data[k][z].map(t => [t[0], t[1]]);
@@ -224,12 +246,18 @@ function tripsFor(data, cat, zone, day){
   if(cat === "廚餘車"){
     const arr = data.kitchen[zone];
     if(!arr) return null;
-    return arr.map((t, i) => ({ label: labels[i] || `第${i + 1}趟`, dep: atTime(day, t), depText: t, arrText: null }));
+    return arr.map((t, i) => { const dep = atTime(day, t); return { label: labels[i] || `第${i + 1}趟`, dep, end: new Date(dep.getTime() + 60 * 60 * 1000), depText: t, arrText: null }; });
   }
   const src = cat === "回收車" ? data.recycle : data.truck;
   const arr = src[zone];
   if(!arr) return null;
-  return arr.map((t, i) => ({ label: labels[i] || `第${i + 1}趟`, dep: atTime(day, t[0]), depText: t[0], arrText: t[1] }));
+  const ends = (data.ends && data.ends[zone]) || [];
+  return arr.map((t, i) => {
+    const dep = atTime(day, t[0]);
+    let end = ends[i] ? atTime(day, ends[i]) : null;
+    if(!end || end < dep) end = new Date(dep.getTime() + 60 * 60 * 1000);
+    return { label: labels[i] || `第${i + 1}趟`, dep, end, depText: t[0], arrText: t[1] };
+  });
 }
 
 // 某一天要跑哪一區(輪值／一四二五換區)
@@ -336,6 +364,24 @@ function wxAt(wx, date){
   if(i < 0) return null;
   return { rain: wx.hourly.precipitation_probability[i] ?? 0, feel: wx.hourly.apparent_temperature[i], code: wx.hourly.weather_code[i] };
 }
+// 一趟在外面的整段時間(出車 → 沿線最後一站),每個整點都看,挑最差的
+function wxTrip(wx, t){
+  if(!wx || !t || !t.dep) return null;
+  const end = t.end || t.dep;
+  let found = false, rain = -1, feel = -99, storm = false, stormHour = null, rainHour = null;
+  const d = new Date(t.dep); d.setMinutes(0, 0, 0);
+  for(; d <= end; d.setHours(d.getHours() + 1)){
+    const h = wxAt(wx, d);
+    if(!h) continue;
+    found = true;
+    if(h.code >= 95 && !storm){ storm = true; stormHour = d.getHours(); }
+    if(h.rain > rain) rain = h.rain;
+    if(h.rain >= 50 && rainHour === null) rainHour = d.getHours();
+    if(typeof h.feel === "number" && h.feel > feel) feel = h.feel;
+  }
+  if(!found) return null;
+  return { rain, feel, code: storm ? 95 : 0, stormHour, rainHour };
+}
 function wxColor(h){
   if(!h) return C.dim;
   if(h.code >= 95) return C.storm;
@@ -404,9 +450,9 @@ function drawSmall(ctx){
   const d = txt(w, t.depText, 30, C.depart, true);
   if(t.arrText){ const r = txt(w, `→ ${t.arrText}`, 18, C.arrive, true); }
   w.addSpacer();
-  const h = wxAt(wx, t.dep);
+  const h = wxTrip(wx, t);
   const foot = w.addStack(); foot.centerAlignContent();
-  if(h) txt(foot, `出車時 ☔${h.rain}%`, 11, wxColor(h));
+  if(h) txt(foot, h.code >= 95 ? `⛈️ ${h.stormHour}時起雷雨` : `☔ 最高 ${h.rain}%`, 11, wxColor(h));
   foot.addSpacer();
   if(offline) txt(foot, "離線", 10, C.past);
   w.refreshAfterDate = refreshAt(next, now);
@@ -447,7 +493,7 @@ function drawMedium(ctx){
     timePair(row, t, isNext ? 21 : 18, isNext, isPast);
     row.addSpacer();
     if(!isPast){
-      const h = wxAt(wx, t.dep);
+      const h = wxTrip(wx, t);
       if(h && (h.rain >= 50 || h.code >= 95 || h.feel >= 36)) txt(row, h.code >= 95 ? "⛈️" : h.rain >= 50 ? `☔${h.rain}%` : "🥵", 11, wxColor(h));
     }
     if(i < next.trips.length - 1) w.addSpacer();
@@ -455,10 +501,11 @@ function drawMedium(ctx){
 
   w.addSpacer();
   const t = next.trips[next.idx];
-  const h = wxAt(wx, t.dep);
+  const h = wxTrip(wx, t);
   const foot = w.addStack(); foot.centerAlignContent();
-  if(h && (h.rain >= 50 || h.code >= 95)) txt(foot, `🌧 ${t.label}出車時降雨 ${h.rain}%,記得帶雨具`, 11, wxColor(h));
-  else if(h && h.feel >= 36) txt(foot, `🥵 ${t.label}出車時體感 ${Math.round(h.feel)}°`, 11, wxColor(h));
+  if(h && h.code >= 95) txt(foot, `⛈️ ${t.label} ${h.stormHour}時起可能雷雨,注意安全`, 11, wxColor(h));
+  else if(h && h.rain >= 50) txt(foot, `🌧 ${t.label} ${h.rainHour}時起降雨 ${h.rain}%,記得帶雨具`, 11, wxColor(h));
+  else if(h && h.feel >= 36) txt(foot, `🥵 ${t.label}體感最高 ${Math.round(h.feel)}°`, 11, wxColor(h));
   foot.addSpacer();
   txt(foot, offline ? "離線資料" : `更新 ${pad(now.getHours())}:${pad(now.getMinutes())}`, 9, C.past);
   w.refreshAfterDate = refreshAt(next, now);

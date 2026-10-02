@@ -2273,7 +2273,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.59 ｜ 更新日期：2026.10.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.60 ｜ 更新日期：2026.10.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -8187,6 +8187,45 @@ function showUpdateBanner(){
   const WX_ICON = { rain:'☔', heat:'🔥', storm:'⚡' };
 
   // 只在內容真的不一樣時才改 DOM,避免 MutationObserver 一直觸發
+  // 這一趟沿線最後一站的時間(分鐘);沒有沿線資料就當作出車後 60 分鐘
+  function tripEndMin(row, depMin){
+    const key = (typeof currentSelectedKey !== 'undefined') ? currentSelectedKey : null;
+    const i = parseInt(row.getAttribute('data-trip-idx'), 10);
+    let end = null;
+    if(key && officialLineData[key] && !isNaN(i)){
+      const trip = splitOfficialTrips(officialLineData[key].stops)[i];
+      if(trip){
+        for(let k = trip.length - 1; k >= 0 && end === null; k--){
+          const ts = String(trip[k][0]).match(/\d{1,2}:\d{2}/g);
+          if(ts){ const [hh, mm] = ts[ts.length - 1].split(':'); end = (+hh) * 60 + (+mm); }
+        }
+      }
+    }
+    if(end === null || end < depMin) end = depMin + 60;
+    return end;
+  }
+  const fmtMin = n => `${String(Math.floor(n / 60)).padStart(2, '0')}:${String(n % 60).padStart(2, '0')}`;
+  // 時段內經過的每個整點都看,挑最差的:雷雨 > 降雨 ≥50% > 體感 ≥36°
+  function worstWeather(day, depMin, endMin){
+    let found = false, storm = null, maxRain = -1, rainHour = null, maxFeel = -99;
+    for(let hr = Math.floor(depMin / 60); hr <= Math.floor(endMin / 60); hr++){
+      const d = new Date(day); d.setHours(hr, 0, 0, 0);
+      const h = hourAt(hourKey(d));
+      if(!h) continue;
+      found = true;
+      if(storm === null && isStorm(h.code)) storm = hr;
+      if(h.rain > maxRain){ maxRain = h.rain; }
+      if(rainHour === null && h.rain >= LINE_RAIN) rainHour = hr;
+      if(h.feel > maxFeel) maxFeel = h.feel;
+    }
+    if(!found) return null;
+    let lv = '';
+    if(storm !== null) lv = 'storm';
+    else if(maxRain >= CHIP_RAIN) lv = 'rain';
+    else if(maxFeel >= HEAT_WARN) lv = 'heat';
+    return { lv, hour: storm, maxRain, rainHour, maxFeel };
+  }
+
   function decorateTrips(){
     const rows = document.querySelectorAll('#trips .trip');
     const cat = (typeof currentCategory !== 'undefined') ? currentCategory : '';
@@ -8198,18 +8237,16 @@ function showUpdateBanner(){
       const dep = row.querySelector('.time-pair .depart'); // 編輯時間模式下沒有 .depart → 不顯示
       const m = dep && dep.textContent.trim().match(/^(\d{1,2}):(\d{2})$/);
       if(enabled && m){
-        const d = new Date(today);
-        d.setHours(parseInt(m[1], 10), 0, 0, 0);
-        const h = hourAt(hourKey(d));
-        if(h){
-          const storm = isStorm(h.code);
-          if(storm) lv = 'storm';
-          else if(h.rain >= CHIP_RAIN) lv = 'rain';
-          else if(h.feel >= HEAT_WARN) lv = 'heat';
-          if(storm) line = 'storm|⛈️ 出車時可能雷雨，注意安全';
-          else if(h.rain >= LINE_RAIN) line = `rain|🌧 出車時降雨 ${h.rain}%，記得帶雨具`;
-          const [, txt] = wxDesc(h.code, h.hour);
-          tip = `${m[1]}時預報：${txt} ${Math.round(h.temp)}°，體感 ${Math.round(h.feel)}°，降雨 ${h.rain}%`;
+        // 這一趟「在外面」的時段:出車時間 → 沿線時刻表這一趟最後一站的時間
+        const depMin = (+m[1]) * 60 + (+m[2]);
+        const endMin = tripEndMin(row, depMin);
+        const w = worstWeather(today, depMin, endMin);
+        if(w){
+          lv = w.lv;
+          const range = `${String(m[1]).padStart(2, '0')}:${m[2]}–${fmtMin(endMin)}`;
+          if(w.lv === 'storm') line = `storm|⛈️ ${w.hour}時起可能雷雨，注意安全`;
+          else if(w.maxRain >= LINE_RAIN) line = `rain|🌧 ${w.rainHour}時起降雨 ${w.maxRain}%，記得帶雨具`;
+          tip = `外出 ${range}：最高降雨 ${w.maxRain}%，體感最高 ${Math.round(w.maxFeel)}°`;
         }
       }
       if(lv) used.add(lv);
