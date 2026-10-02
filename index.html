@@ -1176,6 +1176,7 @@
     user-select:none;
   }
   .float-map-widget.dragging{opacity:0.85;}
+  .float-map-widget.pinching{box-shadow:0 8px 28px rgba(0,0,0,0.6), 0 0 0 6px rgba(230,162,60,0.35);}
   .float-map-head{
     display:flex;
     align-items:center;
@@ -1289,6 +1290,8 @@
   .rn-photo-block{
     margin:0 0 20px;
   }
+  /* 全螢幕看圖:只允許單指捲動,兩指交給程式縮放圖片(不會整頁一起放大) */
+  #routeSketchBody{touch-action:pan-x pan-y;}
   .rn-photo-img{
     display:block;
     width:calc(100% * var(--img-scale, 1));
@@ -2270,7 +2273,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.57 ｜ 更新日期：2026.10.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.59 ｜ 更新日期：2026.10.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -4457,7 +4460,7 @@ const routeTripMapData = {
   },
 };
 
-// 開啟手繪路線圖(照片)全螢幕檢視:圖片用 object-fit:contain 撐滿螢幕,手機原生兩指縮放可直接放大細節
+// 開啟手繪路線圖(照片)全螢幕檢視:兩指縮放／點兩下放大見 setupSketchGestures
 function openRouteSketch(zoneKey){
   const data = routeSketchData[zoneKey];
   if(!data || !data.images || !data.images.length) return;
@@ -7364,6 +7367,70 @@ function changeRnImgScale(delta){
   applyRnImgScale(scale);
 }
 
+// 全螢幕看圖的手勢(手繪路線圖／車次地圖共用):
+//  兩指張開／合起 → 放大縮小圖片(60%~300%),以兩指中間為中心,不會跑掉
+//  單指 → 照常上下左右捲動看放大的地方
+//  點兩下圖片 → 放大到 200%(以點的位置為中心),再點兩下回到 100%
+// 放開後記住大小(跟上面的百分比按鈕共用同一個設定)
+(function setupSketchGestures(){
+  const body = document.getElementById('routeSketchBody');
+  if(!body) return;
+  let pinch = null, curScale = null, lastTap = 0;
+  const dist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  const clampS = v => Math.min(RN_IMG_SCALE_MAX, Math.max(RN_IMG_SCALE_MIN, v));
+  // 把畫面上(vx,vy)這個點在縮放前後保持在同一位置
+  function zoomAt(newScale, vx, vy, fromScale, fromLeft, fromTop){
+    const r = body.getBoundingClientRect();
+    const padL = parseFloat(getComputedStyle(body).paddingLeft) || 0;
+    const px = vx - r.left, py = vy - r.top, k = newScale / fromScale;
+    applyRnImgScale(newScale);
+    body.scrollLeft = (fromLeft + px - padL) * k + padL - px;
+    body.scrollTop = (fromTop + py) * k - py;
+  }
+  function save(v){
+    const sc = Math.round(clampS(v) * 10) / 10;
+    try{ localStorage.setItem(RN_IMG_SCALE_KEY, String(sc)); }catch(e){}
+    applyRnImgScale(sc);
+  }
+  body.addEventListener('touchstart', e => {
+    if(e.touches.length !== 2) return;
+    const t = e.touches;
+    pinch = { d0: dist(t), s0: getRnImgScale(), left0: body.scrollLeft, top0: body.scrollTop,
+              cx: (t[0].clientX + t[1].clientX) / 2, cy: (t[0].clientY + t[1].clientY) / 2 };
+    curScale = pinch.s0;
+  }, {passive:true});
+  body.addEventListener('touchmove', e => {
+    if(!pinch || e.touches.length !== 2) return;
+    e.preventDefault();
+    curScale = clampS(pinch.s0 * dist(e.touches) / pinch.d0);
+    zoomAt(curScale, pinch.cx, pinch.cy, pinch.s0, pinch.left0, pinch.top0);
+  }, {passive:false});
+  const end = e => {
+    if(!pinch || (e.touches && e.touches.length >= 2)) return;
+    save(curScale);
+    pinch = null; lastTap = 0;
+  };
+  body.addEventListener('touchend', end);
+  body.addEventListener('touchcancel', end);
+  // iPhone Safari 的整頁縮放在這裡關掉,改成只縮放圖片
+  ['gesturestart', 'gesturechange'].forEach(n => body.addEventListener(n, e => e.preventDefault()));
+  // 點兩下放大／還原
+  body.addEventListener('touchend', e => {
+    if(pinch || e.changedTouches.length !== 1 || e.touches.length) return;
+    if(!e.target.closest('.rn-photo-img')) return;
+    const now = Date.now(), t = e.changedTouches[0];
+    if(now - lastTap < 300){
+      e.preventDefault();
+      const s0 = getRnImgScale(), target = s0 < 1.5 ? 2 : 1;
+      zoomAt(target, t.clientX, t.clientY, s0, body.scrollLeft, body.scrollTop);
+      save(target);
+      lastTap = 0;
+    }else{
+      lastTap = now;
+    }
+  });
+})();
+
 // 完整路線導航的「浮動地圖」開關跟大小,只存在這次開著App的當下(記憶體變數),不寫進手機儲存空間,
 // 所以每次重新整理/重開App都會回到預設值(關閉、100%),不會記住上次的狀態
 function getRnShowFloatMap(){ return rnShowFloatMapState; }
@@ -7410,7 +7477,43 @@ function openFloatMap(zoneKey, tripCount, startTrip){
   // 拖曳:觸控/滑鼠都支援,可以拖出螢幕外(不限制範圍);如果不小心拖不見了,把「🎈浮動地圖」開關關掉再開一次,
   // 就會重新出現在預設的左上角位置(因為狀態不記憶,每次重開都是乾淨的預設值)
   let dragging = false, startX = 0, startY = 0, startLeft = 0, startTop = 0;
+  // 兩指捏合縮放:在浮動地圖任何地方(包含圖片)兩指張開／合起,即時改大小(60%~180%),放開後記住這次的大小
+  let pinch = null, pinchEndedAt = 0;
+  const dist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  el.addEventListener('touchstart', e => {
+    if(e.touches.length === 2){
+      dragging = false; el.classList.remove('dragging');
+      pinch = { d0: dist(e.touches), s0: getRnFloatMapScale(), s: getRnFloatMapScale() };
+      el.classList.add('pinching');
+    }
+  }, {passive:true});
+  el.addEventListener('touchmove', e => {
+    if(!pinch || e.touches.length !== 2) return;
+    e.preventDefault();
+    const sc = Math.min(RN_FLOATMAP_SCALE_MAX, Math.max(RN_FLOATMAP_SCALE_MIN, pinch.s0 * dist(e.touches) / pinch.d0));
+    pinch.s = sc;
+    el.style.setProperty('--floatmap-scale', sc);
+    const lab = el.querySelector('.float-map-sizelabel');
+    if(lab) lab.textContent = Math.round(sc * 100) + '%';
+  }, {passive:false});
+  const endPinch = e => {
+    if(!pinch || (e.touches && e.touches.length >= 2)) return;
+    setRnFloatMapScale(Math.round(pinch.s * 10) / 10);
+    pinch = null; pinchEndedAt = Date.now();
+    el.classList.remove('pinching');
+    renderFloatMap();
+  };
+  el.addEventListener('touchend', endPinch);
+  el.addEventListener('touchcancel', endPinch);
+  // iPhone Safari 的整頁縮放手勢,在浮動地圖上關掉,只縮放地圖本身
+  ['gesturestart', 'gesturechange'].forEach(n => el.addEventListener(n, e => e.preventDefault()));
+  // 捏合剛結束時不要誤觸「點圖片開全螢幕」
+  el.addEventListener('click', e => {
+    if(Date.now() - pinchEndedAt < 400){ e.stopPropagation(); e.preventDefault(); }
+  }, true);
+
   const onDown = e => {
+    if(e.touches && e.touches.length > 1) return;   // 兩指是捏合,不是拖曳
     if(e.target.closest('.float-map-btn') || e.target.closest('.float-map-nav')) return; // 按鈕/圖片本身不觸發拖曳
     dragging = true;
     const p = e.touches ? e.touches[0] : e;
@@ -7420,7 +7523,7 @@ function openFloatMap(zoneKey, tripCount, startTrip){
     el.classList.add('dragging');
   };
   const onMove = e => {
-    if(!dragging) return;
+    if(!dragging || pinch) return;
     const p = e.touches ? e.touches[0] : e;
     const newLeft = startLeft + (p.clientX - startX);
     const newTop = startTop + (p.clientY - startY);
