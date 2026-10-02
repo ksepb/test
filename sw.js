@@ -1,12 +1,15 @@
 // 前鎮清運 離線快取
 // 邏輯:每次連網都嘗試抓最新版(4秒內),成功就更新快取;
 //      超時、完全沒訊號、或伺服器出錯,就退回手機裡存好的舊版,確保App一定打得開
-const CACHE_NAME = 'qianzhen-cleanup-v5.56';
+const CACHE_NAME = 'qianzhen-cleanup-v5.57';
 const CORE_ASSETS = [
   './',
   './index.html',
 ];
 const NETWORK_TIMEOUT_MS = 4000;
+// 圖片(路線圖、手繪圖)另外放一個快取,升版時不會被清掉,看過一次之後就從手機直接讀
+const IMG_CACHE = 'qianzhen-img-v1';
+const isImage = (url) => /\.(jpe?g|png|webp|gif)$/i.test(url.pathname);
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -20,7 +23,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
       .then((keys) => Promise.all(
-        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
+        keys.filter((k) => k !== CACHE_NAME && k !== IMG_CACHE).map((k) => caches.delete(k))
       ))
       .then(() => self.clients.claim())
   );
@@ -36,6 +39,24 @@ self.addEventListener('fetch', (event) => {
 
   const req = event.request;
   const isPage = req.mode === 'navigate';
+
+  // 圖片:手機裡有就馬上顯示(不等網路),同時在背景抓新版更新快取;
+  // 手機裡沒有才等網路。這樣同一張圖第二次打開幾乎是瞬間,訊號差也不會卡
+  if (isImage(new URL(req.url))) {
+    event.respondWith(caches.open(IMG_CACHE).then(async (cache) => {
+      const cached = await cache.match(req);
+      const update = fetch(req).then((res) => {
+        if (res.ok && res.status !== 206) cache.put(req, res.clone()).catch(() => {});
+        return res;
+      });
+      if (cached) {
+        event.waitUntil(update.then(() => {}, () => {}));
+        return cached;
+      }
+      return update.catch(() => Response.error());
+    }));
+    return;
+  }
 
   // 手機裡存的版本;打開頁面找不到時用 index.html 頂替(圖片等其他檔案不頂替,免得拿到網頁當圖片)
   const fromCache = () => caches.match(req, { ignoreSearch: isPage })
