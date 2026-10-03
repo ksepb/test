@@ -2224,6 +2224,8 @@
   .wxa-merc{transform-box:fill-box; transform-origin:bottom; animation:wxaMerc 2.4s ease-in-out infinite;}
   /* 卡片上的小圖示:動 3 輪就停,停下來是完整的靜態圖 */
   .wxa-once *{animation-iteration-count:3 !important;}
+  /* 已過站的那一趟:天氣圖示不動(已經跑完了,動也沒意義);點開喚醒的過站趟次也一樣 */
+  .trip.tp-past .wxa *, .trip.wx-past .wxa *{animation:none !important;}
   @keyframes wxaSpin{to{transform:rotate(360deg);}}
   @keyframes wxaGlow{0%,100%{opacity:.35; transform:scale(.9);}50%{opacity:.7; transform:scale(1.12);}}
   @keyframes wxaDrift{0%,100%{transform:translateX(-2px);}50%{transform:translateX(3px);}}
@@ -2278,6 +2280,8 @@
   .trip.wx-heat  > .wx-ico{color:#f0963c;}
   .trip.wx-storm > .wx-ico{color:#e65a5a;}
   .trip > .wx-line{font-size:16px; font-weight:700; line-height:1.45;}
+  /* 已過站的那一趟:「記得帶雨具」這類提醒已經沒意義,收起來,只留色條跟靜態圖示 */
+  .trip.tp-past > .wx-line, .trip.wx-past > .wx-line{display:none;}
   .trip > .wx-line.rain{color:#9ccdf3;}
   .trip > .wx-line.storm{color:#f19a9a;}
   .wx-lg{display:none;}
@@ -2325,7 +2329,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.65 ｜ 更新日期：2026.10.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.67 ｜ 更新日期：2026.10.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -8377,6 +8381,9 @@ function showUpdateBanner(){
         }
       }
       if(lv) used.add(lv);
+      // 這一趟最後一站時間已經過了 → 標記 wx-past(圖示不動)
+      const past = !!(m && (today.getHours() * 60 + today.getMinutes()) > tripEndMin(row, (+m[1]) * 60 + (+m[2])));
+      row.classList.toggle('wx-past', past);
       const sig = lv + '#' + line;
       const intact = (!lv || row.querySelector(':scope > .wx-ico')) && (!line || row.querySelector(':scope > .wx-line'));
       if(row.dataset.wx === sig && intact) return;
@@ -8480,6 +8487,15 @@ function showUpdateBanner(){
           if(wrap.classList.contains('open')) renderBar();
         });
       }).observe(trips, { childList: true, subtree: true });
+    }
+    // 趟次變成「已過站」(class 改變)→ 提醒字收起來,圖示要重新量位置
+    if(trips && 'MutationObserver' in window){
+      let pend = false;
+      new MutationObserver(recs => {
+        if(pend || !recs.some(r => r.target.classList && r.target.classList.contains('trip'))) return;
+        pend = true;
+        requestAnimationFrame(() => { pend = false; placeWxIcons(); });
+      }).observe(trips, { attributes: true, attributeFilter: ['class'], subtree: true });
     }
 
     // 回到前景、或每 10 分鐘檢查一次是否過期
