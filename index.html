@@ -2206,10 +2206,11 @@
   .trip.wx-rain {box-shadow:inset 4px 0 0 #5fa5e6;}
   .trip.wx-heat {box-shadow:inset 4px 0 0 #f0963c;}
   .trip.wx-storm{box-shadow:inset 4px 0 0 #e65a5a;}
+  /* 天氣圖示放在色條「下方」,避開上方進行中那一趟的綠色呼吸燈 */
   .trip > .wx-ico{
     position:absolute;
     left:-16px;
-    top:17px;
+    bottom:14px;
     width:24px;
     height:24px;
     border-radius:50%;
@@ -2273,7 +2274,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.60 ｜ 更新日期：2026.10.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.61 ｜ 更新日期：2026.10.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
