@@ -2184,6 +2184,36 @@
   }
   .wx-alert-x:active{background:rgba(255,255,255,0.12);}
 
+  /* ===== 天氣動畫圖示 ===== */
+  .wx-bar .wx-ico.wx-ico-svg{width:44px; height:44px; margin:-6px -2px;}
+  .wxa{display:block; width:100%; height:100%; overflow:visible;}
+  .trip > .wx-ico .wxa{width:22px; height:22px;}
+  .wxa-rays{transform-origin:32px 32px; animation:wxaSpin 14s linear infinite;}
+  .wxa-glow{transform-origin:32px 32px; animation:wxaGlow 2.6s ease-in-out infinite;}
+  .wxa-glow2{transform-origin:42px 22px; animation:wxaGlow 2.6s ease-in-out infinite;}
+  .wxa-glow3{transform-origin:40px 48px; animation:wxaGlow 2.6s ease-in-out infinite;}
+  .wxa-drift{animation:wxaDrift 4.5s ease-in-out infinite;}
+  .wxa-peek{animation:wxaPeek 5s ease-in-out infinite;}
+  .wxa-drop{animation:wxaFall 1s linear infinite;}
+  .wxa-drop.d2{animation-delay:.33s;} .wxa-drop.d3{animation-delay:.66s;}
+  .wxa-bolt{animation:wxaFlash 3.2s linear infinite;}
+  .wxa-cflash{animation:wxaCloudFlash 3.2s linear infinite;}
+  .wxa-wave{animation:wxaRise 1.8s ease-in-out infinite;}
+  .wxa-wave.w2{animation-delay:.6s;} .wxa-wave.w3{animation-delay:1.2s;}
+  .wxa-merc{transform-box:fill-box; transform-origin:bottom; animation:wxaMerc 2.4s ease-in-out infinite;}
+  /* 卡片上的小圖示:動 3 輪就停,停下來是完整的靜態圖 */
+  .wxa-once *{animation-iteration-count:3 !important;}
+  @keyframes wxaSpin{to{transform:rotate(360deg);}}
+  @keyframes wxaGlow{0%,100%{opacity:.35; transform:scale(.9);}50%{opacity:.7; transform:scale(1.12);}}
+  @keyframes wxaDrift{0%,100%{transform:translateX(-2px);}50%{transform:translateX(3px);}}
+  @keyframes wxaPeek{0%,100%{transform:translate(0,2px);}50%{transform:translate(2px,-2px);}}
+  @keyframes wxaFall{0%{transform:translateY(-7px); opacity:0;}25%{opacity:1;}100%{transform:translateY(8px); opacity:0;}}
+  @keyframes wxaFlash{0%,62%,68%,74%,100%{opacity:.7;}64%,66%,72%{opacity:1;}}
+  @keyframes wxaCloudFlash{0%,62%,68%,74%,100%{filter:none;}64%,72%{filter:brightness(1.8);}}
+  @keyframes wxaRise{0%{transform:translateY(5px); opacity:0;}35%{opacity:1;}100%{transform:translateY(-7px); opacity:0;}}
+  @keyframes wxaMerc{0%,100%{transform:scaleY(.82);}50%{transform:scaleY(1);}}
+  @media (prefers-reduced-motion: reduce){ .wxa *{animation:none !important;} }
+
   /* 每趟卡片上的天氣小標籤 */
   .wx-chip{
     flex:none;
@@ -2209,10 +2239,10 @@
   /* 天氣圖示放在「時間列」跟「接駁紀錄」中間(程式 placeWxIcons 量好位置),避開綠色呼吸燈 */
   .trip > .wx-ico{
     position:absolute;
-    left:-16px;
+    left:-18px;
     top:50%;
-    width:24px;
-    height:24px;
+    width:28px;
+    height:28px;
     border-radius:50%;
     display:flex;
     align-items:center;
@@ -2274,7 +2304,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.62 ｜ 更新日期：2026.10.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.63 ｜ 更新日期：2026.10.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -7944,6 +7974,51 @@ function showUpdateBanner(){
   const HEAT_WARN = 36;   // 體感 ≥ 36° 提醒
   const CHIP_RAIN = 50;   // 卡片標籤轉藍色的門檻
 
+  // ---- 天氣動畫圖示(SVG 向量,放大不失真)----
+  // 頂部天氣列:一直慢慢動;卡片小圓圖示:動 3 輪就停(省電、不分心);手機開「減少動態效果」就不動
+  let wxSvgN = 0;
+  function wxSvg(kind, cls){
+    const u = 'wx' + (++wxSvgN);
+    const defs = `<defs>
+      <radialGradient id="sunG${u}" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#fff6b0"/><stop offset=".55" stop-color="#ffcf3f"/><stop offset="1" stop-color="#ff9f1a"/></radialGradient>
+      <radialGradient id="glowG${u}" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffd84d" stop-opacity=".75"/><stop offset="1" stop-color="#ffd84d" stop-opacity="0"/></radialGradient>
+      <linearGradient id="cloudG${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cfd8e3"/></linearGradient>
+      <linearGradient id="darkG${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#aab4c2"/><stop offset="1" stop-color="#5f6b7a"/></linearGradient>
+      <linearGradient id="dropG${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8e0ff"/><stop offset="1" stop-color="#3d9be9"/></linearGradient>
+      <linearGradient id="boltG${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff7c2"/><stop offset="1" stop-color="#ffc400"/></linearGradient>
+      <radialGradient id="heatG${u}" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#ffe0a3"/><stop offset=".55" stop-color="#ff8a2a"/><stop offset="1" stop-color="#e2461b"/></radialGradient>
+      <filter id="soft${u}" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#000" flood-opacity=".35"/></filter>
+    </defs>`;
+    const cloud = (fill, c = '') => `<g class="${c}" filter="url(#soft${u})"><circle cx="24" cy="36" r="10" fill="${fill}"/><circle cx="35" cy="29" r="13" fill="${fill}"/><circle cx="45" cy="37" r="9" fill="${fill}"/><rect x="14" y="34" width="40" height="13" rx="6.5" fill="${fill}"/></g>`;
+    const drop = (x, c) => `<path class="wxa-drop ${c}" d="M${x} 50c0 0-3.2 4.2-3.2 6.2a3.2 3.2 0 0 0 6.4 0C${x + 3.2} 54.2 ${x} 50 ${x} 50z" fill="url(#dropG${u})"/>`;
+    const sunBody = `<circle class="wxa-glow" cx="32" cy="32" r="26" fill="url(#glowG${u})"/>
+      <g class="wxa-rays" stroke="#ffc53d" stroke-width="3.2" stroke-linecap="round">${[0,30,60,90,120,150,180,210,240,270,300,330].map((a,k)=>`<line x1="32" y1="${k%2?7:5}" x2="32" y2="${k%2?11:12}" transform="rotate(${a} 32 32)"/>`).join('')}</g>
+      <circle cx="32" cy="32" r="13" fill="url(#sunG${u})" filter="url(#soft${u})"/>`;
+    const body = {
+      sun: sunBody,
+      partly: `<g class="wxa-peek"><circle class="wxa-glow2" cx="42" cy="22" r="14" fill="url(#glowG${u})"/><circle cx="42" cy="22" r="9" fill="url(#sunG${u})"/></g>${cloud(`url(#cloudG${u})`, 'wxa-drift')}`,
+      cloud: cloud(`url(#cloudG${u})`, 'wxa-drift'),
+      rain: `${cloud(`url(#darkG${u})`, 'wxa-drift')}${drop(23,'d1')}${drop(33,'d2')}${drop(43,'d3')}`,
+      storm: `<g class="wxa-cflash">${cloud(`url(#darkG${u})`)}</g><polygon class="wxa-bolt" points="35,38 25,52 32,52 27,63 43,46 35,46 40,38" fill="url(#boltG${u})" stroke="#fff3a0" stroke-width=".8"/>${drop(19,'d1')}${drop(47,'d3')}`,
+      heat: `<circle class="wxa-glow3" cx="40" cy="48" r="18" fill="url(#glowG${u})"/>
+        <g stroke="#ffb02e" stroke-width="2.6" stroke-linecap="round" fill="none"><path class="wxa-wave" d="M12 50c-3-3.5 3-6.5 0-10s3-6.5 0-10"/><path class="wxa-wave w2" d="M20 46c-3-3.5 3-6.5 0-10s3-6.5 0-10"/><path class="wxa-wave w3" d="M28 50c-3-3.5 3-6.5 0-10s3-6.5 0-10"/></g>
+        <g filter="url(#soft${u})"><rect x="35" y="8" width="11" height="40" rx="5.5" fill="#f4f6f8" stroke="#c9d1da" stroke-width="1.2"/><circle cx="40.5" cy="50" r="8.5" fill="url(#heatG${u})" stroke="#c9d1da" stroke-width="1.2"/><rect class="wxa-merc" x="38" y="16" width="5" height="34" rx="2.5" fill="#e8461b"/><circle cx="40.5" cy="50" r="7.3" fill="url(#heatG${u})"/><g stroke="#9aa6b2" stroke-width="1.2"><line x1="46" y1="16" x2="49" y2="16"/><line x1="46" y1="24" x2="49" y2="24"/><line x1="46" y1="32" x2="49" y2="32"/></g></g>`,
+    }[kind];
+    return `<svg class="wxa ${cls || ''}" viewBox="0 0 64 64" aria-hidden="true" focusable="false">${defs}${body}</svg>`;
+  }
+  // 現在天氣 → 動畫圖示種類(晚上的晴天/霧等沒有對應的,回傳 null 用原本的 emoji)
+  function wxKind(code, hour, feel){
+    const night = hour != null && (hour >= 18 || hour < 6);
+    if(code >= 95) return 'storm';
+    if((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return 'rain';
+    if(!night && code <= 2 && feel != null && feel >= HEAT_WARN) return 'heat';
+    if(code === 3 || (night && code === 2)) return 'cloud';
+    if(night) return null;
+    if(code === 0) return 'sun';
+    if(code === 1 || code === 2) return 'partly';
+    return null;
+  }
+
   // 天氣代碼 → 圖示 + 中文
   function wxDesc(code, hour){
     const night = hour != null && (hour >= 18 || hour < 6);
@@ -8076,8 +8151,9 @@ function showUpdateBanner(){
     const updTxt = (wxFailed || stale) ? `離線 · ${when} 資料` : `${when} 更新`;
 
     bar.className = 'wx-bar';
+    const kind = wxKind(cur.weather_code, now.getHours(), cur.apparent_temperature);
     bar.innerHTML = `
-      <span class="wx-ico" aria-hidden="true">${ico}</span>
+      <span class="wx-ico${kind ? ' wx-ico-svg' : ''}" aria-hidden="true">${kind ? wxSvg(kind) : ico}</span>
       <span class="wx-temp">${Math.round(cur.temperature_2m)}°</span>
       <span class="wx-mid">
         <span class="wx-feel">${txt}${txt ? '，' : ''}體感 ${Math.round(cur.apparent_temperature)}°</span>
@@ -8185,7 +8261,6 @@ function showUpdateBanner(){
   // ---- 2. 每趟卡片:左側天氣色條 + 很嚴重時多一行字(只有垃圾車、回收車)----
   const WX_TRIP_CATS = ['垃圾車', '回收車'];
   const LINE_RAIN = 70;   // 降雨 ≥ 70% 或雷雨才加一行字
-  const WX_ICON = { rain:'☔', heat:'🔥', storm:'⚡' };
 
   // 只在內容真的不一樣時才改 DOM,避免 MutationObserver 一直觸發
   // 這一趟沿線最後一站的時間(分鐘);沒有沿線資料就當作出車後 60 分鐘
@@ -8264,7 +8339,7 @@ function showUpdateBanner(){
       const ico = document.createElement('span');
       ico.className = 'wx-ico';
       ico.setAttribute('aria-hidden', 'true');
-      ico.textContent = WX_ICON[lv];
+      ico.innerHTML = wxSvg(lv, 'wxa-once');
       row.insertBefore(ico, row.firstChild);
       if(line){
         const [cls, text] = line.split('|');
