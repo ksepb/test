@@ -4,6 +4,32 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>前鎮區清運時間查詢</title>
+<script>
+// 手機記憶體(localStorage)保險:有些 App 內建瀏覽器(例如 LINE)會限制或塞滿儲存空間,
+// 存東西時出錯會讓「完整路線導航」等功能直接打不開。這裡先檢查:
+//  - 可以存 → 照常用,但存失敗時不報錯(功能照常,只是那次沒記住)
+//  - 完全不能用 → 改用暫時記憶(關掉 App 後不會保留),整個 App 照常運作
+(function(){
+  var ok = true;
+  try{ localStorage.setItem('__lsTest', '1'); localStorage.removeItem('__lsTest'); }catch(e){ ok = false; }
+  if(ok){
+    var set = Storage.prototype.setItem;
+    Storage.prototype.setItem = function(k, v){ try{ set.call(this, k, v); }catch(e){} };
+    return;
+  }
+  var proto = {
+    getItem: function(k){ return Object.prototype.hasOwnProperty.call(this, k) ? this[k] : null; },
+    setItem: function(k, v){ this[k] = String(v); },
+    removeItem: function(k){ delete this[k]; },
+    clear: function(){ var self = this; Object.keys(self).forEach(function(k){ delete self[k]; }); },
+    key: function(i){ var ks = Object.keys(this); return i < ks.length ? ks[i] : null; }
+  };
+  Object.defineProperty(proto, 'length', { get: function(){ return Object.keys(this).length; } });
+  var mem = Object.create(proto);
+  try{ Object.defineProperty(window, 'localStorage', { value: mem, configurable: true }); }catch(e){}
+  window.__lsMemoryOnly = true;
+})();
+</script>
 <link rel="shortcut icon" href="favicon.ico">
 <link rel="apple-touch-icon" href="icon-apple.png?v=2">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2">
@@ -89,6 +115,21 @@
     color:#e6a23c;
     font-weight:700;
     font-variant-numeric:tabular-nums;
+  }
+  .line-banner{
+    display:flex; align-items:center; gap:8px;
+    margin:6px 0 10px; padding:10px 10px 10px 12px;
+    border-radius:12px; border:1px solid rgba(240,150,60,0.55); background:rgba(240,150,60,0.12);
+    color:#f4b877; font-size:14px; font-weight:700; line-height:1.5;
+  }
+  .line-banner .lb-txt{flex:1; min-width:0;}
+  .line-banner a{
+    flex:none; padding:7px 11px; border-radius:999px; text-decoration:none; white-space:nowrap;
+    background:var(--accent); color:#12160e; font-weight:800; font-size:14px;
+  }
+  .line-banner button{
+    flex:none; width:30px; height:30px; border-radius:50%; padding:0;
+    border:1.5px solid currentColor; background:rgba(0,0,0,0.3); color:inherit; font-size:15px; font-weight:800; cursor:pointer;
   }
   .update-banner{
     position:fixed;
@@ -2329,7 +2370,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.67 ｜ 更新日期：2026.10.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.68 ｜ 更新日期：2026.10.04</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -8661,6 +8702,27 @@ function showUpdateBanner(){
       }
     });
   });
+})();
+</script>
+<script>
+// 從 LINE 點連結打開時,LINE 內建瀏覽器對圖片、儲存空間、離線功能有限制,
+// 頂端提示「用瀏覽器開啟」;按下去 LINE 會改用手機的 Safari / Chrome 開(openExternalBrowser=1 是 LINE 官方參數)
+(function(){
+  if(!/\bLine\//i.test(navigator.userAgent)) return;
+  try{ if(sessionStorage.getItem('lineBannerOff')) return; }catch(e){}
+  const url = new URL(location.href);
+  url.searchParams.set('openExternalBrowser', '1');
+  const box = document.createElement('div');
+  box.className = 'line-banner';
+  box.innerHTML = '<span class="lb-txt">⚠️ 在 LINE 裡開，路線圖、手繪圖可能打不開</span>'
+    + '<a href="' + url.href.replace(/"/g, '&quot;') + '">用瀏覽器開啟</a>'
+    + '<button type="button" aria-label="關閉提示">✕</button>';
+  box.querySelector('button').onclick = () => {
+    box.remove();
+    try{ sessionStorage.setItem('lineBannerOff', '1'); }catch(e){}
+  };
+  const h1 = document.querySelector('h1');
+  if(h1) h1.insertAdjacentElement('afterend', box);
 })();
 </script>
 </body>
