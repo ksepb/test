@@ -2206,11 +2206,11 @@
   .trip.wx-rain {box-shadow:inset 4px 0 0 #5fa5e6;}
   .trip.wx-heat {box-shadow:inset 4px 0 0 #f0963c;}
   .trip.wx-storm{box-shadow:inset 4px 0 0 #e65a5a;}
-  /* 天氣圖示放在色條「下方」,避開上方進行中那一趟的綠色呼吸燈 */
+  /* 天氣圖示放在「時間列」跟「接駁紀錄」中間(程式 placeWxIcons 量好位置),避開綠色呼吸燈 */
   .trip > .wx-ico{
     position:absolute;
     left:-16px;
-    bottom:14px;
+    top:50%;
     width:24px;
     height:24px;
     border-radius:50%;
@@ -2274,7 +2274,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.61 ｜ 更新日期：2026.10.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.62 ｜ 更新日期：2026.10.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -8280,7 +8280,36 @@ function showUpdateBanner(){
       const el = document.getElementById('wxLg' + k);
       if(el) el.style.display = used.has(k.toLowerCase()) ? 'inline' : 'none';
     });
+    placeWxIcons();
   }
+
+  // 天氣圖示放在「時間列」跟「下一個區塊(接駁紀錄／提醒文字)」中間的空白處;
+  // 卡片內容高度每區不同,所以每次重畫都重新量一次
+  function placeWxIcons(){
+    document.querySelectorAll('#trips .trip > .wx-ico').forEach(ico => {
+      const row = ico.parentElement;
+      const top = row.querySelector(':scope > .trip-toprow');
+      if(!top) return;
+      // 找時間列下面「看得到的」第一個東西(有框線／底色的按鈕、或有字的提醒),取它的上緣
+      let nextTop = null;
+      [...row.children].forEach(ch => {
+        if(ch === top || ch === ico) return;
+        [ch, ...ch.querySelectorAll('*')].forEach(el => {
+          if(!el.offsetHeight) return;
+          const cs = getComputedStyle(el);
+          const boxed = parseFloat(cs.borderTopWidth) > 0 || !/rgba\(0, 0, 0, 0\)|transparent/.test(cs.backgroundColor);
+          const texty = [...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim());
+          if(!boxed && !texty) return;
+          const t = el.getBoundingClientRect().top;
+          if(nextTop === null || t < nextTop) nextTop = t;
+        });
+      });
+      const r = row.getBoundingClientRect(), a = top.getBoundingClientRect();
+      const mid = nextTop !== null ? (a.bottom + nextTop) / 2 : (a.bottom + r.bottom - 14) / 2;
+      ico.style.top = Math.round(mid - r.top - ico.offsetHeight / 2) + 'px';
+    });
+  }
+  window.addEventListener('resize', () => placeWxIcons());
 
   function renderAll(){
     renderBar();
