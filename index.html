@@ -2184,6 +2184,27 @@
   }
   .wx-alert-x:active{background:rgba(255,255,255,0.12);}
 
+  /* ===== 司機專用圖片:載入中/沒載到 ===== */
+  .rn-tripmap-img.img-loading, .rn-photo-img.img-loading, .float-map-img.img-loading{
+    min-height:160px;
+    background:
+      url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='30'%3E%3Ctext x='80' y='20' text-anchor='middle' font-size='15' fill='%239aa492' font-family='sans-serif'%3E%E5%9C%96%E7%89%87%E8%BC%89%E5%85%A5%E4%B8%AD%E2%80%A6%3C/text%3E%3C/svg%3E") center/160px 30px no-repeat,
+      linear-gradient(100deg, rgba(255,255,255,0.03) 30%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.03) 70%) 0 0/200% 100%;
+    animation:imgShimmer 1.4s linear infinite;
+  }
+  @keyframes imgShimmer{to{background-position:center, -200% 0;}}
+  .img-failed{display:none !important;}
+  .img-failed ~ .rn-tripmap-zoom-hint{display:none;}
+  .img-retry{
+    display:block; width:100%; min-height:120px; margin:0 0 10px;
+    padding:18px 12px; border-radius:12px;
+    border:1.5px dashed rgba(240,150,60,0.6); background:rgba(240,150,60,0.08);
+    color:#f4b877; font:inherit; font-size:15px; line-height:1.6; text-align:center; cursor:pointer;
+  }
+  .img-retry b{display:inline-block; margin-top:6px; padding:6px 14px; border-radius:999px; background:var(--accent); color:#12160e; font-size:15px;}
+  .img-retry:active{opacity:.8;}
+  @media (prefers-reduced-motion: reduce){ .img-loading{animation:none !important;} }
+
   /* ===== 天氣動畫圖示 ===== */
   .wx-bar .wx-ico.wx-ico-svg{width:44px; height:44px; margin:-6px -2px;}
   .wxa{display:block; width:100%; height:100%; overflow:visible;}
@@ -2304,7 +2325,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.63 ｜ 更新日期：2026.10.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.64 ｜ 更新日期：2026.10.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -4519,7 +4540,7 @@ function openTripMap(zoneKey, tripNum){
   const body = document.getElementById('routeSketchBody');
   body.innerHTML = imgs.map(img => `
     <div class="rn-photo-block">
-      <img class="rn-photo-img" src="${encodeURI(img.src)}" alt="路線${zoneKey}第${tripNum}車地圖" loading="lazy">
+      <img class="rn-photo-img" src="${encodeURI(img.src)}" alt="路線${zoneKey}第${tripNum}車地圖" decoding="async">
     </div>
   `).join('');
   document.getElementById('routeSketchOverlay').classList.add('show');
@@ -7656,7 +7677,31 @@ function getRnShowText(){
 }
 function setRnShowText(v){ localStorage.setItem(RN_SHOW_TEXT_KEY, v ? '1' : '0'); }
 
+// 打開完整路線導航時,把這一區所有車次地圖＋手繪圖在背景先下載(存進手機快取),
+// 往下捲到第二、三車或切浮動地圖時就不用再等網路
+const preloadedZones = new Set();
+function preloadZoneImages(zoneKey){
+  if(preloadedZones.has(zoneKey)) return;
+  preloadedZones.add(zoneKey);
+  const list = [];
+  const tm = routeTripMapData[zoneKey];
+  if(tm) Object.values(tm).forEach(arr => arr.forEach(i => list.push(i.src)));
+  const sk = routeSketchData[zoneKey];
+  if(sk && sk.images) sk.images.forEach(i => list.push(i.src));
+  let k = 0;
+  // 一次抓 2 張,不跟畫面上正在顯示的圖搶頻寬
+  const next = () => {
+    if(k >= list.length) return;
+    const im = new Image();
+    im.decoding = 'async';
+    im.onload = im.onerror = next;
+    im.src = encodeURI(list[k++]);
+  };
+  setTimeout(() => { next(); next(); }, 300);
+}
+
 function openRouteNav(zoneKey){
+  preloadZoneImages(zoneKey);
   const turnsInfo = routeTurnsData[zoneKey];
   if(!turnsInfo) return;
   // 換到不同區時,浮動地圖開關要重置回預設關閉,不要把上一個區的開關狀態帶過來
@@ -7743,7 +7788,7 @@ function openRouteNav(zoneKey){
 
     if(showMap && tripMaps && tripMaps[ti+1]){
       tripMaps[ti+1].forEach(img => {
-        html += `<div class="rn-tripmap-block"><img class="rn-tripmap-img" src="${encodeURI(img.src)}" alt="${zoneKey}第${ti+1}車路線地圖" loading="lazy" data-zone="${zoneKey}" data-trip="${ti+1}"><span class="rn-tripmap-zoom-hint">🔍 點圖放大</span></div>`;
+        html += `<div class="rn-tripmap-block"><img class="rn-tripmap-img" src="${encodeURI(img.src)}" alt="${zoneKey}第${ti+1}車路線地圖" decoding="async" data-zone="${zoneKey}" data-trip="${ti+1}"><span class="rn-tripmap-zoom-hint">🔍 點圖放大</span></div>`;
       });
     }
 
@@ -8501,6 +8546,99 @@ function showUpdateBanner(){
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
   else mount();
+})();
+</script>
+<script>
+// ===== 司機專用圖片:載入中提示、失敗自動重試、點一下重新載入 =====
+// 訊號不好時圖片可能抓不到,以前會一直空白不會自己再抓;現在:
+//  1. 還沒載完 → 顯示「圖片載入中…」灰底
+//  2. 失敗 → 自動再試 3 次(1.5 秒、4 秒、8 秒後)
+//  3. 還是不行 → 換成「點這裡重新載入」按鈕;手機恢復連線時也會自動再抓一次
+(function(){
+  const SEL = '.rn-tripmap-img, .rn-photo-img, .float-map-img';
+  const DELAYS = [1500, 4000, 8000];
+  const base = img => img.dataset.base || (img.dataset.base = img.getAttribute('src') || '');
+  const isOurs = el => el && el.tagName === 'IMG' && el.matches(SEL);
+
+  function reload(img){
+    const b = base(img);
+    if(!b) return;
+    img.classList.remove('img-failed');
+    img.classList.add('img-loading');
+    img.src = b + (b.includes('?') ? '&' : '?') + 'r=' + Date.now();
+  }
+  function removeBtn(img){
+    const n = img.nextElementSibling;
+    if(n && n.classList.contains('img-retry')) n.remove();
+  }
+  function showBtn(img){
+    img.classList.remove('img-loading');
+    img.classList.add('img-failed');
+    if(img.nextElementSibling && img.nextElementSibling.classList.contains('img-retry')) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'img-retry';
+    btn.innerHTML = '⚠️ 圖片沒載到（可能訊號不好）<br><b>↻ 點這裡重新載入</b>';
+    btn.addEventListener('click', ev => {
+      ev.stopPropagation();
+      img.dataset.retry = '0';
+      btn.remove();
+      reload(img);
+    });
+    img.insertAdjacentElement('afterend', btn);
+  }
+  function onError(img){
+    if(!base(img)) return;
+    const n = +(img.dataset.retry || 0);
+    if(n < DELAYS.length){
+      img.dataset.retry = n + 1;
+      img.classList.add('img-loading');
+      clearTimeout(img._retryTimer);
+      img._retryTimer = setTimeout(() => { if(img.isConnected) reload(img); }, DELAYS[n]);
+    }else{
+      showBtn(img);
+    }
+  }
+  document.addEventListener('load', e => {
+    const img = e.target;
+    if(!isOurs(img)) return;
+    img.classList.remove('img-loading', 'img-failed');
+    img.dataset.retry = '0';
+    removeBtn(img);
+  }, true);
+  document.addEventListener('error', e => { if(isOurs(e.target)) onError(e.target); }, true);
+
+  // 新畫出來的圖:還沒載完就先掛「載入中」;已經失敗的補處理
+  function tag(){
+    document.querySelectorAll(SEL).forEach(img => {
+      if(img.dataset.watch) return;
+      img.dataset.watch = '1';
+      base(img);
+      if(img.complete){
+        if(!img.naturalWidth) onError(img);
+      }else{
+        img.classList.add('img-loading');
+      }
+    });
+  }
+  let pending = false;
+  new MutationObserver(() => {
+    if(pending) return;
+    pending = true;
+    requestAnimationFrame(() => { pending = false; tag(); });
+  }).observe(document.body, { childList:true, subtree:true });
+  tag();
+
+  // 恢復連線 → 沒載到的全部再抓一次
+  window.addEventListener('online', () => {
+    document.querySelectorAll(SEL).forEach(img => {
+      if(img.classList.contains('img-failed') || (img.complete && !img.naturalWidth)){
+        img.dataset.retry = '0';
+        removeBtn(img);
+        reload(img);
+      }
+    });
+  });
 })();
 </script>
 </body>
