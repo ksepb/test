@@ -2325,7 +2325,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.64 ｜ 更新日期：2026.10.03</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.65 ｜ 更新日期：2026.10.03</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -7688,16 +7688,22 @@ function preloadZoneImages(zoneKey){
   if(tm) Object.values(tm).forEach(arr => arr.forEach(i => list.push(i.src)));
   const sk = routeSketchData[zoneKey];
   if(sk && sk.images) sk.images.forEach(i => list.push(i.src));
+  // 畫面上已經在顯示的圖不用重抓(避免同一張下載兩次浪費流量),等畫面畫好(300ms 後)再比對
   let k = 0;
   // 一次抓 2 張,不跟畫面上正在顯示的圖搶頻寬
   const next = () => {
     if(k >= list.length) return;
     const im = new Image();
     im.decoding = 'async';
-    im.onload = im.onerror = next;
+    im.onload = next;
+    im.onerror = () => { preloadedZones.delete(zoneKey); next(); };  // 沒抓到 → 下次打開再試
     im.src = encodeURI(list[k++]);
   };
-  setTimeout(() => { next(); next(); }, 300);
+  setTimeout(() => {
+    const showing = new Set([...document.querySelectorAll('img')].map(i => i.dataset.base || i.getAttribute('src')));
+    for(let i = list.length - 1; i >= 0; i--) if(showing.has(encodeURI(list[i]))) list.splice(i, 1);
+    next(); next();
+  }, 300);
 }
 
 function openRouteNav(zoneKey){
