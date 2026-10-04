@@ -2370,7 +2370,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.68 ｜ 更新日期：2026.10.04</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.69 ｜ 更新日期：2026.10.04</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -7725,17 +7725,46 @@ function setRnShowText(v){ localStorage.setItem(RN_SHOW_TEXT_KEY, v ? '1' : '0')
 // 打開完整路線導航時,把這一區所有車次地圖＋手繪圖在背景先下載(存進手機快取),
 // 往下捲到第二、三車或切浮動地圖時就不用再等網路
 const preloadedZones = new Set();
+// 照順序一張一張抓(前一張好了或失敗了才抓下一張),不讓好幾張大圖同時搶網路
+function loadImagesInOrder(imgs){
+  let k = 0;
+  const step = () => {
+    while(k < imgs.length){
+      const im = imgs[k++];
+      const src = im.getAttribute('data-src');
+      if(!src) continue;
+      im.removeAttribute('data-src');
+      im.addEventListener('load', step, { once: true });
+      im.addEventListener('error', step, { once: true });
+      im.src = src;
+      return;
+    }
+  };
+  const first = imgs[0];
+  if(first && first.getAttribute('src') && !first.complete){
+    first.addEventListener('load', step, { once: true });
+    first.addEventListener('error', step, { once: true });
+  }else{
+    step();
+  }
+}
+
+// 背景預先下載這一區「畫面上沒顯示」的圖(例如手繪圖、只看文字時的車次地圖),存進手機快取。
+//  - 等畫面上的圖都抓完才開始,一次一張,不跟正在看的圖搶網路
+//  - 沒有離線快取的環境(例如 LINE 內建瀏覽器)存不起來,抓了只是白白搶網路 → 不做
+//  - 手機開省流量、或網路很慢(2G)→ 不做
 function preloadZoneImages(zoneKey){
   if(preloadedZones.has(zoneKey)) return;
+  if(!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) return;
+  const conn = navigator.connection;
+  if(conn && (conn.saveData || /2g/.test(conn.effectiveType || ''))) return;
   preloadedZones.add(zoneKey);
   const list = [];
   const tm = routeTripMapData[zoneKey];
   if(tm) Object.values(tm).forEach(arr => arr.forEach(i => list.push(i.src)));
   const sk = routeSketchData[zoneKey];
   if(sk && sk.images) sk.images.forEach(i => list.push(i.src));
-  // 畫面上已經在顯示的圖不用重抓(避免同一張下載兩次浪費流量),等畫面畫好(300ms 後)再比對
   let k = 0;
-  // 一次抓 2 張,不跟畫面上正在顯示的圖搶頻寬
   const next = () => {
     if(k >= list.length) return;
     const im = new Image();
@@ -7745,9 +7774,18 @@ function preloadZoneImages(zoneKey){
     im.src = encodeURI(list[k++]);
   };
   setTimeout(() => {
-    const showing = new Set([...document.querySelectorAll('img')].map(i => i.dataset.base || i.getAttribute('src')));
+    const onScreen = [...document.querySelectorAll('#routeNavOverlay img, .float-map-widget img')];
+    const showing = new Set(onScreen.map(i => i.dataset.base || i.getAttribute('src') || i.getAttribute('data-src')));
     for(let i = list.length - 1; i >= 0; i--) if(showing.has(encodeURI(list[i]))) list.splice(i, 1);
-    next(); next();
+    if(!list.length) return;
+    // 等畫面上的圖都好了(最多等 30 秒)再開始
+    const started = Date.now();
+    const wait = () => {
+      const busy = onScreen.some(i => i.isConnected && (i.getAttribute('data-src') || !i.complete));
+      if(busy && Date.now() - started < 30000) setTimeout(wait, 800);
+      else next();
+    };
+    wait();
   }, 300);
 }
 
@@ -7830,6 +7868,7 @@ function openRouteNav(zoneKey){
     </div>`;
   }
   let stopNum = 0;
+  let mapImgCount = 0;
 
   trips.forEach((tripStops, ti) => {
     const firstTime = (tripStops[0][0] || '').split('-')[0]; // 只取到達時間,避免跟離開時間擠成一串
@@ -7839,7 +7878,9 @@ function openRouteNav(zoneKey){
 
     if(showMap && tripMaps && tripMaps[ti+1]){
       tripMaps[ti+1].forEach(img => {
-        html += `<div class="rn-tripmap-block"><img class="rn-tripmap-img" src="${encodeURI(img.src)}" alt="${zoneKey}第${ti+1}車路線地圖" decoding="async" data-zone="${zoneKey}" data-trip="${ti+1}"><span class="rn-tripmap-zoom-hint">🔍 點圖放大</span></div>`;
+        // 第一張直接抓;後面的先排隊(data-src),等前一張好了再抓 → 第一車最快出來,第二、三車也不用捲到才抓
+        const srcAttr = (mapImgCount++ === 0 ? 'src' : 'data-src') + `="${encodeURI(img.src)}"`;
+        html += `<div class="rn-tripmap-block"><img class="rn-tripmap-img${mapImgCount > 1 ? ' img-loading' : ''}" ${srcAttr} alt="${zoneKey}第${ti+1}車路線地圖" decoding="async" data-zone="${zoneKey}" data-trip="${ti+1}"><span class="rn-tripmap-zoom-hint">🔍 點圖放大</span></div>`;
       });
     }
 
@@ -7894,6 +7935,7 @@ function openRouteNav(zoneKey){
       openRouteNav(zoneKey);
     };
   }
+  loadImagesInOrder([...body.querySelectorAll('.rn-tripmap-img')]);
   body.querySelectorAll('.rn-tripmap-img').forEach(img => {
     img.onclick = () => {
       openTripMap(img.getAttribute('data-zone'), +img.getAttribute('data-trip'));
@@ -8620,7 +8662,7 @@ function showUpdateBanner(){
 (function(){
   const SEL = '.rn-tripmap-img, .rn-photo-img, .float-map-img';
   const DELAYS = [1500, 4000, 8000];
-  const base = img => img.dataset.base || (img.dataset.base = img.getAttribute('src') || '');
+  const base = img => img.dataset.base || (img.getAttribute('src') ? (img.dataset.base = img.getAttribute('src')) : '');
   const isOurs = el => el && el.tagName === 'IMG' && el.matches(SEL);
 
   function reload(img){
@@ -8677,7 +8719,9 @@ function showUpdateBanner(){
       if(img.dataset.watch) return;
       img.dataset.watch = '1';
       base(img);
-      if(img.complete){
+      if(img.getAttribute('data-src')){
+        img.classList.add('img-loading');   // 排隊中,還沒開始抓
+      }else if(img.complete){
         if(!img.naturalWidth) onError(img);
       }else{
         img.classList.add('img-loading');
