@@ -702,6 +702,12 @@ async function main(paramOverride){
     if(!st) return drawError(`找不到「${cat} ${zone}」的時刻表,請確認區域名稱`);
     if(st.mode === "remind") return drawRemind({ rem: st.rem, wx, now, fam, shift, offline: sched.offline });
     next = st.next;
+  }else if(noService(cat, now) && fam === "accessoryRectangular"){
+    // 沒選配套、今天是休假日(垃圾車星期三日、回收車星期三六日):鎖定畫面長條整個留白(看起來像隱藏),
+    // 半夜 00:01 自動回來;主畫面、圓形、單行照原本顯示下一個收運日
+    const w = new ListWidget(); w.url = SITE_URL;
+    w.refreshAfterDate = new Date(startOfDay(addDays(now, 1)).getTime() + 60 * 1000);
+    return w;
   }else{
     next = findNext(sched.data, cat, zone, now, anchor);
   }
