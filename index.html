@@ -2262,6 +2262,28 @@
   .img-retry:active{opacity:.8;}
   @media (prefers-reduced-motion: reduce){ .img-loading{animation:none !important;} }
 
+  /* ===== 頂部天氣列:左｜中｜右 三個固定位置(中間永遠在正中間)===== */
+  .wx-bar:not(.wx-muted){display:grid; grid-template-columns:1fr auto 1fr; gap:8px;}
+  .wx-bar .wx-L{display:flex; align-items:center; gap:10px; justify-self:start; min-width:0;}
+  .wx-bar .wx-R{display:flex; align-items:center; gap:8px; justify-self:end;}
+  .wx-bar:not(.wx-muted) .wx-mid{flex:none;}
+  .wx-bar .wx-rain{display:inline-flex; align-items:center;}
+  .wx-bar .wx-um{width:36px; height:36px; flex:none; margin:-6px 4px -6px 0; display:block; overflow:visible;}
+  .wx-bar .wx-rain.low .wx-um{filter:saturate(.35); opacity:.7;}
+  .wx-bar .wx-caret{font-size:10px;}
+  .wx-um .um-drop{opacity:0;}
+  .wx-bar .wx-rain.hi .um-drop{animation:umDrop 1s linear infinite;}
+  .wx-bar .wx-rain.hi .um-d2 .um-drop{animation-delay:.5s;}
+  .wx-bar .wx-rain.vhi .wx-um{transform-origin:50% 54%; animation:umSway 2.4s ease-in-out infinite;}
+  @keyframes umDrop{0%{transform:translateY(-3px); opacity:0;}30%{opacity:1;}100%{transform:translateY(4px); opacity:0;}}
+  @keyframes umSway{0%,40%,100%{transform:rotate(0);}10%{transform:rotate(-9deg);}20%{transform:rotate(8deg);}30%{transform:rotate(-4deg);}}
+  @media (max-width:360px){
+    .wx-bar:not(.wx-muted){gap:6px;}
+    .wx-bar .wx-L{gap:6px;}
+    .wx-bar .wx-um{width:30px; height:30px; margin-right:2px;}
+  }
+  @media (prefers-reduced-motion: reduce){ .wx-um, .wx-um *{animation:none !important;} }
+
   /* ===== 天氣動畫圖示 ===== */
   .wx-bar .wx-ico.wx-ico-svg{width:40px; height:40px; margin:-6px -4px -6px -2px;}
   .wxa{display:block; width:100%; height:100%; overflow:visible;}
@@ -2386,7 +2408,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.73 ｜ 更新日期：2026.10.06</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.74 ｜ 更新日期：2026.10.07</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -8160,6 +8182,30 @@ function showUpdateBanner(){
     }[kind];
     return `<svg class="wxa ${cls || ''}" viewBox="0 0 64 64" aria-hidden="true" focusable="false">${defs}${body}</svg>`;
   }
+  // 頂部降雨的彩色雨傘(紅黃綠藍四色傘面＋白色傘柄);50% 以上傘下滴雨、80% 以上雨傘左右晃
+  let umN = 0;
+  function umbrellaSvg(){
+    const u = 'um' + (++umN);
+    const canopy = 'M2 12.5C2 6.7 6.5 2.5 12 2.5s10 4.2 10 10c-1.7-1.6-3.3-1.6-5 0-1.7-1.6-3.3-1.6-5 0-1.7-1.6-3.3-1.6-5 0-1.7-1.6-3.3-1.6-5 0z';
+    const drop = x => `<path class="um-drop" d="M${x} 16.5c0 0-1.2 1.6-1.2 2.3a1.2 1.2 0 0 0 2.4 0C${x + 1.2} 18.1 ${x} 16.5 ${x} 16.5z" fill="#7cc0f5"/>`;
+    return `<svg class="wx-um" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <defs>
+        <clipPath id="${u}"><path d="${canopy}"/></clipPath>
+        <linearGradient id="${u}h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/></linearGradient>
+      </defs>
+      <g clip-path="url(#${u})">
+        <polygon points="12,2.5 7,13 -2,13 -2,0" fill="#ff5a5f"/>
+        <polygon points="12,2.5 7,13 12,13" fill="#ffc93c"/>
+        <polygon points="12,2.5 12,13 17,13" fill="#3ecf8e"/>
+        <polygon points="12,2.5 17,13 26,13 26,0" fill="#4fa8ff"/>
+        <rect x="0" y="0" width="24" height="14" fill="url(#${u}h)"/>
+      </g>
+      <path d="M12 12.5v6.5a2.3 2.3 0 0 1-4.6 0" fill="none" stroke="#e9edf2" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="12" cy="2" r="1.2" fill="#e9edf2"/>
+      ${drop(4)}<g class="um-d2">${drop(20)}</g>
+    </svg>`;
+  }
+
   // 現在天氣 → 動畫圖示種類(晚上的晴天/霧等沒有對應的,回傳 null 用原本的 emoji)
   function wxKind(code, hour, feel){
     const night = hour != null && (hour >= 18 || hour < 6);
@@ -8306,15 +8352,21 @@ function showUpdateBanner(){
 
     bar.className = 'wx-bar';
     const kind = wxKind(cur.weather_code, now.getHours(), cur.apparent_temperature);
+    const rainCls = rain == null ? '' : rain >= 80 ? 'hi vhi' : rain >= CHIP_RAIN ? 'hi' : rain >= 30 ? 'mid' : 'low';
+    // 左(圖示＋溫度)｜中(天氣＋更新時間,固定在正中間)｜右(雨傘＋降雨＋▼)
     bar.innerHTML = `
-      <span class="wx-ico${kind ? ' wx-ico-svg' : ''}" aria-hidden="true">${kind ? wxSvg(kind) : ico}</span>
-      <span class="wx-tcol"><span class="wx-temp">${Math.round(cur.temperature_2m)}°</span><span class="wx-tfeel${cur.apparent_temperature >= HEAT_WARN ? ' hot' : ''}">體感 ${Math.round(cur.apparent_temperature)}°</span></span>
+      <span class="wx-L">
+        <span class="wx-ico${kind ? ' wx-ico-svg' : ''}" aria-hidden="true">${kind ? wxSvg(kind) : ico}</span>
+        <span class="wx-tcol"><span class="wx-temp">${Math.round(cur.temperature_2m)}°</span><span class="wx-tfeel${cur.apparent_temperature >= HEAT_WARN ? ' hot' : ''}">體感 ${Math.round(cur.apparent_temperature)}°</span></span>
+      </span>
       <span class="wx-mid">
         <span class="wx-feel">${txt || '　'}</span>
         <span class="wx-upd${(wxFailed || stale) ? ' wx-off' : ''}">${updTxt}</span>
       </span>
-      ${rain != null ? `<span class="wx-rain ${rain >= CHIP_RAIN ? 'hi' : rain >= 30 ? 'mid' : 'low'}">☔${rain}%</span>` : ''}
-      <span class="wx-caret" aria-hidden="true">▼</span>`;
+      <span class="wx-R">
+        ${rain != null ? `<span class="wx-rain ${rainCls}" aria-label="降雨機率 ${rain}%">${umbrellaSvg()}${rain}%</span>` : ''}
+        <span class="wx-caret" aria-hidden="true">▼</span>
+      </span>`;
 
     // 逐時預報:從現在起 12 小時
     const tripSet = tripHours();
