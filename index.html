@@ -2152,6 +2152,12 @@
     .wx-bar .wx-rain{font-size:16px;}
     .wx-bar .wx-feel{font-size:14px;}
   }
+  /* 降雨分顏色:0–29% 淡灰(不用在意)、30–49% 藍、50% 以上亮藍(跟卡片色條「下雨」同標準) */
+  .wx-bar .wx-rain.low{color:var(--text-dim);}
+  .wx-bar .wx-rain.mid{color:#9dbad3;}
+  .wx-bar .wx-rain.hi{color:#4fb3ff; text-shadow:0 0 12px rgba(79,179,255,0.55);}
+  /* 體感 36° 以上轉橘色(跟高溫提醒同色) */
+  .wx-bar .wx-tfeel.hot{color:#f0963c;}
   .wx-bar .wx-tfeel{font-size:11.5px; font-weight:700; color:var(--text-dim); line-height:1; white-space:nowrap;}
   .wx-bar .wx-mid{display:flex; flex-direction:column; align-items:center; text-align:center; gap:3px; min-width:0; flex:1;}
   .wx-bar .wx-mid > span{max-width:100%;}
@@ -2380,7 +2386,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.71 ｜ 更新日期：2026.10.06</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.72 ｜ 更新日期：2026.10.06</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -8302,12 +8308,12 @@ function showUpdateBanner(){
     const kind = wxKind(cur.weather_code, now.getHours(), cur.apparent_temperature);
     bar.innerHTML = `
       <span class="wx-ico${kind ? ' wx-ico-svg' : ''}" aria-hidden="true">${kind ? wxSvg(kind) : ico}</span>
-      <span class="wx-tcol"><span class="wx-temp">${Math.round(cur.temperature_2m)}°</span><span class="wx-tfeel">體感 ${Math.round(cur.apparent_temperature)}°</span></span>
+      <span class="wx-tcol"><span class="wx-temp">${Math.round(cur.temperature_2m)}°</span><span class="wx-tfeel${cur.apparent_temperature >= HEAT_WARN ? ' hot' : ''}">體感 ${Math.round(cur.apparent_temperature)}°</span></span>
       <span class="wx-mid">
         <span class="wx-feel">${txt || '　'}</span>
         <span class="wx-upd${(wxFailed || stale) ? ' wx-off' : ''}">${updTxt}</span>
       </span>
-      ${rain != null ? `<span class="wx-rain">☔${rain}%</span>` : ''}
+      ${rain != null ? `<span class="wx-rain ${rain >= CHIP_RAIN ? 'hi' : rain >= 30 ? 'mid' : 'low'}">☔${rain}%</span>` : ''}
       <span class="wx-caret" aria-hidden="true">▼</span>`;
 
     // 逐時預報:從現在起 12 小時
