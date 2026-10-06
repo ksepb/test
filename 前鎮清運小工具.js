@@ -320,6 +320,35 @@ function remindFor(data, cat, zone, day, when, anchor, shift){
   return { when, kind: "work", time: trips[0].depText, sub: `第一趟 ${cat.replace("車", "")}${zoneTxt}`, at: trips[0].dep };
 }
 
+// ---- 鎖定畫面長條(沒選配套):什麼時候顯示 ----
+const RECT_SHOW_FROM = "14:00";                       // 收運日幾點開始顯示(要改時間改這裡)
+// 回傳 { show:true, next } 或 { show:false, nextShow:下次出現的時間 }
+function rectWindow(data, cat, zone, now, anchor){
+  const today = startOfDay(now);
+  // 下一個收運日的下午2點(今天還沒到2點就是今天)
+  const nextShowFrom = () => {
+    for(let add = 0; add < 8; add++){
+      const d = addDays(today, add);
+      if(noService(cat, d)) continue;
+      const t = atTime(d, RECT_SHOW_FROM);
+      if(t > now) return t;
+    }
+    return new Date(now.getTime() + 6 * 60 * 60 * 1000);
+  };
+  if(noService(cat, today)) return { show: false, nextShow: nextShowFrom() };
+  const from = atTime(today, RECT_SHOW_FROM);
+  if(now < from) return { show: false, nextShow: from };
+  const z = zoneForDay(data, cat, zone, today, anchor);
+  const trips = tripsFor(data, cat, z.zone, today);
+  if(!trips || !trips.length) return { show: false, nextShow: nextShowFrom() };
+  const last = trips[trips.length - 1];
+  const lastEnd = last.arrText ? atTime(today, last.arrText) : last.end;   // 第三趟結束(到達時間)
+  if(lastEnd && now >= lastEnd) return { show: false, nextShow: nextShowFrom() };
+  let idx = trips.findIndex(t => t.dep && t.dep > now);
+  if(idx < 0) idx = trips.length - 1;                 // 第三趟已出發、還沒結束:繼續顯示第三趟
+  return { show: true, next: { day: today, add: 0, idx, trips, zone: z.zone, switchedFrom: z.switchedFrom, rotPair: z.rotPair, endAt: lastEnd } };
+}
+
 // 找「下一趟」:今天還沒出發的第一趟;今天都結束或停收,就找下一個收運日的第一趟
 function findNext(data, cat, zone, now, anchor){
   for(let add = 0; add < 8; add++){
@@ -702,12 +731,15 @@ async function main(paramOverride){
     if(!st) return drawError(`找不到「${cat} ${zone}」的時刻表,請確認區域名稱`);
     if(st.mode === "remind") return drawRemind({ rem: st.rem, wx, now, fam, shift, offline: sched.offline });
     next = st.next;
-  }else if(noService(cat, now) && fam === "accessoryRectangular"){
-    // 沒選配套、今天是休假日(垃圾車星期三日、回收車星期三六日):鎖定畫面長條整個留白(看起來像隱藏),
-    // 半夜 00:01 自動回來;主畫面、圓形、單行照原本顯示下一個收運日
-    const w = new ListWidget(); w.url = SITE_URL;
-    w.refreshAfterDate = new Date(startOfDay(addDays(now, 1)).getTime() + 60 * 1000);
-    return w;
+  }else if(fam === "accessoryRectangular"){
+    // 沒選配套的鎖定畫面長條:只在收運日 下午2點(RECT_SHOW_FROM)～第三趟結束 顯示,其他時間留白(看起來像隱藏)
+    const win = rectWindow(sched.data, cat, zone, now, anchor);
+    if(!win.show){
+      const w = new ListWidget(); w.url = SITE_URL;
+      w.refreshAfterDate = win.nextShow;
+      return w;
+    }
+    next = win.next;
   }else{
     next = findNext(sched.data, cat, zone, now, anchor);
   }
