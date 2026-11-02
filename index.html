@@ -2042,7 +2042,8 @@
     display:flex; align-items:center; justify-content:center;
     padding:24px; pointer-events:none;
   }
-  .toast-layer.on{pointer-events:auto;}
+  /* 彈跳提醒顯示中也不擋手指:點下去的按鈕照常作用,同時把提醒關掉(以前會吃掉第一下,看起來像按了沒反應) */
+  .toast-layer.on{pointer-events:none;}
   .toast-layer::before{
     content:''; position:absolute; inset:0;
     background:rgba(6,8,5,0.55);
@@ -2408,7 +2409,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.80 ｜ 更新日期：2026.10.30</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.81 ｜ 更新日期：2026.11.02</div>
   <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
@@ -4637,6 +4638,7 @@ function closeRouteSketch(){
   // 車次地圖縮圖(openTripMap)開的是暫時性瀏覽,不動手繪路線圖原本的記憶
   if(sketchDirectOpenZone) clearSubViewScrollPos('sketch', sketchDirectOpenZone);
   document.getElementById('routeSketchOverlay').classList.remove('show');
+  document.getElementById('routeSketchBody').innerHTML = '';   // 釋放大張照片佔用的記憶體
   restoreFloatMap();
   // 只有「手繪路線圖」直接開的才清記憶;如果這次全螢幕是從完整路線導航裡點車次地圖縮圖開的(openTripMap),
   // sketchDirectOpenZone 不會被設定,這裡就不會誤清掉外層完整路線導航的 lastSubView 記憶
@@ -5565,7 +5567,8 @@ function showToast(icon, title, sub, ms = 2000){
         <div class="toast-bar"><i></i></div>
       </div>`;
     document.body.appendChild(layer);
-    layer.addEventListener('click', hideToast);
+    // 提醒顯示中,手指一碰畫面任何地方就關掉提醒,但不攔住這一下(按鈕照樣會被按到)
+    document.addEventListener('pointerdown', () => { if(layer.classList.contains('on')) hideToast(); }, true);
     document.addEventListener('keydown', e => { if(e.key === 'Escape') hideToast(); });
   }
   layer.querySelector('.toast-ic').textContent = icon;
@@ -8017,6 +8020,8 @@ function closeRouteNav(){
   // 按✕=看完了,清掉捲動記憶(不是存)
   if(lastOpenedSubViewZone) clearSubViewScrollPos('nav', lastOpenedSubViewZone);
   document.getElementById('routeNavOverlay').classList.remove('show');
+  // 關掉就把內容(含大張地圖)清掉,釋放手機記憶體;iPhone 記憶體吃緊時網頁會被系統重新載入,看起來就像打不開
+  document.getElementById('routeNavBody').innerHTML = '';
   closeFloatMap();
   if(lastOpenedSubViewZone){ localStorage.removeItem('lastSubView:' + lastOpenedSubViewZone); lastOpenedSubViewZone = null; }
 }
