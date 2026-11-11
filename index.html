@@ -43,8 +43,23 @@
     --accent:#a8dc4a;
     --accent-dim:#5d7a2c;
     --text:#f3f5ed;
-    --text-dim:#9aa492;
+    --text-dim:#b0b8a6;   /* 次要文字:調亮一階,陽光下也看得清楚(原 #9aa492) */
     --line:#383f33;
+    /* 主色的 RGB 數值:半透明的主色(邊框、底色、光暈)都從這裡取,要調主色時改這裡和 --accent 就好 */
+    --accent-rgb:168,220,74;
+    /* 警示/提醒用的橘色(剩餘時間、還原/刪除按鈕) */
+    --warn:#e6a23c;
+    --warn-rgb:230,162,60;
+    /* 頁尾等次要小字:在深色底上對比度 ≥ 4.5:1 */
+    --text-faint:#8c9584;
+    /* 天氣/備註等語意色:半透明用 rgb 數值,實色用對應的 hex */
+    --info-rgb:120,170,230;     /* 藍:下雨、資訊提示 */
+    --heat-rgb:240,150,60;      /* 橘:高溫、LINE 內建瀏覽器提醒 */
+    --heat:#f0963c;
+    --note-rgb:179,140,235;     /* 紫:個人備註 */
+    --note:#b38ceb;
+    --storm-rgb:230,90,90;      /* 紅:雷雨、取消 */
+    --storm:#e65a5a;
   }
   *{box-sizing:border-box;}
   html{touch-action:manipulation;}
@@ -70,7 +85,7 @@
     margin:0 0 6px;
     color:var(--accent);
     font-weight:800;
-    text-shadow:0 0 18px rgba(168,220,74,0.25);
+    text-shadow:0 0 18px rgba(var(--accent-rgb),0.25);
   }
   .sub{
     color:var(--text-dim);
@@ -91,7 +106,7 @@
     gap:4px 12px;
     padding:9px 14px;
     background:rgba(18,22,14,0.96);
-    border-bottom:1px solid rgba(168,220,74,0.3);
+    border-bottom:1px solid rgba(var(--accent-rgb),0.3);
     backdrop-filter:blur(8px);
     -webkit-backdrop-filter:blur(8px);
     font-size:14px;
@@ -112,14 +127,14 @@
     font-variant-numeric:tabular-nums;
   }
   .ti-remain{
-    color:#e6a23c;
+    color:var(--warn);
     font-weight:700;
     font-variant-numeric:tabular-nums;
   }
   .line-banner{
     display:flex; align-items:center; gap:8px;
     margin:6px 0 10px; padding:10px 10px 10px 12px;
-    border-radius:12px; border:1px solid rgba(240,150,60,0.55); background:rgba(240,150,60,0.12);
+    border-radius:12px; border:1px solid rgba(var(--heat-rgb),0.55); background:rgba(var(--heat-rgb),0.12);
     color:#f4b877; font-size:14px; font-weight:700; line-height:1.5;
   }
   .line-banner .lb-txt{flex:1; min-width:0;}
@@ -142,7 +157,7 @@
     gap:10px;
     padding:9px 10px 9px 16px;
     background:linear-gradient(135deg, var(--accent-dim), #3f5621);
-    border:1px solid rgba(168,220,74,0.4);
+    border:1px solid rgba(var(--accent-rgb),0.4);
     border-radius:24px;
     color:#f3f5ed;
     font-size:13.5px;
@@ -203,14 +218,14 @@
   }
   .tab-btn:active{transform:scale(0.94);}
   .tab-btn.active{
-    background:rgba(168,220,74,0.14);
+    background:rgba(var(--accent-rgb),0.14);
     color:var(--accent);
     border-color:transparent;
     box-shadow:none;
   }
   .route-btn.partner{
     position:relative;
-    border:1.5px dashed rgba(230,162,60,0.7);
+    border:1.5px dashed rgba(var(--warn-rgb),0.7);
     overflow:visible;
   }
   .route-btn.partner::after{
@@ -223,7 +238,7 @@
     line-height:1;
     letter-spacing:1px;
     color:#1a1e16;
-    background:#e6a23c;
+    background:var(--warn);
     border-radius:7px;
     padding:3.5px 7px;
     box-shadow:0 2px 6px rgba(0,0,0,0.4);
@@ -261,7 +276,7 @@
     background:linear-gradient(135deg, var(--accent), #7cb52f);
     color:#161a13;
     border-color:var(--accent);
-    box-shadow:0 4px 16px rgba(168,220,74,0.35);
+    box-shadow:0 4px 16px rgba(var(--accent-rgb),0.35);
   }
   .card{
     width:100%;
@@ -273,7 +288,7 @@
     border-radius:18px;
     padding:22px;
     display:none;
-    box-shadow:0 10px 30px rgba(0,0,0,0.4), 0 0 0 1px rgba(168,220,74,0.06);
+    box-shadow:0 10px 30px rgba(0,0,0,0.4), 0 0 0 1px rgba(var(--accent-rgb),0.06);
   }
   .card.show{display:block;animation:fade .25s ease;}
   @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
@@ -322,14 +337,49 @@
     padding:4px 6px;
     width:108px;
   }
+  /* 編輯時間:時、分兩個下拉選單(24 小時制)。原本的 <input type="time"> 在 Android/電腦 Chrome 會顯示 12 小時制,
+     15:55 變「03:55」且「下午」被切掉;改成選單後各平台都一樣。外框尺寸跟原本 108px 輸入框相同,版面不變 */
+  .time-sel{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:108px;
+    height:37px;   /* 跟原本輸入框同高,編輯模式版面不位移 */
+    box-sizing:border-box;
+    background:#11150e;
+    border:1px solid var(--accent);
+    border-radius:8px;
+    padding:4px 2px;
+  }
+  .time-sel select{
+    -webkit-appearance:none;
+    appearance:none;
+    background:transparent;
+    border:0;
+    border-radius:4px;
+    color:var(--text);
+    font:inherit;
+    font-size:20px;
+    font-weight:700;
+    font-variant-numeric:tabular-nums;
+    text-align:center;
+    text-align-last:center;
+    width:42px;
+    padding:0;
+    margin:0;
+    cursor:pointer;
+  }
+  .time-sel select:focus-visible{outline:2px solid var(--accent); outline-offset:1px;}
+  .time-sel option{background:#11150e; color:var(--text);}
+  .time-sel .ts-colon{font-size:20px; font-weight:700; color:var(--text); padding:0 1px;}
   .depart.edited, .arrive.edited{
-    border-bottom:2px dashed #e6a23c;
+    border-bottom:2px dashed var(--warn);
   }
   .reset-times{
     font-size:13px;
-    color:#e6a23c;
-    background:rgba(230,162,60,0.1);
-    border:1px solid rgba(230,162,60,0.35);
+    color:var(--warn);
+    background:rgba(var(--warn-rgb),0.1);
+    border:1px solid rgba(var(--warn-rgb),0.35);
     border-radius:20px;
     padding:8px 14px;
     cursor:pointer;
@@ -358,12 +408,12 @@
     position:relative;
   }
   .trip:last-child{margin-bottom:0;}
-  .trip.tp-past{opacity:0.55;cursor:pointer;}
+  .trip.tp-past{opacity:0.75;cursor:pointer;}
   .trip.tp-past:active{opacity:0.6;}
-  .trip.tp-past .trip-label::after{content:' · 已過站'; font-size:10px;}
+  .trip.tp-past .trip-label::after{content:' · 已過站'; font-size:12px;}
   .trip.tp-active{
     position:relative;
-    background:rgba(168,220,74,0.08);
+    background:rgba(var(--accent-rgb),0.08);
     border-color:transparent;
   }
   .trip.tp-active::before{
@@ -372,7 +422,7 @@
     inset:-1px;
     border-radius:inherit;
     padding:1.5px;
-    background:conic-gradient(from var(--chase-angle, 0deg), transparent 0%, rgba(168,220,74,0.95) 33.5%, #eaffb0 50%, rgba(168,220,74,0.95) 66.5%, transparent 100%);
+    background:conic-gradient(from var(--chase-angle, 0deg), transparent 0%, rgba(var(--accent-rgb),0.95) 33.5%, #eaffb0 50%, rgba(var(--accent-rgb),0.95) 66.5%, transparent 100%);
     -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite:xor;
     mask-composite:exclude;
@@ -403,7 +453,7 @@
     margin-top:-3.5px;
     border-radius:50%;
     background:var(--accent);
-    box-shadow:0 0 0 3px rgba(168,220,74,0.25);
+    box-shadow:0 0 0 3px rgba(var(--accent-rgb),0.25);
     animation:breathe 1.6s ease-in-out infinite;
   }
   .trip-label{
@@ -437,7 +487,7 @@
   .arrive{color:#9bc25c;font-size:18px;}
   .note{
     font-size:14px;
-    color:#e6a23c;
+    color:var(--warn);
     margin-top:4px;
   }
   .note-link{
@@ -484,8 +534,8 @@
     gap:14px;
     margin-top:8px;
     padding:14px;
-    background:rgba(230,162,60,0.08);
-    border:1px solid rgba(230,162,60,0.25);
+    background:rgba(var(--warn-rgb),0.08);
+    border:1px solid rgba(var(--warn-rgb),0.25);
     border-radius:12px;
   }
   .shuttle-detail.show{display:flex;}
@@ -496,7 +546,7 @@
   }
   .shuttle-item + .shuttle-item{
     padding-top:12px;
-    border-top:1px dashed rgba(230,162,60,0.25);
+    border-top:1px dashed rgba(var(--warn-rgb),0.25);
   }
   .shuttle-thumb{
     width:76px;
@@ -544,11 +594,11 @@
     display:inline-flex;
     align-items:center;
     gap:6px;
-    border-color:rgba(230,162,60,0.3);
-    background:rgba(230,162,60,0.05);
+    border-color:rgba(var(--warn-rgb),0.3);
+    background:rgba(var(--warn-rgb),0.05);
   }
   .stat-combo .combo-count{color:var(--accent);}
-  .stat-combo .combo-remain{color:#e6a23c;}
+  .stat-combo .combo-remain{color:var(--warn);}
   .stat-combo .combo-sep{opacity:0.35;font-weight:400;}
   .car-tag{
     font-size:13px;
@@ -570,8 +620,8 @@
   }
   .stat-pill.stat-start{
     color:#9cc4ee;
-    background:rgba(120,170,230,0.12);
-    border-color:rgba(120,170,230,0.35);
+    background:rgba(var(--info-rgb),0.12);
+    border-color:rgba(var(--info-rgb),0.35);
   }
   .stat-pill.stat-end{
     color:#8fdb9a;
@@ -580,13 +630,13 @@
   }
   .stat-pill.stat-count{
     color:var(--accent);
-    background:rgba(168,220,74,0.1);
-    border-color:rgba(168,220,74,0.3);
+    background:rgba(var(--accent-rgb),0.1);
+    border-color:rgba(var(--accent-rgb),0.3);
   }
   .stat-pill.stat-remain{
-    color:#e6a23c;
-    background:rgba(230,162,60,0.1);
-    border-color:rgba(230,162,60,0.3);
+    color:var(--warn);
+    background:rgba(var(--warn-rgb),0.1);
+    border-color:rgba(var(--warn-rgb),0.3);
   }
   .buckets{
     display:flex;
@@ -716,7 +766,7 @@
   }
   .k-give-count{font-weight:600;}
   .k-give-label-text{color:var(--accent);font-weight:700;}
-  .k-addr-pending{color:#e6a23c;font-style:normal;}
+  .k-addr-pending{color:var(--warn);font-style:normal;}
   .k-give-addr{
     font-weight:400;
     color:var(--text);
@@ -758,8 +808,8 @@
     align-items:flex-start;
     gap:7px;
     padding:8px 10px;
-    background:rgba(179,140,235,0.08);
-    border:1px solid rgba(179,140,235,0.28);
+    background:rgba(var(--note-rgb),0.08);
+    border:1px solid rgba(var(--note-rgb),0.28);
     border-radius:10px;
   }
   .pn-icon{flex:none;font-size:13px;line-height:1.5;}
@@ -797,10 +847,10 @@
   .pn-icon-btn{
     flex:none;
     margin-left:auto;
-    background:rgba(179,140,235,0.08);
-    border:1px solid rgba(179,140,235,0.3);
+    background:rgba(var(--note-rgb),0.08);
+    border:1px solid rgba(var(--note-rgb),0.3);
     border-radius:10px;
-    color:#9d85b8;
+    color:#b29ccf;
     font-size:11px;
     font-weight:700;
     opacity:0.85;
@@ -810,8 +860,8 @@
   }
   .pn-icon-btn:active{opacity:0.5;}
   .personal-note-edit{
-    background:rgba(179,140,235,0.06);
-    border:1px solid rgba(179,140,235,0.3);
+    background:rgba(var(--note-rgb),0.06);
+    border:1px solid rgba(var(--note-rgb),0.3);
     border-radius:10px;
     padding:9px;
   }
@@ -843,8 +893,8 @@
   }
   .pn-save-btn{
     color:#141810;
-    background:#b38ceb;
-    border-color:#b38ceb;
+    background:var(--note);
+    border-color:var(--note);
   }
   .pn-cancel-btn{
     color:var(--text-dim);
@@ -852,9 +902,9 @@
     border-color:var(--line);
   }
   .pn-delete-btn{
-    color:#e6a23c;
+    color:var(--warn);
     background:transparent;
-    border-color:rgba(230,162,60,0.4);
+    border-color:rgba(var(--warn-rgb),0.4);
     margin-left:auto;
   }
   .end-point-tag{
@@ -863,8 +913,8 @@
     font-size:11px;
     font-weight:700;
     color:#8fa8c2;
-    background:rgba(120,170,230,0.1);
-    border:1px solid rgba(120,170,230,0.3);
+    background:rgba(var(--info-rgb),0.1);
+    border:1px solid rgba(var(--info-rgb),0.3);
     padding:1px 5px;
     border-radius:9px;
     margin-left:5px;
@@ -879,6 +929,12 @@
     cursor:pointer;
   }
   .backup-entry:active{opacity:0.6;}
+  button.backup-entry, button.nav-link{font-family:inherit; line-height:inherit;}
+  /* 門牌/電話號碼當成一整塊換行;欄位比號碼還窄時(320px 手機)才在號碼中間斷,不會超出欄位 */
+  .addr-search-empty{text-align:center; margin:0 0 12px; line-height:1.8;}
+  .addr-search-empty .addr-search-clear{margin-top:8px;}
+  .nobr{display:inline-block; max-width:100%; overflow-wrap:anywhere;}
+  @media (max-width:340px){ .nobr{display:inline;} }  /* 320px 小手機地址欄只有約 3 個字寬,號碼塊放不下,維持原本斷法 */
   .backup-box{
     max-width:420px;
     text-align:left;
@@ -900,8 +956,8 @@
     cursor:pointer;
   }
   .backup-tab.active{
-    background:rgba(168,220,74,0.12);
-    border-color:rgba(168,220,74,0.4);
+    background:rgba(var(--accent-rgb),0.12);
+    border-color:rgba(var(--accent-rgb),0.4);
     color:var(--accent);
   }
   .backup-help{
@@ -937,7 +993,7 @@
     margin:4px 0 0;
   }
   .backup-note.ok{color:var(--accent);}
-  .backup-note.err{color:#e6a23c;}
+  .backup-note.err{color:var(--warn);}
   .modal-overlay{
     display:none;
     position:fixed;
@@ -967,7 +1023,7 @@
     display:flex;
     align-items:center;
     gap:10px;
-    padding:14px 16px calc(12px + env(safe-area-inset-top)) 16px;
+    padding:calc(14px + env(safe-area-inset-top)) 16px 12px 16px;
     border-bottom:1px solid var(--line);
     background:var(--panel);
   }
@@ -1004,7 +1060,7 @@
     justify-content:center;
     white-space:nowrap;
   }
-  .rn-font-btn:active{background:rgba(168,220,74,0.2);border-color:var(--accent);}
+  .rn-font-btn:active{background:rgba(var(--accent-rgb),0.2);border-color:var(--accent);}
   .rn-font-pct{
     flex:none;
     min-width:34px;
@@ -1040,8 +1096,8 @@
     -webkit-overflow-scrolling:touch;
   }
   .rn-start{
-    background:rgba(168,220,74,0.08);
-    border:1px solid rgba(168,220,74,0.3);
+    background:rgba(var(--accent-rgb),0.08);
+    border:1px solid rgba(var(--accent-rgb),0.3);
     border-radius:12px;
     padding:12px 14px;
     font-size:calc(17px * var(--rn-scale));
@@ -1093,7 +1149,7 @@
     width:30px;
     height:30px;
     border-radius:50%;
-    background:rgba(168,220,74,0.15);
+    background:rgba(var(--accent-rgb),0.15);
     color:var(--accent);
     font-size:14px;
     font-weight:700;
@@ -1142,7 +1198,7 @@
     color:var(--accent);
     font-size:16px;
     font-weight:700;
-    border-bottom:1px solid rgba(168,220,74,0.3);
+    border-bottom:1px solid rgba(var(--accent-rgb),0.3);
   }
   .rn-trip-head:first-child{margin-top:0;}
   .rn-trip-head .rn-trip-meta{
@@ -1167,7 +1223,7 @@
   }
   .rn-toggle-btn.active{
     border-color:var(--accent);
-    background:rgba(168,220,74,0.14);
+    background:rgba(var(--accent-rgb),0.14);
     color:var(--accent);
   }
   .rn-toggle-btn:active{transform:scale(0.97);}
@@ -1209,15 +1265,15 @@
     min-width:100px;
     z-index:80;
     background:var(--panel);
-    border:2px solid #e6a23c;
+    border:2px solid var(--warn);
     border-radius:14px;
-    box-shadow:0 8px 28px rgba(0,0,0,0.6), 0 0 0 4px rgba(230,162,60,0.18);
+    box-shadow:0 8px 28px rgba(0,0,0,0.6), 0 0 0 4px rgba(var(--warn-rgb),0.18);
     overflow:hidden;
     touch-action:none;
     user-select:none;
   }
   .float-map-widget.dragging{opacity:0.85;}
-  .float-map-widget.pinching{box-shadow:0 8px 28px rgba(0,0,0,0.6), 0 0 0 6px rgba(230,162,60,0.35);}
+  .float-map-widget.pinching{box-shadow:0 8px 28px rgba(0,0,0,0.6), 0 0 0 6px rgba(var(--warn-rgb),0.35);}
   .float-map-head{
     display:flex;
     align-items:center;
@@ -1246,11 +1302,11 @@
     padding:7px 12px;
     white-space:nowrap;
     color:var(--accent);
-    background:rgba(168,220,74,0.12);
-    border:1px solid rgba(168,220,74,0.4);
+    background:rgba(var(--accent-rgb),0.12);
+    border:1px solid rgba(var(--accent-rgb),0.4);
     border-radius:8px;
   }
-  .float-map-sizerow .float-map-btn:active{background:rgba(168,220,74,0.25);}
+  .float-map-sizerow .float-map-btn:active{background:rgba(var(--accent-rgb),0.25);}
   .float-map-sizelabel{
     font-size:14px;
     color:var(--text-dim);
@@ -1308,11 +1364,11 @@
     font-weight:700;
     padding:6px 14px;
     color:var(--accent);
-    background:rgba(168,220,74,0.12);
-    border:1px solid rgba(168,220,74,0.4);
+    background:rgba(var(--accent-rgb),0.12);
+    border:1px solid rgba(var(--accent-rgb),0.4);
     border-radius:8px;
   }
-  .float-map-pages .float-map-btn:active{background:rgba(168,220,74,0.25);}
+  .float-map-pages .float-map-btn:active{background:rgba(var(--accent-rgb),0.25);}
   .float-map-dots{
     display:flex;
     gap:5px;
@@ -1376,7 +1432,7 @@
     width:100%;
     margin-top:16px;
     padding:11px 0;
-    background:linear-gradient(135deg, var(--accent-dim), #3f5621);
+    background:linear-gradient(135deg, #59752a, #3f5621);   /* 亮端略調暗,白字對比 4.46 → 4.77 */
     color:var(--text);
     border:none;
     border-radius:12px;
@@ -1384,6 +1440,8 @@
     font-weight:600;
     cursor:pointer;
   }
+  /* 有危險動作的視窗:「關閉」改成低調的外框樣式,不要比危險按鈕還搶眼(尺寸不變) */
+  .modal-close.modal-close-quiet{background:transparent; box-shadow:inset 0 0 0 1px var(--line);}
   .ol-wrap{margin-top:16px;}
   .ol-more-wrap{margin-top:16px;}
   .ol-toggle{
@@ -1391,8 +1449,8 @@
     align-items:center;
     gap:8px;
     width:100%;
-    background:rgba(120,170,230,0.05);
-    border:1px solid rgba(120,170,230,0.18);
+    background:rgba(var(--info-rgb),0.05);
+    border:1px solid rgba(var(--info-rgb),0.18);
     border-radius:10px;
     color:#8fa8c2;
     font-size:14px;
@@ -1402,8 +1460,8 @@
   }
   .ol-toggle:active{opacity:0.6;}
   .ol-toggle-sub{
-    background:rgba(168,220,74,0.06);
-    border-color:rgba(168,220,74,0.25);
+    background:rgba(var(--accent-rgb),0.06);
+    border-color:rgba(var(--accent-rgb),0.25);
     color:var(--accent);
   }
   .ol-label{display:flex;align-items:center;flex:1;}
@@ -1427,8 +1485,8 @@
     font-weight:800;
     letter-spacing:0.5px;
     color:#9cc4ee;
-    background:rgba(120,170,230,0.08);
-    border:1px solid rgba(120,170,230,0.25);
+    background:rgba(var(--info-rgb),0.08);
+    border:1px solid rgba(var(--info-rgb),0.25);
     border-radius:9px;
     padding:8px 12px;
     margin:12px 0 6px;
@@ -1458,24 +1516,24 @@
   }
   .legend{
     margin-top:14px;
-    font-size:11px;
+    font-size:12px;
+    line-height:16px;   /* 字放大一點但高度維持原本 16px,下面的內容不會被往下推 */
     color:var(--text-dim);
     display:flex;
     gap:16px;
   }
   .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;}
   .reset-btn.armed{
-    color:#e6a23c;
-    border-color:rgba(230,162,60,0.5);
-    background:rgba(230,162,60,0.12);
+    color:var(--warn);
+    border-color:rgba(var(--warn-rgb),0.5);
+    background:rgba(var(--warn-rgb),0.12);
     font-weight:700;
   }
   .site-footer{
     text-align:left;
     width:100%;
     font-size:12px;
-    color:var(--text-dim);
-    opacity:0.7;
+    color:var(--text-faint);
     margin-top:28px;
     padding-bottom:4px;
   }
@@ -1512,11 +1570,11 @@
     box-shadow:0 2px 6px rgba(0,0,0,0.25);
   }
   .addr-check.type-star{
-    background:rgba(230,162,60,0.22);
+    background:rgba(var(--warn-rgb),0.22);
     font-size:16px;
   }
   .addr-check.type-note{
-    background:rgba(120,170,230,0.2);
+    background:rgba(var(--info-rgb),0.2);
     font-size:16px;
   }
   .addr-content{
@@ -1599,7 +1657,7 @@
   .addr-row.done .addr-check{
     background:linear-gradient(135deg, var(--accent), #7cb52f);
     color:#161a13;
-    box-shadow:0 0 10px rgba(168,220,74,0.4);
+    box-shadow:0 0 10px rgba(var(--accent-rgb),0.4);
   }
   .addr-row.done .addr-line-main,
   .addr-row.done .addr-line-note{
@@ -1622,7 +1680,7 @@
     line-height:1.5;
     color:var(--accent);
     background:#232b1c;
-    border:1px solid rgba(168,220,74,0.35);
+    border:1px solid rgba(var(--accent-rgb),0.35);
     border-radius:10px;
     padding:9px 13px;
     margin:14px 0 8px;
@@ -1631,14 +1689,16 @@
     z-index:5;
     box-shadow:0 3px 10px rgba(0,0,0,0.35);
   }
+  /* 站點、新增表單被捲到畫面上(例如打開「新增站點」自動跳到輸入框)時,預留固定標題的高度,不會被「回區隊」標題蓋住 */
+  #trips .addr-row, #trips .addr-add-form, #trips .addr-add-input{scroll-margin-top:64px;}
   .addr-group-note{
     font-size:13.5px;
     font-weight:600;
     line-height:1.65;
     letter-spacing:0.3px;
-    color:#e6a23c;
-    background:rgba(230,162,60,0.08);
-    border:1px solid rgba(230,162,60,0.3);
+    color:var(--warn);
+    background:rgba(var(--warn-rgb),0.08);
+    border:1px solid rgba(var(--warn-rgb),0.3);
     border-radius:10px;
     padding:10px 13px;
     margin:14px 0 8px;
@@ -1655,7 +1715,7 @@
   .addr-badge{
     display:block; width:fit-content; max-width:100%; margin-top:4px; padding:2px 8px; border-radius:10px;
     font-size:calc(12.5px * var(--addr-scale, 1)); font-weight:700; line-height:1.4;
-    color:#f4b877; background:rgba(240,150,60,0.14); border:1px solid rgba(240,150,60,0.45);
+    color:#f4b877; background:rgba(var(--heat-rgb),0.14); border:1px solid rgba(var(--heat-rgb),0.45);
   }
   .addr-row.done .addr-badge{opacity:.5;}
   /* 已取消的點:預設刪除線＋變淡,標記改紅色 */
@@ -1663,7 +1723,7 @@
   .addr-row.canceled .addr-line-note,
   .addr-row.canceled .addr-time{color:var(--text-dim); text-decoration:line-through; opacity:.75;}
   .addr-row.canceled .addr-check{opacity:.5;}
-  .addr-badge.cancel{color:#f19a9a; background:rgba(230,90,90,0.12); border-color:rgba(230,90,90,0.5);}
+  .addr-badge.cancel{color:#f19a9a; background:rgba(var(--storm-rgb),0.12); border-color:rgba(var(--storm-rgb),0.5);}
   .rn-stop.canceled .rn-stop-addr{text-decoration:line-through; color:var(--text-dim);}
   .rn-stop.canceled .rn-stop-num{opacity:.5;}
   .rn-cancel{display:inline-block; margin-top:3px; font-size:13px; font-weight:700; color:#f19a9a;}
@@ -1673,7 +1733,7 @@
     font-size:13px;
     font-weight:600;
     color:var(--accent);
-    background:rgba(168,220,74,0.1);
+    background:rgba(var(--accent-rgb),0.1);
     border-radius:8px;
     padding:3px 8px;
     white-space:nowrap;
@@ -1693,14 +1753,14 @@
   }
   .search-box:focus{
     border-color:var(--accent);
-    box-shadow:0 0 0 3px rgba(168,220,74,0.15);
+    box-shadow:0 0 0 3px rgba(var(--accent-rgb),0.15);
   }
   .search-box::placeholder{color:var(--text-dim);}
   .nav-link{
     font-size:13px;
     color:var(--accent);
-    background:rgba(168,220,74,0.12);
-    border:1px solid rgba(168,220,74,0.35);
+    background:rgba(var(--accent-rgb),0.12);
+    border:1px solid rgba(var(--accent-rgb),0.35);
     border-radius:20px;
     padding:7px 12px;
     margin-left:12px;
@@ -1730,19 +1790,20 @@
     flex-shrink:0;
   }
   .ord-btn{
-    background:rgba(168,220,74,0.08);
-    border:1px solid rgba(168,220,74,0.25);
+    background:rgba(var(--accent-rgb),0.08);
+    border:1px solid rgba(var(--accent-rgb),0.25);
     color:var(--text-dim);
     font-size:11px;
     line-height:1;
     padding:3px 6px;
+    min-height:24px;   /* 只加高到 24px(WCAG 最低標準);寬度維持原本約 25px,不吃掉地址欄的寬度 */
     border-radius:6px;
     cursor:pointer;
     transition:all .15s ease;
   }
-  .ord-btn:active{transform:scale(0.9); background:rgba(168,220,74,0.2);}
+  .ord-btn:active{transform:scale(0.9); background:rgba(var(--accent-rgb),0.2);}
   .ord-btn:disabled{opacity:0.25; cursor:default;}
-  .ord-btn:disabled:active{transform:none; background:rgba(168,220,74,0.08);}
+  .ord-btn:disabled:active{transform:none; background:rgba(var(--accent-rgb),0.08);}
   /* ===== 配套地址清單:個人化字級縮放/隱藏/新增(只存這台手機,不影響原始資料跟其他人) ===== */
   .addr-list-wrap{ --addr-scale:1; }
   .addr-list-wrap .addr-row{ font-size:calc(18px * var(--addr-scale)); }
@@ -1813,7 +1874,7 @@
     padding:11px;
   }
   .addr-row.custom-added .addr-check{
-    background:rgba(120,170,230,0.25);
+    background:rgba(var(--info-rgb),0.25);
   }
   .addr-add-form{
     display:flex;
@@ -1908,18 +1969,18 @@
     border:2px solid var(--panel);
   }
   .tl-item.done .tl-dot{background:#5d6656;}
-  .tl-item.done{opacity:0.55;}
+  .tl-item.done{opacity:0.75;}
   .tl-item.active .tl-dot{
     background:var(--accent);
-    box-shadow:0 0 0 4px rgba(168,220,74,0.2);
+    box-shadow:0 0 0 4px rgba(var(--accent-rgb),0.2);
     animation:breathe 2.2s ease-in-out infinite;
   }
   @keyframes breathe{
-    0%,100%{box-shadow:0 0 0 4px rgba(168,220,74,0.2);}
-    50%{box-shadow:0 0 0 8px rgba(168,220,74,0.35);}
+    0%,100%{box-shadow:0 0 0 4px rgba(var(--accent-rgb),0.2);}
+    50%{box-shadow:0 0 0 8px rgba(var(--accent-rgb),0.35);}
   }
   .tl-item.active{
-    background:rgba(168,220,74,0.06);
+    background:rgba(var(--accent-rgb),0.06);
     border-radius:10px;
     margin-left:5px;
   }
@@ -1934,8 +1995,8 @@
     justify-content:flex-start;
     gap:8px;
     width:100%;
-    background:rgba(168,220,74,0.08);
-    border:1px solid rgba(168,220,74,0.3);
+    background:rgba(var(--accent-rgb),0.08);
+    border:1px solid rgba(var(--accent-rgb),0.3);
     border-radius:10px;
     color:var(--accent);
     font-size:15px;
@@ -2002,8 +2063,8 @@
     font-size:13.5px;
     line-height:1.5;
     color:#9cc4ee;
-    background:rgba(120,170,230,0.08);
-    border:1px solid rgba(120,170,230,0.3);
+    background:rgba(var(--info-rgb),0.08);
+    border:1px solid rgba(var(--info-rgb),0.3);
     border-radius:9px;
     padding:8px 12px;
     margin:0 0 14px;
@@ -2029,11 +2090,11 @@
   .shuttle-free + .shuttle-tail{
     margin-top:2px;
     padding-top:12px;
-    border-top:1px dashed rgba(230,162,60,0.25);
+    border-top:1px dashed rgba(var(--warn-rgb),0.25);
   }
   .shuttle-tail .shuttle-item + .shuttle-item{
     padding-top:12px;
-    border-top:1px dashed rgba(230,162,60,0.25);
+    border-top:1px dashed rgba(var(--warn-rgb),0.25);
   }
   .zone-chip.dim{
     opacity:0.45;
@@ -2041,12 +2102,12 @@
     font-size:13px;
   }
   .zone-col.today{
-    border-color:rgba(168,220,74,0.55);
-    background:rgba(168,220,74,0.07);
+    border-color:rgba(var(--accent-rgb),0.55);
+    background:rgba(var(--accent-rgb),0.07);
   }
   .zone-col.today .zone-chip{
-    background:rgba(168,220,74,0.12);
-    border-color:rgba(168,220,74,0.35);
+    background:rgba(var(--accent-rgb),0.12);
+    border-color:rgba(var(--accent-rgb),0.35);
     color:var(--accent);
   }
   .zone-col.off{opacity:0.55;}
@@ -2074,8 +2135,8 @@
     border-radius:22px;
     text-align:center;
     background:#262d20;
-    border:1.5px solid rgba(168,220,74,0.55);
-    box-shadow:0 18px 50px rgba(0,0,0,0.6), 0 0 0 4px rgba(168,220,74,0.08);
+    border:1.5px solid rgba(var(--accent-rgb),0.55);
+    box-shadow:0 18px 50px rgba(0,0,0,0.6), 0 0 0 4px rgba(var(--accent-rgb),0.08);
     opacity:0; transform:scale(0.94);
     transition:opacity .22s ease, transform .22s ease;
   }
@@ -2126,7 +2187,7 @@
   }
   .cat-note-line{margin:3px 0;}
   .cat-note-star{
-    color:#e6a23c;
+    color:var(--warn);
     font-weight:700;
   }
   .cat-note-seq{
@@ -2174,7 +2235,7 @@
   .wx-bar .wx-rain.mid{color:#9dbad3;}
   .wx-bar .wx-rain.hi{color:#4fb3ff; text-shadow:0 0 12px rgba(79,179,255,0.55);}
   /* 體感 36° 以上轉橘色(跟高溫提醒同色) */
-  .wx-bar .wx-tfeel.hot{color:#f0963c;}
+  .wx-bar .wx-tfeel.hot{color:var(--heat);}
   .wx-bar .wx-tfeel{font-size:11.5px; font-weight:700; color:var(--text-dim); line-height:1; white-space:nowrap;}
   .wx-bar .wx-mid{display:flex; flex-direction:column; align-items:center; text-align:center; gap:3px; min-width:0; flex:1;}
   .wx-bar .wx-mid > span{max-width:100%;}
@@ -2186,6 +2247,8 @@
   .wx-bar .wx-caret{color:var(--text-dim); font-size:12px; flex:none; transition:transform .2s ease;}
   .wx-wrap.open .wx-caret{transform:rotate(180deg);}
   .wx-bar.wx-muted{color:var(--text-dim); font-size:14px;}
+  /* 天氣讀不到:縮成一行小字,不要讓「錯誤」成為打開 App 第一眼看到的東西(仍可點一下重試) */
+  .wx-bar.wx-muted.wx-fail{padding:6px 14px; font-size:13px; background:transparent; border-style:dashed; justify-content:center;}
 
   .wx-hours{
     display:none;
@@ -2216,7 +2279,7 @@
   .wx-h .wx-h-r{color:#7fbfee; font-size:14px; font-weight:700;}
   .wx-h .wx-h-r.low{color:var(--text-dim); font-weight:400;}
   .wx-h.is-now{border-color:var(--accent-dim);}
-  .wx-h.is-trip{border-color:rgba(168,220,74,0.6); background:rgba(168,220,74,0.07);}
+  .wx-h.is-trip{border-color:rgba(var(--accent-rgb),0.6); background:rgba(var(--accent-rgb),0.07);}
   .wx-h.is-trip .wx-h-t{color:var(--accent);}
 
   .wx-alert, .wx-card-alert{
@@ -2232,8 +2295,8 @@
   .wx-alert{margin-top:8px;}
   .wx-card-alert{margin:0 0 14px;}  /* 路線卡片裡:「已切換至同組」提示下面、第一趟上面 */
   .wx-alert.rain, .wx-card-alert.rain{background:rgba(95,165,230,0.12); border:1px solid rgba(95,165,230,0.45); color:#9ccdf3;}
-  .wx-alert.heat, .wx-card-alert.heat{background:rgba(240,150,60,0.12); border:1px solid rgba(240,150,60,0.45); color:#f4b877;}
-  .wx-alert.storm, .wx-card-alert.storm{background:rgba(230,90,90,0.12); border:1px solid rgba(230,90,90,0.5); color:#f19a9a;}
+  .wx-alert.heat, .wx-card-alert.heat{background:rgba(var(--heat-rgb),0.12); border:1px solid rgba(var(--heat-rgb),0.45); color:#f4b877;}
+  .wx-alert.storm, .wx-card-alert.storm{background:rgba(var(--storm-rgb),0.12); border:1px solid rgba(var(--storm-rgb),0.5); color:#f19a9a;}
   .wx-alert-txt{flex:1; min-width:0;}
   .wx-alert-txt div + div{margin-top:4px;}
   .wx-card-alert .wx-num{font-size:18px; font-weight:800;}
@@ -2272,7 +2335,7 @@
   .img-retry{
     display:block; width:100%; min-height:120px; margin:0 0 10px;
     padding:18px 12px; border-radius:12px;
-    border:1.5px dashed rgba(240,150,60,0.6); background:rgba(240,150,60,0.08);
+    border:1.5px dashed rgba(var(--heat-rgb),0.6); background:rgba(var(--heat-rgb),0.08);
     color:#f4b877; font:inherit; font-size:15px; line-height:1.6; text-align:center; cursor:pointer;
   }
   .img-retry b{display:inline-block; margin-top:6px; padding:6px 14px; border-radius:999px; background:var(--accent); color:#12160e; font-size:15px;}
@@ -2353,8 +2416,8 @@
   /* ===== 每趟天氣:左側色條 + 嚴重時一行字(只有垃圾車、回收車)===== */
   /* 色條用 inset box-shadow 畫:跟著卡片圓角彎、不改 padding(版面不會位移)、不跟進行中跑馬燈(::before)打架 */
   .trip.wx-rain {box-shadow:inset 4px 0 0 #5fa5e6;}
-  .trip.wx-heat {box-shadow:inset 4px 0 0 #f0963c;}
-  .trip.wx-storm{box-shadow:inset 4px 0 0 #e65a5a;}
+  .trip.wx-heat {box-shadow:inset 4px 0 0 var(--heat);}
+  .trip.wx-storm{box-shadow:inset 4px 0 0 var(--storm);}
   /* 天氣圖示放在「時間列」跟「接駁紀錄」中間(程式 placeWxIcons 量好位置),避開綠色呼吸燈 */
   .trip > .wx-ico{
     position:absolute;
@@ -2373,8 +2436,8 @@
     pointer-events:none;
   }
   .trip.wx-rain  > .wx-ico{color:#5fa5e6;}
-  .trip.wx-heat  > .wx-ico{color:#f0963c;}
-  .trip.wx-storm > .wx-ico{color:#e65a5a;}
+  .trip.wx-heat  > .wx-ico{color:var(--heat);}
+  .trip.wx-storm > .wx-ico{color:var(--storm);}
   .trip > .wx-line{font-size:16px; font-weight:700; line-height:1.45;}
   /* 已過站的那一趟:「記得帶雨具」這類提醒已經沒意義,收起來,只留色條跟靜態圖示 */
   .trip.tp-past > .wx-line, .trip.wx-past > .wx-line{display:none;}
@@ -2384,10 +2447,27 @@
   .wx-lg-bar{display:inline-block; width:4px; height:11px; border-radius:2px; margin-right:4px; vertical-align:-1px;}
 
   .wx-chip.rain{color:#9ccdf3; border-color:rgba(95,165,230,0.5); background:rgba(95,165,230,0.1);}
-  .wx-chip.heat{color:#f4b877; border-color:rgba(240,150,60,0.5); background:rgba(240,150,60,0.1);}
-  .wx-chip.storm{color:#f19a9a; border-color:rgba(230,90,90,0.55); background:rgba(230,90,90,0.1);}
+  .wx-chip.heat{color:#f4b877; border-color:rgba(var(--heat-rgb),0.5); background:rgba(var(--heat-rgb),0.1);}
+  .wx-chip.storm{color:#f19a9a; border-color:rgba(var(--storm-rgb),0.55); background:rgba(var(--storm-rgb),0.1);}
   .time-pair > .wx-chip{margin-left:4px;}
   @media (prefers-reduced-motion: reduce){ .wx-bar .wx-caret{transition:none;} }
+
+  /* ===== 點擊範圍放大:外觀不變,但手指可點的範圍至少 44px 高(車上單手、晃動時比較不會點錯) ===== */
+  .edit-btn, .pn-icon-btn{position:relative;}
+  .edit-btn::after, .pn-icon-btn::after{
+    content:''; position:absolute; left:-4px; right:-4px; top:50%;
+    height:44px; transform:translateY(-50%);
+  }
+  /* ===== 鍵盤焦點:用 Tab 移動時看得到現在在哪一顆 ===== */
+  button:focus-visible, .addr-check:focus-visible, a:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  [role="dialog"]:focus, [role="alertdialog"]:focus{outline:none;}
+  /* ===== 系統開啟「減少動態效果」時:停掉無限循環的動畫,狀態改用靜態樣式表示 ===== */
+  @media (prefers-reduced-motion: reduce){
+    .trip.tp-active .trip-label::before, .tl-item.active .tl-dot{animation:none;}
+    .tl-item.active .tl-dot{box-shadow:0 0 0 5px rgba(var(--accent-rgb),0.3);}
+    .trip.tp-active::before{animation:none;}
+    .card.show, .kitchen-detail.show, .ol-more-body.show, .ol-body.show, .cat-note-body.show{animation:none;}
+  }
 </style>
 </head>
 <body>
@@ -2398,13 +2478,13 @@
   <div class="sub">選擇底部車輛類型與區域 · 查看三趟時間</div>
 
 
-  <div class="tabs" id="tabs"></div>
+  <div class="tabs" id="tabs" role="navigation" aria-label="車輛類型"></div>
 
-  <input type="text" class="search-box" id="searchBox" placeholder="🔍 搜尋路線編號 / 地址關鍵字...">
+  <input type="text" class="search-box" id="searchBox" aria-label="搜尋路線編號或地址關鍵字" placeholder="🔍 搜尋路線編號 / 地址關鍵字...">
 
   <div class="cat-note" id="categoryNote" style="display:none;"></div>
 
-  <div class="picker" id="picker"></div>
+  <div class="picker" id="picker" role="group" aria-label="路線編號"></div>
 
   <div id="empty" class="placeholder">↑ 請選擇路線編號</div>
 
@@ -2417,23 +2497,23 @@
     <div class="wx-card-alert" id="wxCardAlert" style="display:none;"></div>
     <div id="trips"></div>
     <div class="legend" id="legendBox">
-      <span><span class="dot" style="background:var(--text)"></span>出發</span>
+      <span><span class="dot" style="background:transparent;box-shadow:inset 0 0 0 2px var(--text)"></span>出發</span>
       <span><span class="dot" style="background:var(--accent)"></span>到達</span>
       <span class="wx-lg" id="wxLgRain"><span class="wx-lg-bar" style="background:#5fa5e6"></span>下雨</span>
-      <span class="wx-lg" id="wxLgHeat"><span class="wx-lg-bar" style="background:#f0963c"></span>高溫</span>
-      <span class="wx-lg" id="wxLgStorm"><span class="wx-lg-bar" style="background:#e65a5a"></span>雷雨</span>
+      <span class="wx-lg" id="wxLgHeat"><span class="wx-lg-bar" style="background:var(--heat)"></span>高溫</span>
+      <span class="wx-lg" id="wxLgStorm"><span class="wx-lg-bar" style="background:var(--storm)"></span>雷雨</span>
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.93 ｜ 更新日期：2026.11.05</div>
-  <div class="site-footer" style="margin-top:4px;opacity:0.75;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.99 ｜ 更新日期：2026.11.11</div>
+  <div class="site-footer" style="margin-top:4px;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
-    <div class="backup-entry" id="clearDataEntry">↺ 還原所有預設</div>
-    <div class="backup-entry" id="backupEntry">💾 備份與還原</div>
+    <button type="button" class="backup-entry" id="backupEntry">💾 備份與還原</button>
+    <button type="button" class="backup-entry" id="clearDataEntry">↺ 還原所有預設</button>
   </div>
 
   <div class="modal-overlay" id="modalOverlay" onclick="closeImg()">
-    <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1" onclick="event.stopPropagation()">
       <div class="modal-title" id="modalTitle">位置</div>
       <img id="modalImg" src="" alt="位置照片">
       <button class="modal-close" onclick="closeImg()">關閉</button>
@@ -2441,8 +2521,8 @@
   </div>
 
   <div class="modal-overlay" id="backupOverlay" onclick="closeBackup()">
-    <div class="modal-box backup-box" onclick="event.stopPropagation()">
-      <div class="modal-title">💾 備份與還原</div>
+    <div class="modal-box backup-box" role="dialog" aria-modal="true" aria-labelledby="backupTitle" tabindex="-1" onclick="event.stopPropagation()">
+      <div class="modal-title" id="backupTitle">💾 備份與還原</div>
 
       <div class="backup-tabs">
         <button class="backup-tab active" id="tabExport" onclick="switchBackupTab('export')">匯出備份</button>
@@ -2453,7 +2533,7 @@
         <p class="backup-help">這裡存的是你<b>自己編輯過的內容</b>：改過的時間、勾選進度、排序。不含路線本身的資料(那些本來就不會不見)。</p>
         <p class="backup-help">點下方按鈕產生備份文字，<b>整段複製</b>起來，存到備忘錄或傳給自己的LINE。之後要換手機、換瀏覽器，或資料不見了，貼回「還原備份」就能救回來。</p>
         <button class="reset-btn" id="genBackupBtn" type="button">產生備份文字</button>
-        <textarea class="backup-textarea" id="exportText" readonly placeholder="點上方按鈕產生備份文字…" onclick="this.select()"></textarea>
+        <textarea class="backup-textarea" id="exportText" aria-label="備份文字(唯讀,請整段複製)" readonly placeholder="點上方按鈕產生備份文字…" onclick="this.select()"></textarea>
         <button class="reset-btn" id="copyBackupBtn" type="button" style="display:none;">📋 複製這段文字</button>
         <p class="backup-note" id="exportStatus"></p>
       </div>
@@ -2461,7 +2541,7 @@
       <div id="importPane" style="display:none;">
         <p class="backup-help">把之前備份的那段文字<b>貼在下面</b>，按「還原」就能救回你編輯過的時間、勾選、排序。</p>
         <p class="backup-help">⚠ 還原後會<b>覆蓋</b>目前手機上的編輯記錄，請確認貼的是你要的那份。</p>
-        <textarea class="backup-textarea" id="importText" placeholder="請貼上備份文字…"></textarea>
+        <textarea class="backup-textarea" id="importText" aria-label="貼上要還原的備份文字" placeholder="請貼上備份文字…"></textarea>
         <button class="reset-btn" id="doImportBtn" type="button">還原備份</button>
         <p class="backup-note" id="importStatus"></p>
       </div>
@@ -2471,27 +2551,27 @@
   </div>
 
   <div class="modal-overlay" id="clearDataOverlay" onclick="closeClearData()">
-    <div class="modal-box backup-box" onclick="event.stopPropagation()">
-      <div class="modal-title">↺ 還原所有預設</div>
+    <div class="modal-box backup-box" role="dialog" aria-modal="true" aria-labelledby="clearDataTitle" tabindex="-1" onclick="event.stopPropagation()">
+      <div class="modal-title" id="clearDataTitle">↺ 還原所有預設</div>
       <p class="backup-help">這會清除<b>這支手機這個瀏覽器</b>存的所有東西：改過的時間、勾選進度、排序、上次瀏覽位置——<b>全部清空</b>，且無法復原。</p>
       <p class="backup-help">路線本身的資料（時間表、地址、接駁路線）不會受影響，因為那些是寫在程式裡的，不是存在手機裡的。</p>
-      <p class="backup-help" style="color:#9cc4ee;">⚠ 建議清除前，先去「匯出備份」存一份起來，之後還能救回來。</p>
-      <button class="reset-btn" id="clearDataBtn" type="button" style="width:100%;text-align:center;box-sizing:border-box;background:rgba(230,162,60,0.1);border-color:rgba(230,162,60,0.4);color:#e6a23c;">還原所有預設</button>
+      <p class="backup-help" style="color:#f4b877;">⚠ 建議清除前，先去「匯出備份」存一份起來，之後還能救回來。</p>
+      <button class="reset-btn" id="clearDataBtn" type="button" style="width:100%;text-align:center;box-sizing:border-box;background:rgba(var(--warn-rgb),0.1);border-color:rgba(var(--warn-rgb),0.4);color:var(--warn);">還原所有預設</button>
       <p class="backup-note" id="clearDataStatus"></p>
-      <button class="modal-close" onclick="closeClearData()">關閉</button>
+      <button class="modal-close modal-close-quiet" onclick="closeClearData()">關閉</button>
     </div>
   </div>
 
   <div class="modal-overlay" id="deleteNoteOverlay" onclick="closeDeleteNote()">
-    <div class="modal-box backup-box" onclick="event.stopPropagation()">
-      <div class="modal-title">🗑️ 刪除這則備註？</div>
+    <div class="modal-box backup-box" role="alertdialog" aria-modal="true" aria-labelledby="deleteNoteTitle" tabindex="-1" onclick="event.stopPropagation()">
+      <div class="modal-title" id="deleteNoteTitle">🗑️ 刪除這則備註？</div>
       <p class="backup-help">刪除後<b>無法復原</b>，確定要刪除嗎？</p>
-      <button class="reset-btn" id="deleteNoteConfirmBtn" type="button" style="width:100%;text-align:center;box-sizing:border-box;background:rgba(230,162,60,0.1);border-color:rgba(230,162,60,0.4);color:#e6a23c;">確定刪除</button>
+      <button class="reset-btn" id="deleteNoteConfirmBtn" type="button" style="width:100%;text-align:center;box-sizing:border-box;background:rgba(var(--warn-rgb),0.1);border-color:rgba(var(--warn-rgb),0.4);color:var(--warn);">確定刪除</button>
       <button class="reset-btn" type="button" style="width:100%;text-align:center;box-sizing:border-box;margin-top:8px;" onclick="closeDeleteNote()">取消</button>
     </div>
   </div>
 
-  <div class="route-nav-overlay" id="routeNavOverlay">
+  <div class="route-nav-overlay" id="routeNavOverlay" role="dialog" aria-modal="true" aria-labelledby="routeNavTitle" tabindex="-1">
     <div class="route-nav-head">
       <div class="rn-title" id="routeNavTitle">完整路線導航</div>
       <div class="rn-font-ctrl">
@@ -2499,12 +2579,12 @@
         <span class="rn-font-pct">100%</span>
         <button class="rn-font-btn" type="button" onclick="changeRnFontScale(0.1)">放大＋</button>
       </div>
-      <button class="route-nav-close" type="button" onclick="closeRouteNav()">✕</button>
+      <button class="route-nav-close" type="button" aria-label="關閉" onclick="closeRouteNav()">✕</button>
     </div>
     <div class="route-nav-body" id="routeNavBody"></div>
   </div>
 
-  <div class="route-nav-overlay" id="routeSketchOverlay">
+  <div class="route-nav-overlay" id="routeSketchOverlay" role="dialog" aria-modal="true" aria-labelledby="routeSketchTitle" tabindex="-1">
     <div class="route-nav-head">
       <div class="rn-title" id="routeSketchTitle">路線示意圖</div>
       <div class="rn-font-ctrl">
@@ -2512,12 +2592,12 @@
         <span class="rn-img-pct">100%</span>
         <button class="rn-font-btn" type="button" onclick="changeRnImgScale(0.2)">放大＋</button>
       </div>
-      <button class="route-nav-close" type="button" onclick="closeRouteSketch()">✕</button>
+      <button class="route-nav-close" type="button" aria-label="關閉" onclick="closeRouteSketch()">✕</button>
     </div>
     <div class="route-nav-body" id="routeSketchBody"></div>
   </div>
 
-  <div class="route-nav-overlay" id="routeStopsOverlay">
+  <div class="route-nav-overlay" id="routeStopsOverlay" role="dialog" aria-modal="true" aria-labelledby="routeStopsTitle" tabindex="-1">
     <div class="route-nav-head">
       <div class="rn-title" id="routeStopsTitle">沿線時刻</div>
       <div class="rn-font-ctrl">
@@ -2525,7 +2605,7 @@
         <span class="rn-font-pct">100%</span>
         <button class="rn-font-btn" type="button" onclick="changeRnFontScale(0.1)">放大＋</button>
       </div>
-      <button class="route-nav-close" type="button" onclick="closeRouteStops()">✕</button>
+      <button class="route-nav-close" type="button" aria-label="關閉" onclick="closeRouteStops()">✕</button>
     </div>
     <div class="route-nav-body" id="routeStopsBody"></div>
   </div>
@@ -5950,10 +6030,33 @@ function renderPicker(){
 
 function filterAddressRows(){
   const q = (document.getElementById('searchBox').value || '').trim();
-  document.querySelectorAll('.addr-row').forEach(row=>{
+  let shown = 0;
+  const rows = document.querySelectorAll('.addr-row');
+  rows.forEach(row=>{
     const text = row.querySelector('.addr-content').textContent;
-    row.style.display = (!q || text.includes(q)) ? 'flex' : 'none';
+    const ok = !q || text.includes(q);
+    row.style.display = ok ? 'flex' : 'none';
+    if(ok) shown++;
   });
+  // 搜尋沒有任何站點符合時,清單上方說一聲,並可一鍵清除(不然整個清單消失,看起來像壞掉)
+  let empty = document.getElementById('addrSearchEmpty');
+  if(q && rows.length && !shown){
+    if(!empty){
+      empty = document.createElement('div');
+      empty.id = 'addrSearchEmpty';
+      empty.className = 'placeholder addr-search-empty';
+      const tripsEl = document.getElementById('trips');
+      if(tripsEl) tripsEl.prepend(empty);
+    }
+    empty.innerHTML = `找不到符合「${escapeHtml(q)}」的站點<br><button type="button" class="reset-btn addr-search-clear">✕ 清除搜尋</button>`;
+    empty.querySelector('.addr-search-clear').onclick = ()=>{
+      const sb = document.getElementById('searchBox');
+      sb.value = '';
+      sb.dispatchEvent(new Event('input'));
+    };
+  } else if(empty){
+    empty.remove();
+  }
 }
 
 document.getElementById('searchBox').addEventListener('input', ()=>{
@@ -6046,11 +6149,11 @@ function showConfirmModal(message, onConfirm){
   const overlay = document.createElement('div');
   overlay.id = 'confirmModalOverlay';
   overlay.className = 'confirm-modal-overlay';
-  overlay.innerHTML = `<div class="confirm-modal-box">
-    <div class="confirm-modal-msg">${message}</div>
+  overlay.innerHTML = `<div class="confirm-modal-box" role="alertdialog" aria-modal="true" aria-labelledby="confirmModalMsg" tabindex="-1">
+    <div class="confirm-modal-msg" id="confirmModalMsg">${message}</div>
     <div class="confirm-modal-actions">
-      <button class="reset-btn confirm-modal-cancel">取消</button>
-      <button class="reset-btn order-btn confirm-modal-ok">確定</button>
+      <button type="button" class="reset-btn confirm-modal-cancel">取消</button>
+      <button type="button" class="reset-btn order-btn confirm-modal-ok">確定</button>
     </div>
   </div>`;
   overlay.onclick = (e)=>{ if(e.target === overlay) overlay.remove(); };
@@ -6261,7 +6364,7 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
   if(!readOnly){
     const hint = document.createElement('div');
     hint.className = 'list-hint' + (onBack ? '' : ' no-back');
-    hint.innerHTML = '<div>點一下可標記已收取</div><div>▲▼調順序 · 🙈隱藏 · 🗑刪除</div>';
+    hint.innerHTML = '<div>點一下可標記已收取</div><div>▲▼調順序 · 🙈隱藏 · 🗑刪除自己加的</div>';
     topbar.appendChild(hint);
   }
 
@@ -6333,10 +6436,10 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
       .replace(/街口$/, '街')
       .replace(/(前|旁|尾|邊|對面)$/, ''));
     const isRealAddr = !mainText.startsWith('※') && /[路街巷弄號]/.test(mainText);
-    const orderBtnsHtml = readOnly ? '' : `<span class="order-btns"><button class="ord-btn ord-up" ${isFirstInGroup ? 'disabled' : ''}>▲</button><button class="ord-btn ord-down" ${isLastInGroup ? 'disabled' : ''}>▼</button></span>`;
-    const hideBtnHtml = readOnly ? '' : `<button class="hide-btn" title="${info.isCustom ? '刪除這筆(自己新增的)' : '隱藏(只有自己看不到,不影響原始資料)'}">${info.isCustom ? '🗑' : '🙈'}</button>`;
+    const orderBtnsHtml = readOnly ? '' : `<span class="order-btns"><button type="button" class="ord-btn ord-up" aria-label="上移" ${isFirstInGroup ? 'disabled' : ''}>▲</button><button type="button" class="ord-btn ord-down" aria-label="下移" ${isLastInGroup ? 'disabled' : ''}>▼</button></span>`;
+    const hideBtnHtml = readOnly ? '' : `<button type="button" class="hide-btn" title="${info.isCustom ? '刪除這筆(自己新增的)' : '隱藏(只有自己看不到,不影響原始資料)'}" aria-label="${info.isCustom ? '刪除這筆自己新增的站點' : '隱藏這個站點'}">${info.isCustom ? '🗑' : '🙈'}</button>`;
     row.className = 'addr-row' + (doneMap[addr] ? ' done' : '') + (info.isCustom ? ' custom-added' : '') + (info.canceled ? ' canceled' : '');
-    row.innerHTML = `${orderBtnsHtml}<span class="addr-check${parsedType.type === 'star' ? ' type-star' : ''}${parsedType.type === 'note' ? ' type-note' : ''}">${doneMap[addr] ? '✓' : displayNum}</span><div class="addr-content"><div class="addr-line-main">${escapeHtml(mainText)}</div>${noteText ? `<div class="addr-line-note">${escapeHtml(noteText)}</div>` : ''}${info.time ? `<div class="addr-time">${escapeHtml(info.time)}</div>` : ''}${info.badge ? `<div class="addr-badge${info.canceled ? ' cancel' : ''}">${info.canceled ? '⛔' : '🆕'} ${escapeHtml(info.badge)}</div>` : ''}</div>${isRealAddr && !info.canceled ? `<span class="nav-link nav-icon">🗺️</span>` : ''}${hideBtnHtml}`;
+    row.innerHTML = `${orderBtnsHtml}<span class="addr-check${parsedType.type === 'star' ? ' type-star' : ''}${parsedType.type === 'note' ? ' type-note' : ''}"${readOnly ? '' : ` role="checkbox" tabindex="0" aria-checked="${doneMap[addr] ? 'true' : 'false'}" aria-label="${escapeHtml(mainText)} 已完成"`}>${doneMap[addr] ? '✓' : displayNum}</span><div class="addr-content"><div class="addr-line-main">${addrNoBreakHTML(mainText)}</div>${noteText ? `<div class="addr-line-note">${escapeHtml(noteText)}</div>` : ''}${info.time ? `<div class="addr-time">${escapeHtml(info.time)}</div>` : ''}${info.badge ? `<div class="addr-badge${info.canceled ? ' cancel' : ''}">${info.canceled ? '⛔' : '🆕'} ${escapeHtml(info.badge)}</div>` : ''}</div>${isRealAddr && !info.canceled ? `<button type="button" class="nav-link nav-icon" aria-label="在 Google 地圖開啟這個地點"><span aria-hidden="true">🗺️</span></button>` : ''}${hideBtnHtml}`;
     const checkEl = row.querySelector('.addr-check');
     const navEl = row.querySelector('.nav-link');
     const hideEl = row.querySelector('.hide-btn');
@@ -6384,9 +6487,14 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
         const isDone = !row.classList.contains('done');
         row.classList.toggle('done');
         checkEl.textContent = isDone ? '✓' : (parsedType.badge || String(displayIndexOf(row)));
+        checkEl.setAttribute('aria-checked', isDone ? 'true' : 'false');
         doneMap[addr] = isDone;
         saveDone();
         updateProgress();
+      };
+      // 鍵盤也能勾選:焦點在圓形編號上時按 Enter 或空白鍵
+      checkEl.onkeydown = (e)=>{
+        if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); row.onclick(); }
       };
       row.style.cursor = 'pointer';
     }
@@ -6407,7 +6515,7 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
     addForm.className = 'addr-add-form';
     addForm.style.display = 'none';
     addForm.innerHTML = `<input type="text" class="addr-add-input" placeholder="地址,例如:前鎮街100號前" autocomplete="off" autocorrect="off" autocapitalize="off">
-      <label class="addr-add-time-label">收運時間(選填)<input type="time" class="addr-add-time"></label>
+      <div class="addr-add-time-label"><span>收運時間(選填)</span><span class="addr-add-time">${timeSelHTML('', 0, 'add', '收運')}</span></div>
       <div class="addr-add-actions">
         <button class="reset-btn addr-add-cancel">取消</button>
         <button class="reset-btn order-btn addr-add-save">儲存</button>
@@ -6419,10 +6527,10 @@ function renderAddressList(masterList, storageKeyBase, onBack, readOnly){
     addForm.querySelector('.addr-add-cancel').onclick = ()=>{ addForm.style.display = 'none'; };
     addForm.querySelector('.addr-add-save').onclick = ()=>{
       const inputEl = addForm.querySelector('.addr-add-input');
-      const timeEl = addForm.querySelector('.addr-add-time');
+      const timeWrap = addForm.querySelector('.addr-add-time .time-sel');
       const addrVal = inputEl.value.trim();
       if(!addrVal) { inputEl.focus(); return; }
-      customItems.push({ addr: addrVal, time: timeEl.value || '' });
+      customItems.push({ addr: addrVal, time: timeWrap ? timeSelValue(timeWrap) : '' });
       saveCustom();
       renderAddressList(masterList, storageKeyBase, onBack, readOnly);
     };
@@ -6502,6 +6610,31 @@ function discardUnsavedNoteEdit(){
 }
 
 function ovStoreKey(cat, key){ return `timeOverride:${cat}|${key}`; }
+
+// 編輯時間用的「時:分」下拉選單(24 小時制),取代 <input type="time">
+function timeSelHTML(value, idx, which, label){
+  const m = /^(\d{1,2}):(\d{2})/.exec(value || '');
+  const hh = m ? m[1].padStart(2,'0') : '';
+  const mm = m ? m[2] : '';
+  const pad = n => String(n).padStart(2,'0');
+  let hOpts = hh ? '' : '<option value="" selected>--</option>';
+  for(let h = 0; h < 24; h++){ const v = pad(h); hOpts += `<option value="${v}"${v === hh ? ' selected' : ''}>${v}</option>`; }
+  let mOpts = mm ? '' : '<option value="" selected>--</option>';
+  for(let i = 0; i < 60; i++){ const v = pad(i); mOpts += `<option value="${v}"${v === mm ? ' selected' : ''}>${v}</option>`; }
+  return `<span class="time-sel" data-idx="${idx}" data-which="${which}" role="group" aria-label="${label}時間"><select class="ts-h" aria-label="${label}・時">${hOpts}</select><span class="ts-colon" aria-hidden="true">:</span><select class="ts-m" aria-label="${label}・分">${mOpts}</select></span>`;
+}
+// 地址顯示用:門牌、巷弄、電話號碼不要從中間斷行(例如「104號」「07-8216218」),換行只會發生在路名和號碼之間
+function addrNoBreakHTML(text){
+  return escapeHtml(text).replace(/\d{2,4}-\d{6,8}|(?:\d+(?:[-之]\d+)?(?:巷|弄|號|樓))+(?:口|前|旁|對面)?/g, m => `<span class="nobr">${m}</span>`);
+}
+// 讀取下拉選單目前的時間;只選了「時」時,分自動補 00
+function timeSelValue(wrap){
+  const h = wrap.querySelector('.ts-h').value;
+  let m = wrap.querySelector('.ts-m').value;
+  if(!h) return '';
+  if(!m){ m = '00'; wrap.querySelector('.ts-m').value = '00'; }
+  return `${h}:${m}`;
+}
 
 function getOverrides(cat, key){
   try{ return JSON.parse(localStorage.getItem(ovStoreKey(cat, key))) || {}; }
@@ -6691,9 +6824,9 @@ function selectItem(key, btn){
       const outerReminder = Array.isArray(note) ? note.find(n => n.text === '出發時跟車出門') : null;
       if(outerReminder) note = note.filter(n => n !== outerReminder);
       const timeHTML = editMode
-        ? `<span class="time-edit-col"><span class="time-edit-label">出車</span><input type="time" class="time-edit" value="${dep || ''}" data-idx="${i}" data-which="dep"></span>
+        ? `<span class="time-edit-col"><span class="time-edit-label">出車</span>${timeSelHTML(dep, i, 'dep', '出車')}</span>
            <span class="arrow">→</span>
-           <span class="time-edit-col"><span class="time-edit-label">抵達</span><input type="time" class="time-edit" value="${arr || ''}" data-idx="${i}" data-which="arr"></span>`
+           <span class="time-edit-col"><span class="time-edit-label">抵達</span>${timeSelHTML(arr, i, 'arr', '抵達')}</span>`
         : `<span class="depart ${depEdited ? 'edited' : ''}">${dep || '—'}</span>
            <span class="arrow">→</span>
            <span class="arrive ${arrEdited ? 'edited' : ''}">${arr || '—'}</span>`;
@@ -6732,7 +6865,7 @@ function selectItem(key, btn){
               const list = kd.boardPoints;
               const label = list.length > 1 ? `上車點${bi + 1}` : '上車點';
               const hasRealAddr = !bp.noNav && /[路街巷弄號]/.test(bp.addr);
-              boardRows += `<div class="k-line"><span class="k-icon">🚏</span><span class="k-label k-label-wide">${label}</span><span class="k-value k-value-addr">${bp.addr}</span>${hasRealAddr ? `<button class="kitchen-nav-icon" type="button" data-q="${bp.addr}">🧭</button>` : ''}</div>`;
+              boardRows += `<div class="k-line"><span class="k-icon">🚏</span><span class="k-label k-label-wide">${label}</span><span class="k-value k-value-addr">${bp.addr}</span>${hasRealAddr ? `<button class="kitchen-nav-icon" type="button" aria-label="導航到這個地點" data-q="${bp.addr}">🧭</button>` : ''}</div>`;
             });
             if(kd.boardNote) boardRows += `<div class="k-line"><span class="k-icon">⚠️</span><span class="k-label k-label-wide">上車備註</span><span class="k-value k-value-addr">${kd.boardNote}</span></div>`;
             const drops = kd.drops || [];
@@ -6747,7 +6880,7 @@ function selectItem(key, btn){
                 const dotHtml = colorChar ? `<span class="bin-dot bin-dot-${noteColorMap[colorChar]}">●</span> ` : '';
                 noteTag = `<span class="k-note">${dotHtml}${d.note}　</span>`;
               }
-              rows += `<div class="k-line"><span class="k-icon">📍</span><span class="k-label">${label}</span><span class="k-value k-value-addr">${noteTag}${d.addr}${endTag}</span>${hasRealAddr ? `<button class="kitchen-nav-icon" type="button" data-q="${d.addr}">🧭</button>` : ''}</div>`;
+              rows += `<div class="k-line"><span class="k-icon">📍</span><span class="k-label">${label}</span><span class="k-value k-value-addr">${noteTag}${d.addr}${endTag}</span>${hasRealAddr ? `<button class="kitchen-nav-icon" type="button" aria-label="導航到這個地點" data-q="${d.addr}">🧭</button>` : ''}</div>`;
             });
             if(kd.leftover) rows += `<div class="k-line"><span class="k-icon">↩️</span><span class="k-label">未下桶</span><span class="k-value k-value-addr">${kd.leftover}</span></div>`;
             if(kd.give && kd.give.length){
@@ -6762,7 +6895,7 @@ function selectItem(key, btn){
                 } else {
                   countHtml = `<span class="k-give-label-text">${g.label}</span>`;
                 }
-                return `<div class="k-give-item"><span class="k-give-item-stack"><span class="k-give-count">${countHtml}</span><span class="k-give-addr">${addrDisplay}</span></span>${hasAddr ? `<button class="kitchen-nav-icon" type="button" data-q="${g.addr}">🧭</button>` : ''}</div>`;
+                return `<div class="k-give-item"><span class="k-give-item-stack"><span class="k-give-count">${countHtml}</span><span class="k-give-addr">${addrDisplay}</span></span>${hasAddr ? `<button class="kitchen-nav-icon" type="button" aria-label="導航到這個地點" data-q="${g.addr}">🧭</button>` : ''}</div>`;
               }).join('');
               rows += `<div class="k-line k-line-top"><span class="k-icon">🏪</span><span class="k-label">${kd.giveLabel || '給店家'}</span><span class="k-value k-value-stack">${giveItems}</span></div>`;
             }
@@ -6783,10 +6916,10 @@ function selectItem(key, btn){
             return `<div class="personal-note-block" data-pn-key="${pnKey}" style="${pnVal ? '' : 'display:none;'}">
               <div class="personal-note-view" style="${pnVal ? '' : 'display:none;'}">
                 <span class="pn-icon">🖊️</span><span class="pn-text pn-clamped">${pnEsc}</span>
-                <button class="pn-toggle-btn" type="button" style="display:none;">▸</button>
+                <button class="pn-toggle-btn" type="button" aria-label="展開或收合備註" style="display:none;">▸</button>
               </div>
               <div class="personal-note-edit" style="display:none;">
-                <textarea class="pn-textarea" maxlength="200" placeholder="寫給自己看的備註,存在這支手機裡…">${pnEsc}</textarea>
+                <textarea class="pn-textarea" maxlength="200" aria-label="這一趟的個人備註" placeholder="寫給自己看的備註,存在這支手機裡…">${pnEsc}</textarea>
                 <div class="pn-edit-actions">
                   <button class="pn-save-btn" type="button">儲存</button>
                   <button class="pn-cancel-btn" type="button">取消</button>
@@ -6864,10 +6997,10 @@ function selectItem(key, btn){
           return `<div class="personal-note-block" data-pn-key="${pnKey}" style="${pnVal ? '' : 'display:none;'}">
             <div class="personal-note-view" style="${pnVal ? '' : 'display:none;'}">
               <span class="pn-icon">🖊️</span><span class="pn-text pn-clamped">${pnEsc}</span>
-              <button class="pn-toggle-btn" type="button" style="display:none;">▸</button>
+              <button class="pn-toggle-btn" type="button" aria-label="展開或收合備註" style="display:none;">▸</button>
             </div>
             <div class="personal-note-edit" style="display:none;">
-              <textarea class="pn-textarea" maxlength="200" placeholder="寫給自己看的備註,存在這支手機裡…">${pnEsc}</textarea>
+              <textarea class="pn-textarea" maxlength="200" aria-label="這一趟的個人備註" placeholder="寫給自己看的備註,存在這支手機裡…">${pnEsc}</textarea>
               <div class="pn-edit-actions">
                 <button class="pn-save-btn" type="button">儲存</button>
                 <button class="pn-cancel-btn" type="button">取消</button>
@@ -6944,6 +7077,9 @@ function selectItem(key, btn){
           viewEl.style.display = 'none';
           editBox.style.display = 'block';
           textarea.style.height = ''; // 重置為預設高度,避免保留上次手動拖曳放大的大小
+          // 還沒存過的新備註沒有東西可刪,「刪除」先藏起來(用 visibility 保留位置,按鈕不會跳動)
+          const delBtn = pnBlock.querySelector('.pn-delete-btn');
+          if(delBtn) delBtn.style.visibility = localStorage.getItem(pnKey) ? '' : 'hidden';
           textarea.focus();
           // 游標移到文字最後面,方便直接接著往下寫,不用手動移過去
           const len = textarea.value.length;
@@ -7122,7 +7258,7 @@ function selectItem(key, btn){
       row.setAttribute('data-trip-idx', i);
       row.innerHTML = editMode
         ? `<div class="trip-label">${labels[i] || '第' + (i + 1) + '趟'}</div>
-           <div class="time-pair"><input type="time" class="time-edit" value="${eff || ''}" data-idx="${i}" data-which="dep"></div>`
+           <div class="time-pair">${timeSelHTML(eff, i, 'dep', '出車')}</div>`
         : `<div class="trip-label">${labels[i] || '第' + (i + 1) + '趟'}</div>
            <div class="time-pair"><span class="depart ${eff !== time ? 'edited' : ''}">${eff || '—'}</span></div>`;
       tripsEl.appendChild(row);
@@ -7142,13 +7278,17 @@ function selectItem(key, btn){
 
   if(editable && editMode){
     // 輸入框變更即儲存,並更新倒數與高亮
-    tripsEl.querySelectorAll('.time-edit').forEach(inp=>{
-      inp.onchange = ()=>{
-        // 還原進行中或輸入框已被移出畫面時,一律不儲存
-        if(suppressTimeSave || !inp.isConnected) return;
-        setOverride(currentCategory, key, parseInt(inp.dataset.idx,10), inp.dataset.which, inp.value);
-        updateCountdown();
-      };
+    tripsEl.querySelectorAll('.time-sel').forEach(wrap=>{
+      wrap.querySelectorAll('select').forEach(sel=>{
+        sel.onchange = ()=>{
+          // 還原進行中或選單已被移出畫面時,一律不儲存
+          if(suppressTimeSave || !wrap.isConnected) return;
+          const v = timeSelValue(wrap);
+          if(!v) return; // 「時」還沒選就先不存
+          setOverride(currentCategory, key, parseInt(wrap.dataset.idx,10), wrap.dataset.which, v);
+          updateCountdown();
+        };
+      });
     });
     // 有修改過才顯示還原按鈕
     if(Object.keys(getOverrides(currentCategory, key)).length){
@@ -7447,9 +7587,21 @@ document.getElementById('copyBackupBtn').onclick = async ()=>{
   }
 };
 
+// 還原備份分兩步:第一次按先顯示「這份備份是哪天、有幾筆」,確認是要的那份再按一次才覆蓋
+function resetImportBtn(){
+  const btn = document.getElementById('doImportBtn');
+  btn.dataset.armed = '';
+  btn.textContent = '還原備份';
+}
+document.getElementById('importText').addEventListener('input', ()=>{
+  resetImportBtn();
+  const status = document.getElementById('importStatus');
+  status.textContent = ''; status.className = 'backup-note';
+});
 document.getElementById('doImportBtn').onclick = ()=>{
   const raw = document.getElementById('importText').value.trim();
   const status = document.getElementById('importStatus');
+  const btn = document.getElementById('doImportBtn');
   if(!raw){
     status.textContent = '請先貼上備份文字。';
     status.className = 'backup-note err';
@@ -7459,6 +7611,22 @@ document.getElementById('doImportBtn').onclick = ()=>{
     const b64 = raw.replace(BACKUP_HEADER, '').trim();
     const payload = JSON.parse(base64ToUtf8(b64));
     if(!payload || typeof payload.data !== 'object') throw new Error('格式不對');
+    if(!btn.dataset.armed){
+      const keys = Object.keys(payload.data).filter(k => BACKUP_PREFIXES.some(p => k.startsWith(p)));
+      if(!keys.length) throw new Error('沒有可還原的記錄');
+      const cnt = pre => keys.filter(k => k.startsWith(pre)).length;
+      const parts = [];
+      if(cnt('timeOverride:')) parts.push(`改過的時間 ${cnt('timeOverride:')}`);
+      if(cnt('addrDone:')) parts.push(`勾選進度 ${cnt('addrDone:')}`);
+      if(cnt('addrOrder:')) parts.push(`排序 ${cnt('addrOrder:')}`);
+      if(cnt('personalNote:')) parts.push(`備註 ${cnt('personalNote:')}`);
+      status.textContent = `這份備份${payload.at ? '是 ' + payload.at.replace(/-/g,'/') + ' 產生的' : ''}，共 ${keys.length} 筆記錄${parts.length ? '（' + parts.join('、') + '）' : ''}。確認是這份，再按一次「確認還原」。`;
+      status.className = 'backup-note';
+      btn.dataset.armed = '1';
+      btn.textContent = '⚠ 確認還原（會覆蓋目前記錄）';
+      return;
+    }
+    resetImportBtn();
     let restored = 0, skipped = 0;
     Object.keys(payload.data).forEach(k=>{
       if(BACKUP_PREFIXES.some(p => k.startsWith(p))){
@@ -7472,6 +7640,7 @@ document.getElementById('doImportBtn').onclick = ()=>{
     status.className = 'backup-note ok';
     document.getElementById('importText').value = '';
   }catch(e){
+    resetImportBtn();
     status.textContent = '這段文字看起來不是有效的備份內容，請確認複製完整再試一次。';
     status.className = 'backup-note err';
   }
@@ -7632,6 +7801,8 @@ function closeFloatMap(){
     window.removeEventListener('touchmove', floatMapDragHandlers.onMove);
     window.removeEventListener('mouseup', floatMapDragHandlers.onUp);
     window.removeEventListener('touchend', floatMapDragHandlers.onUp);
+    window.removeEventListener('touchcancel', floatMapDragHandlers.onUp);
+    window.removeEventListener('blur', floatMapDragHandlers.onUp);
     floatMapDragHandlers = null;
   }
 }
@@ -7714,6 +7885,9 @@ function openFloatMap(zoneKey, tripCount, startTrip){
   window.addEventListener('touchmove', onMove, {passive:false});
   window.addEventListener('mouseup', onUp);
   window.addEventListener('touchend', onUp);
+  // 手勢被系統中斷(來電、通知、切App)時也要結束拖曳,否則拖曳狀態會卡住,之後整頁滑動都會變成在拖地圖、頁面捲不動
+  window.addEventListener('touchcancel', onUp);
+  window.addEventListener('blur', onUp);
   floatMapDragHandlers = { onMove, onUp };
 }
 
@@ -7731,10 +7905,10 @@ function renderFloatMap(){
   el.style.setProperty('--floatmap-scale', curScale);
   el.innerHTML = `
     <div class="float-map-head">
-      <button class="float-map-btn" data-act="prevtrip">◀</button>
+      <button type="button" class="float-map-btn" data-act="prevtrip" aria-label="上一車">◀</button>
       <span class="float-map-triplabel">${tripLabels[curTrip-1] || ('第'+curTrip+'車')}</span>
-      <button class="float-map-btn" data-act="nexttrip">▶</button>
-      <button class="float-map-btn float-map-close" data-act="close">✕</button>
+      <button type="button" class="float-map-btn" data-act="nexttrip" aria-label="下一車">▶</button>
+      <button type="button" class="float-map-btn float-map-close" data-act="close" aria-label="關閉浮動地圖">✕</button>
     </div>
     <div class="float-map-sizerow">
       <button class="float-map-btn" data-act="sizedown">縮小－</button>
@@ -7745,9 +7919,9 @@ function renderFloatMap(){
       ${img ? `<img class="float-map-img" src="${encodeURI(img.src)}" alt="${zoneKey}${tripLabels[curTrip-1]||''}地圖">` : `<div class="float-map-empty">這車沒有地圖</div>`}
     </div>
     ${pageCount > 1 ? `<div class="float-map-pages">
-      <button class="float-map-btn" data-act="prevpage">‹</button>
+      <button type="button" class="float-map-btn" data-act="prevpage" aria-label="上一頁">‹</button>
       <span class="float-map-dots">${imgs.map((_,i)=>`<span class="float-map-dot${i===curPage?' active':''}"></span>`).join('')}</span>
-      <button class="float-map-btn" data-act="nextpage">›</button>
+      <button type="button" class="float-map-btn" data-act="nextpage" aria-label="下一頁">›</button>
     </div>` : ''}
   `;
 
@@ -8381,8 +8555,8 @@ function showUpdateBanner(){
     const hoursEl = wrap.querySelector('.wx-hours');
 
     if(!wx){
-      bar.className = 'wx-bar wx-muted';
-      bar.innerHTML = wxLoading ? '⏳ 天氣讀取中…' : '天氣暫時無法取得，點這裡重試';
+      bar.className = 'wx-bar wx-muted' + (wxLoading ? '' : ' wx-fail');
+      bar.innerHTML = wxLoading ? '⏳ 天氣讀取中…' : '☁️ 天氣暫時讀不到 · 點這裡重試';
       hoursEl.innerHTML = '';
       return;
     }
@@ -8779,9 +8953,13 @@ function showUpdateBanner(){
   const base = img => img.dataset.base || (img.getAttribute('src') ? (img.dataset.base = img.getAttribute('src')) : '');
   const isOurs = el => el && el.tagName === 'IMG' && el.matches(SEL);
 
+  // 載入中/失敗時先把 alt 文字收起來:不然瀏覽器會在「圖片載入中…」上面疊一個破圖圖示加說明文字,看起來很亂
+  function hideAlt(img){ if(img.alt){ img.dataset.alt = img.alt; img.alt = ''; } }
+  function restoreAlt(img){ if(img.dataset.alt != null){ img.alt = img.dataset.alt; delete img.dataset.alt; } }
   function reload(img){
     const b = base(img);
     if(!b) return;
+    hideAlt(img);
     img.classList.remove('img-failed');
     img.classList.add('img-loading');
     img.src = b + (b.includes('?') ? '&' : '?') + 'r=' + Date.now();
@@ -8791,13 +8969,19 @@ function showUpdateBanner(){
     if(n && n.classList.contains('img-retry')) n.remove();
   }
   function showBtn(img){
+    hideAlt(img);
     img.classList.remove('img-loading');
     img.classList.add('img-failed');
-    if(img.nextElementSibling && img.nextElementSibling.classList.contains('img-retry')) return;
+    const offline = navigator.onLine === false;
+    const old = img.nextElementSibling;
+    if(old && old.classList.contains('img-retry')){
+      old.innerHTML = offline ? '📶 手機沒有訊號，圖片載不到<br><b>↻ 有訊號後點這裡重新載入</b>' : '⚠️ 圖片沒載到（可能訊號不好）<br><b>↻ 點這裡重新載入</b>';
+      return;
+    }
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'img-retry';
-    btn.innerHTML = '⚠️ 圖片沒載到（可能訊號不好）<br><b>↻ 點這裡重新載入</b>';
+    btn.innerHTML = offline ? '📶 手機沒有訊號，圖片載不到<br><b>↻ 有訊號後點這裡重新載入</b>' : '⚠️ 圖片沒載到（可能訊號不好）<br><b>↻ 點這裡重新載入</b>';
     btn.addEventListener('click', ev => {
       ev.stopPropagation();
       img.dataset.retry = '0';
@@ -8808,6 +8992,9 @@ function showUpdateBanner(){
   }
   function onError(img){
     if(!base(img)) return;
+    hideAlt(img);
+    // 手機確定沒網路:不用等 13 秒重試,直接顯示;恢復連線時(online 事件)會自動再抓
+    if(navigator.onLine === false){ clearTimeout(img._retryTimer); showBtn(img); return; }
     const n = +(img.dataset.retry || 0);
     if(n < DELAYS.length){
       img.dataset.retry = n + 1;
@@ -8823,6 +9010,7 @@ function showUpdateBanner(){
     if(!isOurs(img)) return;
     img.classList.remove('img-loading', 'img-failed');
     img.dataset.retry = '0';
+    restoreAlt(img);
     removeBtn(img);
   }, true);
   document.addEventListener('error', e => { if(isOurs(e.target)) onError(e.target); }, true);
@@ -8834,10 +9022,12 @@ function showUpdateBanner(){
       img.dataset.watch = '1';
       base(img);
       if(img.getAttribute('data-src')){
+        hideAlt(img);
         img.classList.add('img-loading');   // 排隊中,還沒開始抓
       }else if(img.complete){
         if(!img.naturalWidth) onError(img);
       }else{
+        hideAlt(img);
         img.classList.add('img-loading');
       }
     });
@@ -8881,6 +9071,77 @@ function showUpdateBanner(){
   };
   const h1 = document.querySelector('h1');
   if(h1) h1.insertAdjacentElement('afterend', box);
+})();
+</script>
+<script>
+// ===== 對話框共用處理:按 Esc 關閉最上層的視窗;打開時把焦點移進視窗,關掉後回到原本按的那顆按鈕 =====
+// 只處理鍵盤與螢幕報讀,不改變任何視窗原本的開關邏輯(仍然呼叫各自的 close 函式)
+(function(){
+  // 由上到下:越前面越在最上層,Esc 先關它
+  var DIALOGS = [
+    { id:'confirmModalOverlay', close:function(){ var o=document.getElementById('confirmModalOverlay'); if(o) o.remove(); } },
+    { id:'deleteNoteOverlay',  close:function(){ closeDeleteNote(); } },
+    { id:'clearDataOverlay',   close:function(){ closeClearData(); } },
+    { id:'backupOverlay',      close:function(){ closeBackup(); } },
+    { id:'modalOverlay',       close:function(){ closeImg(); } },
+    { id:'routeSketchOverlay', close:function(){ closeRouteSketch(); } },
+    { id:'routeStopsOverlay',  close:function(){ closeRouteStops(); } },
+    { id:'routeNavOverlay',    close:function(){ closeRouteNav(); } }
+  ];
+  function isOpen(id){
+    var el = document.getElementById(id);
+    if(!el) return false;
+    if(id === 'confirmModalOverlay') return true;
+    return el.classList.contains('show');
+  }
+  document.addEventListener('keydown', function(e){
+    if(e.key !== 'Escape') return;
+    for(var i = 0; i < DIALOGS.length; i++){
+      if(isOpen(DIALOGS[i].id)){
+        e.preventDefault();
+        try{ DIALOGS[i].close(); }catch(err){}
+        return;
+      }
+    }
+  });
+
+  // 焦點:打開時記住原本的位置並移進視窗;關掉後還回去
+  var returnTo = {};
+  function dialogBox(id){
+    var o = document.getElementById(id);
+    if(!o) return null;
+    return o.querySelector('[role="dialog"],[role="alertdialog"]') || o;
+  }
+  function onOpen(id){
+    var a = document.activeElement;
+    returnTo[id] = (a && a !== document.body) ? a : null;
+    var box = dialogBox(id);
+    if(box && box.focus) box.focus({ preventScroll:true });
+  }
+  function onClose(id){
+    var t = returnTo[id];
+    returnTo[id] = null;
+    if(t && document.contains(t) && t.focus) t.focus({ preventScroll:true });
+  }
+  DIALOGS.forEach(function(d){
+    if(d.id === 'confirmModalOverlay') return;
+    var el = document.getElementById(d.id);
+    if(!el) return;
+    var was = el.classList.contains('show');
+    new MutationObserver(function(){
+      var now = el.classList.contains('show');
+      if(now === was) return;
+      was = now;
+      if(now) onOpen(d.id); else onClose(d.id);
+    }).observe(el, { attributes:true, attributeFilter:['class'] });
+  });
+  // 確認視窗是臨時建立/移除的,看 body 的子元素變化
+  new MutationObserver(function(muts){
+    muts.forEach(function(m){
+      m.addedNodes.forEach(function(n){ if(n.id === 'confirmModalOverlay') onOpen('confirmModalOverlay'); });
+      m.removedNodes.forEach(function(n){ if(n.id === 'confirmModalOverlay') onClose('confirmModalOverlay'); });
+    });
+  }).observe(document.body, { childList:true });
 })();
 </script>
 </body>
