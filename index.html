@@ -2468,6 +2468,62 @@
     .trip.tp-active::before{animation:none;}
     .card.show, .kitchen-detail.show, .ol-more-body.show, .ol-body.show, .cat-note-body.show{animation:none;}
   }
+  /* ===== v6.00 單手操作:全螢幕頁底部「關閉」列(拇指按得到),往回滑也會關閉(見 history 處理) ===== */
+  .route-nav-foot{
+    flex:none; display:flex; gap:8px;
+    padding:8px 16px calc(8px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--line); background:var(--panel);
+  }
+  .route-nav-foot button{
+    flex:1; min-height:46px; border-radius:12px; cursor:pointer;
+    border:1px solid var(--line); background:rgba(255,255,255,0.06);
+    color:var(--text); font-size:16px; font-weight:700;
+  }
+  .route-nav-foot button:active{background:rgba(255,255,255,0.12);}
+  .route-nav-foot .rn-jump-now{display:none; border-color:rgba(var(--accent-rgb),0.6); background:rgba(var(--accent-rgb),0.14); color:var(--accent);}
+  .route-nav-foot .rn-jump-now.show{display:block;}
+  .route-nav-body{padding-bottom:16px;}
+  .rn-font-btn{height:36px;}
+  /* 🧭 導航按鈕:至少 44×44,車上晃動也按得到 */
+  .rn-nav-btn{min-width:44px; min-height:44px; margin:-6px -6px -6px 0; display:flex; align-items:center; justify-content:center;}
+  /* 配套 ▲▼ / 🙈:外觀不變,手指可點範圍加大 */
+  .ord-btn, .hide-btn{position:relative;}
+  .ord-btn::after{content:''; position:absolute; left:-8px; right:-8px; top:-2px; bottom:-2px;}
+  .hide-btn::after{content:''; position:absolute; inset:-9px;}
+  /* ===== v6.00 沿線時刻/完整路線導航:已過站變淡、下一站框起來 ===== */
+  .rn-stop.rn-past{opacity:0.42;}
+  .rn-stop.rn-next{
+    border-color:rgba(var(--accent-rgb),0.85);
+    background:rgba(var(--accent-rgb),0.10);
+    box-shadow:0 0 0 1px rgba(var(--accent-rgb),0.85) inset;
+  }
+  .rn-stop.rn-next .rn-stop-num{background:var(--accent); color:#12160e;}
+  .rn-now-tag{
+    display:inline-block; margin-left:6px; padding:2px 8px; border-radius:999px;
+    background:var(--accent); color:#12160e;
+    font-size:calc(13px * var(--rn-scale)); font-weight:800; white-space:nowrap; vertical-align:1px;
+  }
+  /* 每站時間:原本用了「備註」的紫色,改成中性色,紫色只留給個人備註 */
+  .stop-time-tag{color:#dfe7d2; background:rgba(255,255,255,0.08);}
+  /* ===== v6.00 主畫面:正在收運的那一車顯示「進行中」(不是一出車就「已過站」) ===== */
+  .trip.tp-running .trip-label::after{content:'進行中'; display:block; font-size:11.5px; font-weight:700; line-height:1.35; color:var(--accent); white-space:pre; margin-top:2px;}
+  .trip.tp-running .trip-label::before{top:10px;}
+  .trip.tp-running .trip-label[data-end]::after{content:'進行中\A至 ' attr(data-end);}
+  /* ===== v6.00 選好區之後,區號收成一行,結果往上移 ===== */
+  .picker.collapsed .route-btn:not(.active):not(.partner){display:none;}
+  .picker.collapsed .picker-group-label{display:none;}
+  /* 三配套/日配套 圖示:像日曆上的星期幾,取代原本看不出意思的色塊 */
+  .day-ico{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:1.3em; height:1.3em; border:1.5px solid currentColor; border-radius:5px;
+    font-size:0.78em; font-weight:800; line-height:1; vertical-align:middle;
+  }
+  .picker-toggle{
+    background:transparent; border:1px dashed var(--line); color:var(--text-dim);
+    border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; min-height:51px;
+  }
+  .picker:not(.collapsed) .picker-toggle{grid-column:1 / -1; min-height:44px;}
+
 </style>
 </head>
 <body>
@@ -2475,7 +2531,7 @@
   <div class="time-info" id="timeInfo"></div>
 
   <h1>前鎮區清運時間查詢</h1>
-  <div class="sub">選擇底部車輛類型與區域 · 查看三趟時間</div>
+  <div class="sub">選擇底部車輛類型與區域 · 查看三車時間</div>
 
 
   <div class="tabs" id="tabs" role="navigation" aria-label="車輛類型"></div>
@@ -2497,15 +2553,15 @@
     <div class="wx-card-alert" id="wxCardAlert" style="display:none;"></div>
     <div id="trips"></div>
     <div class="legend" id="legendBox">
-      <span><span class="dot" style="background:transparent;box-shadow:inset 0 0 0 2px var(--text)"></span>出發</span>
-      <span><span class="dot" style="background:var(--accent)"></span>到達</span>
+      <span><span class="dot" style="background:transparent;box-shadow:inset 0 0 0 2px var(--text)"></span>出車</span>
+      <span><span class="dot" style="background:var(--accent)"></span>到第一站</span>
       <span class="wx-lg" id="wxLgRain"><span class="wx-lg-bar" style="background:#5fa5e6"></span>下雨</span>
       <span class="wx-lg" id="wxLgHeat"><span class="wx-lg-bar" style="background:var(--heat)"></span>高溫</span>
       <span class="wx-lg" id="wxLgStorm"><span class="wx-lg-bar" style="background:var(--storm)"></span>雷雨</span>
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v5.99 ｜ 更新日期：2026.11.11</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v6.00 ｜ 更新日期：2026.11.17</div>
   <div class="site-footer" style="margin-top:4px;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <button type="button" class="backup-entry" id="backupEntry">💾 備份與還原</button>
@@ -2582,6 +2638,7 @@
       <button class="route-nav-close" type="button" aria-label="關閉" onclick="closeRouteNav()">✕</button>
     </div>
     <div class="route-nav-body" id="routeNavBody"></div>
+    <div class="route-nav-foot"><button type="button" class="rn-jump-now" data-body="routeNavBody">📍 回到下一站</button><button type="button" onclick="closeRouteNav()">✕ 關閉</button></div>
   </div>
 
   <div class="route-nav-overlay" id="routeSketchOverlay" role="dialog" aria-modal="true" aria-labelledby="routeSketchTitle" tabindex="-1">
@@ -2595,6 +2652,7 @@
       <button class="route-nav-close" type="button" aria-label="關閉" onclick="closeRouteSketch()">✕</button>
     </div>
     <div class="route-nav-body" id="routeSketchBody"></div>
+    <div class="route-nav-foot"><button type="button" onclick="closeRouteSketch()">✕ 關閉</button></div>
   </div>
 
   <div class="route-nav-overlay" id="routeStopsOverlay" role="dialog" aria-modal="true" aria-labelledby="routeStopsTitle" tabindex="-1">
@@ -2608,6 +2666,7 @@
       <button class="route-nav-close" type="button" aria-label="關閉" onclick="closeRouteStops()">✕</button>
     </div>
     <div class="route-nav-body" id="routeStopsBody"></div>
+    <div class="route-nav-foot"><button type="button" class="rn-jump-now" data-body="routeStopsBody">📍 回到下一站</button><button type="button" onclick="closeRouteStops()">✕ 關閉</button></div>
   </div>
 
 <script>
@@ -4703,7 +4762,7 @@ function openRouteSketch(zoneKey){
   sketchDirectOpenZone = zoneKey;
   document.getElementById('routeSketchTitle').textContent = `路線${zoneKey} · 手繪路線圖`;
   const body = document.getElementById('routeSketchBody');
-  body.innerHTML = data.images.map(img => `
+  body.innerHTML = (officialLineData[zoneKey] ? `<div class="rn-sketch-label">手繪圖上寫的時間是當初的筆記，實際時間以「沿線時刻」為準</div>` : '') + data.images.map(img => `
     <div class="rn-photo-block">
       <img class="rn-photo-img" src="${encodeURI(img.src)}" alt="路線${zoneKey}手繪路線圖" loading="lazy">
       ${img.caption ? `<div class="rn-photo-caption">${img.caption}</div>` : ''}
@@ -5785,8 +5844,8 @@ const categoryIcons = {
   "回收車": "♻️",
   "廚餘車": "🍃",
   "接駁車": "🚌",
-  "三配套": "🟦",
-  "日配套": "🟧",
+  "三配套": '<span class="day-ico">三</span>',
+  "日配套": '<span class="day-ico">日</span>',
 };
 
 // 責任區順序表:依今天星期幾自動高亮適用欄位
@@ -5899,10 +5958,34 @@ function updateSearchVisibility(){
   searchEl.style.display = (cfg && cfg.type === 'address') ? '' : 'none';
 }
 
+// v6.00:選好區之後區號收成一行(只留選到的區＋同組),點「換區」再展開,讓結果往上移
+function setPickerCollapsed(on){
+  const picker = document.getElementById('picker');
+  if(!picker) return;
+  let tg = picker.querySelector('.picker-toggle');
+  const hasSel = !!picker.querySelector('.route-btn.active');
+  if(!hasSel || categories[currentCategory].type === 'address'){
+    picker.classList.remove('collapsed');
+    if(tg) tg.remove();
+    return;
+  }
+  if(!tg){
+    tg = document.createElement('button');
+    tg.type = 'button';
+    tg.className = 'picker-toggle';
+    tg.onclick = () => setPickerCollapsed(!picker.classList.contains('collapsed'));
+    picker.appendChild(tg);
+  }
+  picker.classList.toggle('collapsed', on);
+  tg.textContent = on ? '換區 ▾' : '收起 ▴';
+  tg.setAttribute('aria-expanded', on ? 'false' : 'true');
+}
+
 function renderPicker(){
   const cfg = categories[currentCategory];
   const picker = document.getElementById('picker');
   picker.innerHTML = '';
+  picker.classList.remove('collapsed');
   const searchEl = document.getElementById('searchBox');
   const q = (searchEl && searchEl.value || '').trim();
   const fullOrder = cfg.order;
@@ -6691,6 +6774,7 @@ function selectItem(key, btn){
 
   const card = document.getElementById('card');
   card.classList.add('show');
+  setPickerCollapsed(categories[currentCategory].type !== 'address');
 
   const cfg = categories[currentCategory];
   const isRoute = cfg.order === truckOrder;
@@ -6704,7 +6788,7 @@ function selectItem(key, btn){
 
   const tripsEl = document.getElementById('trips');
   tripsEl.innerHTML = '';
-  const labels = ['第一趟','第二趟','第三趟'];
+  const labels = ['第一車','第二車','第三車'];
   const legend = document.getElementById('legendBox');
 
   if(cfg.type === 'address'){
@@ -6832,7 +6916,7 @@ function selectItem(key, btn){
            <span class="arrive ${arrEdited ? 'edited' : ''}">${arr || '—'}</span>`;
       row.innerHTML = `
         <div class="trip-toprow">
-          <div class="trip-label">${labels[i] || '第' + (i + 1) + '趟'}</div>
+          <div class="trip-label">${labels[i] || '第' + (i + 1) + '車'}</div>
           <div class="time-pair">${timeHTML}</div>
           ${(currentCategory === '回收車' || currentCategory === '垃圾車') ? `<button class="pn-icon-btn" type="button" data-pn-key="personalNote:${currentCategory}:${key}:${i}">+備註</button>` : ''}
         </div>
@@ -6919,7 +7003,7 @@ function selectItem(key, btn){
                 <button class="pn-toggle-btn" type="button" aria-label="展開或收合備註" style="display:none;">▸</button>
               </div>
               <div class="personal-note-edit" style="display:none;">
-                <textarea class="pn-textarea" maxlength="200" aria-label="這一趟的個人備註" placeholder="寫給自己看的備註,存在這支手機裡…">${pnEsc}</textarea>
+                <textarea class="pn-textarea" maxlength="200" aria-label="這一車的個人備註" placeholder="寫給自己看的備註,存在這支手機裡…">${pnEsc}</textarea>
                 <div class="pn-edit-actions">
                   <button class="pn-save-btn" type="button">儲存</button>
                   <button class="pn-cancel-btn" type="button">取消</button>
@@ -7000,7 +7084,7 @@ function selectItem(key, btn){
               <button class="pn-toggle-btn" type="button" aria-label="展開或收合備註" style="display:none;">▸</button>
             </div>
             <div class="personal-note-edit" style="display:none;">
-              <textarea class="pn-textarea" maxlength="200" aria-label="這一趟的個人備註" placeholder="寫給自己看的備註,存在這支手機裡…">${pnEsc}</textarea>
+              <textarea class="pn-textarea" maxlength="200" aria-label="這一車的個人備註" placeholder="寫給自己看的備註,存在這支手機裡…">${pnEsc}</textarea>
               <div class="pn-edit-actions">
                 <button class="pn-save-btn" type="button">儲存</button>
                 <button class="pn-cancel-btn" type="button">取消</button>
@@ -7257,9 +7341,9 @@ function selectItem(key, btn){
       row.className = 'trip';
       row.setAttribute('data-trip-idx', i);
       row.innerHTML = editMode
-        ? `<div class="trip-label">${labels[i] || '第' + (i + 1) + '趟'}</div>
+        ? `<div class="trip-label">${labels[i] || '第' + (i + 1) + '車'}</div>
            <div class="time-pair">${timeSelHTML(eff, i, 'dep', '出車')}</div>`
-        : `<div class="trip-label">${labels[i] || '第' + (i + 1) + '趟'}</div>
+        : `<div class="trip-label">${labels[i] || '第' + (i + 1) + '車'}</div>
            <div class="time-pair"><span class="depart ${eff !== time ? 'edited' : ''}">${eff || '—'}</span></div>`;
       tripsEl.appendChild(row);
     });
@@ -7396,6 +7480,25 @@ function getDepartTimes(cfg, key){
   return null; // 配套路線沒有時間可倒數
 }
 
+// v6.00:每一車「收完」的時間。垃圾車用官方沿線時刻最後一站;回收車用 recycleTripEndTimes;其他(廚餘車)沒有
+function getTripEndTimes(key){
+  if(!key) return null;
+  if(currentCategory === '垃圾車' && officialLineData[key]){
+    return splitOfficialTrips(officialLineData[key].stops).map(t => {
+      const last = t[t.length-1] && t[t.length-1][0] || '';
+      const parts = String(last).split('-').map(x => x.trim()).filter(Boolean);
+      return parts[parts.length-1] || '';
+    });
+  }
+  if(currentCategory === '回收車' && recycleTripEndTimes[key]) return recycleTripEndTimes[key];
+  return null;
+}
+// 星期三、星期日停收:這兩天不顯示「進行中」「下一站」
+function isServiceDayToday(){
+  const d = new Date().getDay();
+  return d !== 0 && d !== 3;
+}
+
 function parseTimeToday(hhmm, baseDate){
   if(!hhmm) return null;
   const parts = hhmm.split(':');
@@ -7425,7 +7528,7 @@ function updateCountdown(){
     return;
   }
 
-  const tripLabels = ['第一趟','第二趟','第三趟'];
+  const tripLabels = ['第一車','第二車','第三車'];
   const now = new Date();
   let nextIdx = -1;
   let nextDate = null;
@@ -7446,23 +7549,40 @@ function updateCountdown(){
     nextDate = parseTimeToday(times[0], tomorrow);
     label = `明天 ${tripLabels[0]}`;
   } else {
-    label = tripLabels[nextIdx] || `第${nextIdx+1}趟`;
+    label = tripLabels[nextIdx] || `第${nextIdx+1}車`;
   }
   diffMs = nextDate - now;
 
   // 只有「下一趟索引」真的改變時,才重新設定變暗/高亮狀態,避免每秒重複remove+add造成不必要的重繪(閃爍)
-  if(lastNextIdx !== nextIdx || lastWokenSize !== wokenTrips.size){
-    lastNextIdx = nextIdx;
+  // v6.00:出車後到最後一站收完之前算「進行中」,不再一出車就顯示已過站
+  const endTimes = getTripEndTimes(currentSelectedKey);
+  let runningIdx = -1;
+  if(endTimes && isServiceDayToday()){
+    for(let i = 0; i < times.length; i++){
+      const d0 = parseTimeToday(times[i], now), d1 = parseTimeToday(endTimes[i], now);
+      if(d0 && d1 && d0 <= now && now < d1){ runningIdx = i; break; }
+    }
+  }
+  const stateKey = nextIdx + ':' + runningIdx;
+  if(lastNextIdx !== stateKey || lastWokenSize !== wokenTrips.size){
+    lastNextIdx = stateKey;
     lastWokenSize = wokenTrips.size;
     document.querySelectorAll('.trip[data-trip-idx]').forEach(row=>{
       const idx = parseInt(row.getAttribute('data-trip-idx'), 10);
-      row.classList.remove('tp-past', 'tp-active');
+      row.classList.remove('tp-past', 'tp-active', 'tp-running');
+      const lbl = row.querySelector('.trip-label');
+      if(lbl) lbl.removeAttribute('data-end');
+      if(idx === runningIdx){
+        row.classList.add('tp-active', 'tp-running');
+        if(lbl && endTimes[idx]) lbl.setAttribute('data-end', endTimes[idx]);
+        return;
+      }
       if(wokenTrips.has(idx)) return; // 這一趟已被點擊喚醒過,維持正常亮度,不重新變暗
       if(nextIdx === -1){
         row.classList.add('tp-past');
       } else if(idx < nextIdx){
         row.classList.add('tp-past');
-      } else if(idx === nextIdx){
+      } else if(idx === nextIdx && runningIdx === -1){
         row.classList.add('tp-active');
       }
     });
@@ -7475,10 +7595,13 @@ function updateCountdown(){
   const mins = Math.max(0, Math.round(diffMs / 60000));
   const remain = isNaN(mins) ? '' :
     (mins >= 60 ? `${Math.floor(mins/60)}時${String(mins%60).padStart(2,'0')}分` : `${mins}分`);
-  const newBarContent =
-    `<span class="ti-key">${icon} ${keyName}</span>` +
-    `<span class="ti-next">下一趟｜${label} ${nextTime}</span>` +
-    (remain ? `<span class="ti-remain">還有 ${remain}</span>` : '');
+  const newBarContent = runningIdx > -1
+    ? `<span class="ti-key">${icon} ${keyName}</span>` +
+      `<span class="ti-next">進行中｜${tripLabels[runningIdx] || ''}</span>` +
+      `<span class="ti-remain">約 ${endTimes[runningIdx]} 收完</span>`
+    : `<span class="ti-key">${icon} ${keyName}</span>` +
+      `<span class="ti-next">下一班｜${label} ${nextTime}</span>` +
+      (remain ? `<span class="ti-remain">還有 ${remain}</span>` : '');
   if(el.innerHTML !== newBarContent){
     el.innerHTML = newBarContent;
   }
@@ -8043,6 +8166,73 @@ function preloadZoneImages(zoneKey){
   }, 300);
 }
 
+// ===== v6.00 沿線時刻/完整路線導航:依現在時間把已過的站變淡、下一站框起來,打開時自動捲過去 =====
+// 只在收運日(週三、週日停收除外)、而且下一站在 90 分鐘內才標示,其他時間維持原本樣子
+let stopsNowTimer = null, stopsNowBody = null;
+function stopTimeToMin(t){ const m = String(t||'').match(/(\d{1,2}):(\d{2})/); return m ? (+m[1])*60 + (+m[2]) : null; }
+function markStopsNow(body, autoScroll){
+  const rows = [...body.querySelectorAll('.rn-stop[data-time]')];
+  rows.forEach(r => { r.classList.remove('rn-past', 'rn-next'); const tg = r.querySelector('.rn-now-tag'); if(tg) tg.remove(); });
+  const jumpBtn = body.parentElement && body.parentElement.querySelector('.rn-jump-now');
+  if(jumpBtn) jumpBtn.classList.remove('show');
+  if(!isServiceDayToday()) return null;
+  const d = new Date(), nowMin = d.getHours()*60 + d.getMinutes();
+  let next = null;
+  for(const r of rows){
+    if(r.classList.contains('canceled')) continue;
+    const parts = r.getAttribute('data-time').split('-');
+    const arr = stopTimeToMin(parts[0]), dep = stopTimeToMin(parts[1] || parts[0]);
+    if(arr === null) continue;
+    if(dep < nowMin){ r.dataset.past = '1'; continue; }
+    if(!next) next = { row:r, arr, dep };
+  }
+  if(!next || next.arr - nowMin > 90){ rows.forEach(r => delete r.dataset.past); return null; }
+  rows.forEach(r => { if(r.dataset.past){ r.classList.add('rn-past'); delete r.dataset.past; } });
+  next.row.classList.add('rn-next');
+  const diff = next.arr - nowMin;
+  const tag = document.createElement('span');
+  tag.className = 'rn-now-tag';
+  tag.textContent = diff <= 0 ? '現在這站' : `下一站 · ${diff}分後`;
+  const addr = next.row.querySelector('.rn-stop-addr');
+  if(addr) addr.appendChild(tag);
+  if(autoScroll){
+    const top = next.row.offsetTop - body.offsetTop - 90;
+    body.scrollTop = Math.max(0, top);
+  }
+  return next.row;
+}
+function startStopsNowMarker(body, enabled){
+  stopStopsNowMarker();
+  if(!enabled) return;
+  stopsNowBody = body;
+  const hadSavedPos = body.scrollTop > 0;   // 有捲動記憶(重新整理後還原)就尊重原位置,不強制捲走
+  const nextRow = markStopsNow(body, !hadSavedPos);
+  const jumpBtn = body.parentElement.querySelector('.rn-jump-now');
+  const updateJump = () => {
+    const nr = body.querySelector('.rn-stop.rn-next');
+    if(!jumpBtn) return;
+    if(!nr){ jumpBtn.classList.remove('show'); return; }
+    const top = nr.offsetTop - body.offsetTop - body.scrollTop;
+    jumpBtn.classList.toggle('show', top < 0 || top > body.clientHeight - 40);
+  };
+  if(jumpBtn){
+    jumpBtn.onclick = () => {
+      const nr = body.querySelector('.rn-stop.rn-next');
+      if(nr) body.scrollTo({ top: Math.max(0, nr.offsetTop - body.offsetTop - 90), behavior:'smooth' });
+    };
+  }
+  body.addEventListener('scroll', updateJump, { passive:true });
+  body._nowScroll = updateJump;
+  updateJump();
+  stopsNowTimer = setInterval(() => { markStopsNow(body, false); updateJump(); }, 30000);
+}
+function stopStopsNowMarker(){
+  if(stopsNowTimer){ clearInterval(stopsNowTimer); stopsNowTimer = null; }
+  if(stopsNowBody && stopsNowBody._nowScroll){ stopsNowBody.removeEventListener('scroll', stopsNowBody._nowScroll); stopsNowBody._nowScroll = null; }
+  if(stopsNowBody){ const jb = stopsNowBody.parentElement.querySelector('.rn-jump-now'); if(jb) jb.classList.remove('show'); }
+  stopsNowBody = null;
+}
+
 function openRouteNav(zoneKey){
   preloadZoneImages(zoneKey);
   const turnsInfo = routeTurnsData[zoneKey];
@@ -8153,14 +8343,14 @@ function openRouteNav(zoneKey){
       stopNum++;
       const [time, addr, cancelNote] = stop;
       const hasRealAddr = !cancelNote && /[路街巷弄號]/.test(addr.replace(/[（(].*?[）)]/g, ''));
-      html += `<div class="rn-stop${cancelNote ? ' canceled' : ''}">
+      html += `<div class="rn-stop${cancelNote ? ' canceled' : ''}" data-time="${time || ''}">
         <span class="rn-stop-num">${stopNum}</span>
         <span class="rn-stop-body">
           <span class="rn-stop-addr">${addr}</span>
           ${time ? `<span class="rn-stop-time">${renderStopTime(time)}</span>` : ''}
           ${cancelNote ? `<span class="rn-cancel">⛔ ${cancelNote}</span>` : ''}
         </span>
-        ${hasRealAddr ? `<button class="rn-nav-btn" type="button" data-addr="${addr.replace(/"/g,'&quot;')}">🧭</button>` : ''}
+        ${hasRealAddr ? `<button class="rn-nav-btn" type="button" aria-label="用 Google 地圖導航到 ${addr.replace(/"/g,'&quot;')}" data-addr="${addr.replace(/"/g,'&quot;')}">🧭</button>` : ''}
       </div>`;
       // 這一站如果是趟次邊界,只跳過「區隊出發」(已搬到下一車車頭顯示),其餘指引(如結束調頭)照常顯示在這裡
       if(turnsByStop[stopNum]){
@@ -8208,6 +8398,7 @@ function openRouteNav(zoneKey){
   currentFontOverlayId = 'routeNavOverlay';
   applyRnFontScale(getRnFontScale());
   body.scrollTop = getSubViewScrollPos('nav', zoneKey);
+  startStopsNowMarker(body, !isSupportRoute && showText);
 
   if(showFloatMap){
     openFloatMap(zoneKey, trips.length);
@@ -8227,6 +8418,7 @@ function splitByGroup(items){
 }
 
 function closeRouteNav(){
+  stopStopsNowMarker();
   // 按✕=看完了,清掉捲動記憶(不是存)
   if(lastOpenedSubViewZone) clearSubViewScrollPos('nav', lastOpenedSubViewZone);
   document.getElementById('routeNavOverlay').classList.remove('show');
@@ -8258,14 +8450,14 @@ function openRouteStops(zoneKey){
       stopNum++;
       const [time, addr, cancelNote] = stop;
       const hasRealAddr = !cancelNote && /[路街巷弄號]/.test(addr.replace(/[（(].*?[）)]/g, ''));
-      html += `<div class="rn-stop${cancelNote ? ' canceled' : ''}">
+      html += `<div class="rn-stop${cancelNote ? ' canceled' : ''}" data-time="${time || ''}">
         <span class="rn-stop-num">${stopNum}</span>
         <span class="rn-stop-body">
           <span class="rn-stop-addr">${addr}</span>
           ${time ? `<span class="rn-stop-time">${renderStopTime(time)}</span>` : ''}
           ${cancelNote ? `<span class="rn-cancel">⛔ ${cancelNote}</span>` : ''}
         </span>
-        ${hasRealAddr ? `<button class="rn-nav-btn" type="button" data-addr="${addr.replace(/"/g,'&quot;')}">🧭</button>` : ''}
+        ${hasRealAddr ? `<button class="rn-nav-btn" type="button" aria-label="用 Google 地圖導航到 ${addr.replace(/"/g,'&quot;')}" data-addr="${addr.replace(/"/g,'&quot;')}">🧭</button>` : ''}
       </div>`;
     });
   });
@@ -8284,9 +8476,11 @@ function openRouteStops(zoneKey){
   currentFontOverlayId = 'routeStopsOverlay';
   applyRnFontScale(getRnFontScale());
   body.scrollTop = getSubViewScrollPos('stops', zoneKey);
+  startStopsNowMarker(body, true);
 }
 
 function closeRouteStops(){
+  stopStopsNowMarker();
   // 按✕=看完了,清掉捲動記憶(不是存)
   if(lastOpenedSubViewZone) clearSubViewScrollPos('stops', lastOpenedSubViewZone);
   document.getElementById('routeStopsOverlay').classList.remove('show');
@@ -9062,7 +9256,7 @@ function showUpdateBanner(){
   url.searchParams.set('openExternalBrowser', '1');
   const box = document.createElement('div');
   box.className = 'line-banner';
-  box.innerHTML = '<span class="lb-txt">⚠️ 在 LINE 裡開，路線圖、手繪圖可能打不開</span>'
+  box.innerHTML = '<span class="lb-txt">⚠️ LINE 裡圖片可能打不開</span>'
     + '<a href="' + url.href.replace(/"/g, '&quot;') + '">用瀏覽器開啟</a>'
     + '<button type="button" aria-label="關閉提示">✕</button>';
   box.querySelector('button').onclick = () => {
@@ -9112,13 +9306,37 @@ function showUpdateBanner(){
     if(!o) return null;
     return o.querySelector('[role="dialog"],[role="alertdialog"]') || o;
   }
+  // v6.00:手機「往回滑／返回鍵」= 關掉最上層的視窗,不會直接離開 App(LINE 裡尤其常見)
+  var popClosed = {}, skipPops = 0;
+  function pushDialogState(id){
+    try{ history.pushState({ dlg:id }, ''); }catch(e){}
+  }
+  function popDialogState(id){
+    if(popClosed[id]){ delete popClosed[id]; return; }   // 是「往回滑」觸發的關閉,歷史紀錄已經退過了
+    try{
+      if(history.state && history.state.dlg === id){ skipPops++; history.back(); }
+    }catch(e){}
+  }
+  window.addEventListener('popstate', function(){
+    if(skipPops > 0){ skipPops--; return; }
+    for(var i = 0; i < DIALOGS.length; i++){
+      if(DIALOGS[i].id === 'confirmModalOverlay') continue;
+      if(isOpen(DIALOGS[i].id)){
+        popClosed[DIALOGS[i].id] = true;
+        try{ DIALOGS[i].close(); }catch(err){}
+        return;
+      }
+    }
+  });
   function onOpen(id){
+    pushDialogState(id);
     var a = document.activeElement;
     returnTo[id] = (a && a !== document.body) ? a : null;
     var box = dialogBox(id);
     if(box && box.focus) box.focus({ preventScroll:true });
   }
   function onClose(id){
+    popDialogState(id);
     var t = returnTo[id];
     returnTo[id] = null;
     if(t && document.contains(t) && t.focus) t.focus({ preventScroll:true });
