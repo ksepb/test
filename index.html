@@ -60,6 +60,15 @@
     --note:#b38ceb;
     --storm-rgb:230,90,90;      /* 紅:雷雨、取消 */
     --storm:#e65a5a;
+      /* v6.03 顏色規範:淺色文字版的語意色(深色底上用),改顏色只要改這裡 */
+    --on-accent:#12160e;        /* 綠色底上的深色字(選到的按鈕、下一站標籤) */
+    --note-text:#c9a8ef;        /* 紫:個人備註文字 */
+    --warn-text:#f4b877;        /* 橘:提醒文字 */
+    --storm-text:#f19a9a;       /* 紅:雷雨、取消文字 */
+    --info-text:#9cc4ee;        /* 藍:下雨、資訊文字 */
+    --turn-text:#c9b896;        /* 一般轉彎說明 */
+    --turn-line:#a8935f;
+    --arrive:#9bc25c;           /* 到達時間的綠 */
   }
   *{box-sizing:border-box;}
   html{touch-action:manipulation;}
@@ -135,12 +144,12 @@
     display:flex; align-items:center; gap:8px;
     margin:6px 0 10px; padding:10px 10px 10px 12px;
     border-radius:12px; border:1px solid rgba(var(--heat-rgb),0.55); background:rgba(var(--heat-rgb),0.12);
-    color:#f4b877; font-size:14px; font-weight:700; line-height:1.5;
+    color:var(--warn-text); font-size:14px; font-weight:700; line-height:1.5;
   }
   .line-banner .lb-txt{flex:1; min-width:0;}
   .line-banner a{
     flex:none; padding:7px 11px; border-radius:999px; text-decoration:none; white-space:nowrap;
-    background:var(--accent); color:#12160e; font-weight:800; font-size:14px;
+    background:var(--accent); color:var(--on-accent); font-weight:800; font-size:14px;
   }
   .line-banner button{
     flex:none; width:30px; height:30px; border-radius:50%; padding:0;
@@ -159,7 +168,7 @@
     background:linear-gradient(135deg, var(--accent-dim), #3f5621);
     border:1px solid rgba(var(--accent-rgb),0.4);
     border-radius:24px;
-    color:#f3f5ed;
+    color:var(--text);
     font-size:13.5px;
     font-weight:600;
     box-shadow:0 6px 18px rgba(0,0,0,0.45);
@@ -169,7 +178,7 @@
   .update-banner button{
     background:rgba(255,255,255,0.18);
     border:1px solid rgba(255,255,255,0.4);
-    color:#f3f5ed;
+    color:var(--text);
     padding:6px 13px;
     border-radius:16px;
     font-size:13px;
@@ -201,7 +210,7 @@
     border-radius:10px;
     padding:10px 0 8px;
     min-height:52px;
-    font-size:11.5px;
+    font-size:12.5px;
     letter-spacing:0;
     white-space:nowrap;
     font-weight:600;
@@ -274,7 +283,7 @@
   .route-btn:active{transform:scale(0.94);}
   .route-btn.active{
     background:linear-gradient(135deg, var(--accent), #7cb52f);
-    color:#161a13;
+    color:var(--bg);
     border-color:var(--accent);
     box-shadow:0 4px 16px rgba(var(--accent-rgb),0.35);
   }
@@ -321,7 +330,7 @@
     flex-shrink:0;
   }
   .edit-btn.on{
-    color:#161a13;
+    color:var(--bg);
     background:var(--accent);
     border-color:var(--accent);
     font-weight:700;
@@ -330,7 +339,7 @@
     font-size:20px;
     font-weight:700;
     font-variant-numeric:tabular-nums;
-    background:#11150e;
+    background:var(--on-accent);
     color:var(--text);
     border:1px solid var(--accent);
     border-radius:8px;
@@ -346,7 +355,7 @@
     width:108px;
     height:37px;   /* 跟原本輸入框同高,編輯模式版面不位移 */
     box-sizing:border-box;
-    background:#11150e;
+    background:var(--on-accent);
     border:1px solid var(--accent);
     border-radius:8px;
     padding:4px 2px;
@@ -370,7 +379,7 @@
     cursor:pointer;
   }
   .time-sel select:focus-visible{outline:2px solid var(--accent); outline-offset:1px;}
-  .time-sel option{background:#11150e; color:var(--text);}
+  .time-sel option{background:var(--on-accent); color:var(--text);}
   .time-sel .ts-colon{font-size:20px; font-weight:700; color:var(--text); padding:0 1px;}
   .depart.edited, .arrive.edited{
     border-bottom:2px dashed var(--warn);
@@ -469,7 +478,7 @@
     gap:2px;
   }
   .time-edit-label{
-    font-size:11px;
+    font-size:12px;
     font-weight:600;
     color:var(--text-dim);
   }
@@ -484,7 +493,7 @@
   }
   .arrow{color:var(--text-dim);font-size:16px;}
   .depart{color:var(--text);}
-  .arrive{color:#9bc25c;font-size:18px;}
+  .arrive{color:var(--arrive);font-size:18px;}
   .note{
     font-size:14px;
     color:var(--warn);
@@ -619,7 +628,7 @@
     border:1px solid transparent;
   }
   .stat-pill.stat-start{
-    color:#9cc4ee;
+    color:var(--info-text);
     background:rgba(var(--info-rgb),0.12);
     border-color:rgba(var(--info-rgb),0.35);
   }
@@ -649,7 +658,7 @@
     gap:4px;
     font-size:12px;
     color:var(--text-dim);
-    background:#161a13;
+    background:var(--bg);
     border:1px solid var(--line);
     border-radius:20px;
     padding:4px 10px;
@@ -679,7 +688,7 @@
     border-top:1px dashed var(--line);
   }
   .loc-group-title{
-    font-size:11px;
+    font-size:12px;
     color:var(--accent);
     letter-spacing:1.5px;
     margin-bottom:5px;
@@ -815,7 +824,7 @@
   .pn-icon{flex:none;font-size:13px;line-height:1.5;}
   .pn-text{
     flex:1;
-    color:#c9a8ef;
+    color:var(--note-text);
     font-size:15px;
     line-height:1.5;
     white-space:pre-wrap;
@@ -836,7 +845,7 @@
     flex:none;
     background:none;
     border:none;
-    color:#c9a8ef;
+    color:var(--note-text);
     font-size:14px;
     font-weight:700;
     cursor:pointer;
@@ -850,12 +859,11 @@
     background:rgba(var(--note-rgb),0.08);
     border:1px solid rgba(var(--note-rgb),0.3);
     border-radius:10px;
-    color:#b29ccf;
-    font-size:11px;
+    color:var(--note-text);
+    font-size:12.5px;
     font-weight:700;
-    opacity:0.85;
     cursor:pointer;
-    padding:3px 8px;
+    padding:3px 6px;
     white-space:nowrap;
   }
   .pn-icon-btn:active{opacity:0.5;}
@@ -892,7 +900,7 @@
     border:1px solid;
   }
   .pn-save-btn{
-    color:#141810;
+    color:var(--on-accent);
     background:var(--note);
     border-color:var(--note);
   }
@@ -910,7 +918,7 @@
   .end-point-tag{
     display:inline;
     white-space:nowrap;
-    font-size:11px;
+    font-size:12px;
     font-weight:700;
     color:#8fa8c2;
     background:rgba(var(--info-rgb),0.1);
@@ -1065,7 +1073,7 @@
     flex:none;
     min-width:34px;
     text-align:center;
-    font-size:11px;
+    font-size:12px;
     color:var(--text-dim);
     font-variant-numeric:tabular-nums;
   }
@@ -1073,7 +1081,7 @@
     flex:none;
     min-width:34px;
     text-align:center;
-    font-size:11px;
+    font-size:12px;
     color:var(--text-dim);
     font-variant-numeric:tabular-nums;
   }
@@ -1113,9 +1121,9 @@
     font-size:calc(17px * var(--rn-scale));
     font-weight:600;
     line-height:1.6;
-    color:#c9b896;
+    color:var(--turn-text);
     background:rgba(201,184,150,0.1);
-    border-left:3px solid #a8935f;
+    border-left:3px solid var(--turn-line);
     border-radius:8px;
     margin:10px 0;
   }
@@ -1125,9 +1133,9 @@
     border-left-color:#f0a84f;
   }
   .rn-turn.rn-turn-left{
-    color:#c9b896;
+    color:var(--turn-text);
     background:rgba(201,184,150,0.1);
-    border-left-color:#a8935f;
+    border-left-color:var(--turn-line);
   }
   .rn-turn.rn-turn-uturn{
     color:#7a9cc6;
@@ -1484,7 +1492,7 @@
     font-size:14px;
     font-weight:800;
     letter-spacing:0.5px;
-    color:#9cc4ee;
+    color:var(--info-text);
     background:rgba(var(--info-rgb),0.08);
     border:1px solid rgba(var(--info-rgb),0.25);
     border-radius:9px;
@@ -1656,7 +1664,7 @@
   .reset-btn:active{opacity:0.6;transform:scale(0.96);}
   .addr-row.done .addr-check{
     background:linear-gradient(135deg, var(--accent), #7cb52f);
-    color:#161a13;
+    color:var(--bg);
     box-shadow:0 0 10px rgba(var(--accent-rgb),0.4);
   }
   .addr-row.done .addr-line-main,
@@ -1715,7 +1723,7 @@
   .addr-badge{
     display:block; width:fit-content; max-width:100%; margin-top:4px; padding:2px 8px; border-radius:10px;
     font-size:calc(12.5px * var(--addr-scale, 1)); font-weight:700; line-height:1.4;
-    color:#f4b877; background:rgba(var(--heat-rgb),0.14); border:1px solid rgba(var(--heat-rgb),0.45);
+    color:var(--warn-text); background:rgba(var(--heat-rgb),0.14); border:1px solid rgba(var(--heat-rgb),0.45);
   }
   .addr-row.done .addr-badge{opacity:.5;}
   /* 已取消的點:預設刪除線＋變淡,標記改紅色 */
@@ -1723,10 +1731,10 @@
   .addr-row.canceled .addr-line-note,
   .addr-row.canceled .addr-time{color:var(--text-dim); text-decoration:line-through; opacity:.75;}
   .addr-row.canceled .addr-check{opacity:.5;}
-  .addr-badge.cancel{color:#f19a9a; background:rgba(var(--storm-rgb),0.12); border-color:rgba(var(--storm-rgb),0.5);}
+  .addr-badge.cancel{color:var(--storm-text); background:rgba(var(--storm-rgb),0.12); border-color:rgba(var(--storm-rgb),0.5);}
   .rn-stop.canceled .rn-stop-addr{text-decoration:line-through; color:var(--text-dim);}
   .rn-stop.canceled .rn-stop-num{opacity:.5;}
-  .rn-cancel{display:inline-block; margin-top:3px; font-size:13px; font-weight:700; color:#f19a9a;}
+  .rn-cancel{display:inline-block; margin-top:3px; font-size:13px; font-weight:700; color:var(--storm-text);}
   .addr-time{
     display:inline-block;
     align-self:flex-start;
@@ -1793,7 +1801,7 @@
     background:rgba(var(--accent-rgb),0.08);
     border:1px solid rgba(var(--accent-rgb),0.25);
     color:var(--text-dim);
-    font-size:11px;
+    font-size:12px;
     line-height:1;
     padding:3px 6px;
     min-height:24px;   /* 只加高到 24px(WCAG 最低標準);寬度維持原本約 25px,不吃掉地址欄的寬度 */
@@ -2062,7 +2070,7 @@
     flex-wrap:wrap;
     font-size:13.5px;
     line-height:1.5;
-    color:#9cc4ee;
+    color:var(--info-text);
     background:rgba(var(--info-rgb),0.08);
     border:1px solid rgba(var(--info-rgb),0.3);
     border-radius:9px;
@@ -2073,7 +2081,7 @@
     display:inline-flex;
     align-items:center;
     gap:3px;
-    color:#141810;
+    color:var(--on-accent);
     background:var(--accent);
     font-weight:800;
     padding:4px 10px;
@@ -2178,9 +2186,9 @@
     margin-left:6px;
     padding:1px 7px;
     background:var(--accent);
-    color:#141810;
+    color:var(--on-accent);
     border-radius:7px;
-    font-size:11px;
+    font-size:12px;
     font-weight:800;
     letter-spacing:1px;
     vertical-align:1px;
@@ -2236,7 +2244,7 @@
   .wx-bar .wx-rain.hi{color:#4fb3ff; text-shadow:0 0 12px rgba(79,179,255,0.55);}
   /* 體感 36° 以上轉橘色(跟高溫提醒同色) */
   .wx-bar .wx-tfeel.hot{color:var(--heat);}
-  .wx-bar .wx-tfeel{font-size:11.5px; font-weight:700; color:var(--text-dim); line-height:1; white-space:nowrap;}
+  .wx-bar .wx-tfeel{font-size:12px; font-weight:700; color:var(--text-dim); line-height:1; white-space:nowrap;}
   .wx-bar .wx-mid{display:flex; flex-direction:column; align-items:center; text-align:center; gap:3px; min-width:0; flex:1;}
   .wx-bar .wx-mid > span{max-width:100%;}
   /* 離線時間字比較長(例如「離線 · 10/5 08:17」):很窄的手機上允許換第二行,不會被切掉 */
@@ -2294,9 +2302,9 @@
   }
   .wx-alert{margin-top:8px;}
   .wx-card-alert{margin:0 0 14px;}  /* 路線卡片裡:「已切換至同組」提示下面、第一趟上面 */
-  .wx-alert.rain, .wx-card-alert.rain{background:rgba(95,165,230,0.12); border:1px solid rgba(95,165,230,0.45); color:#9ccdf3;}
-  .wx-alert.heat, .wx-card-alert.heat{background:rgba(var(--heat-rgb),0.12); border:1px solid rgba(var(--heat-rgb),0.45); color:#f4b877;}
-  .wx-alert.storm, .wx-card-alert.storm{background:rgba(var(--storm-rgb),0.12); border:1px solid rgba(var(--storm-rgb),0.5); color:#f19a9a;}
+  .wx-alert.rain, .wx-card-alert.rain{background:rgba(95,165,230,0.12); border:1px solid rgba(95,165,230,0.45); color:var(--info-text);}
+  .wx-alert.heat, .wx-card-alert.heat{background:rgba(var(--heat-rgb),0.12); border:1px solid rgba(var(--heat-rgb),0.45); color:var(--warn-text);}
+  .wx-alert.storm, .wx-card-alert.storm{background:rgba(var(--storm-rgb),0.12); border:1px solid rgba(var(--storm-rgb),0.5); color:var(--storm-text);}
   .wx-alert-txt{flex:1; min-width:0;}
   .wx-alert-txt div + div{margin-top:4px;}
   .wx-card-alert .wx-num{font-size:18px; font-weight:800;}
@@ -2336,9 +2344,9 @@
     display:block; width:100%; min-height:120px; margin:0 0 10px;
     padding:18px 12px; border-radius:12px;
     border:1.5px dashed rgba(var(--heat-rgb),0.6); background:rgba(var(--heat-rgb),0.08);
-    color:#f4b877; font:inherit; font-size:15px; line-height:1.6; text-align:center; cursor:pointer;
+    color:var(--warn-text); font:inherit; font-size:15px; line-height:1.6; text-align:center; cursor:pointer;
   }
-  .img-retry b{display:inline-block; margin-top:6px; padding:6px 14px; border-radius:999px; background:var(--accent); color:#12160e; font-size:15px;}
+  .img-retry b{display:inline-block; margin-top:6px; padding:6px 14px; border-radius:999px; background:var(--accent); color:var(--on-accent); font-size:15px;}
   .img-retry:active{opacity:.8;}
   @media (prefers-reduced-motion: reduce){ .img-loading{animation:none !important;} }
 
@@ -2441,14 +2449,14 @@
   .trip > .wx-line{font-size:16px; font-weight:700; line-height:1.45;}
   /* 已過站的那一趟:「記得帶雨具」這類提醒已經沒意義,收起來,只留色條跟靜態圖示 */
   .trip.tp-past > .wx-line, .trip.wx-past > .wx-line{display:none;}
-  .trip > .wx-line.rain{color:#9ccdf3;}
-  .trip > .wx-line.storm{color:#f19a9a;}
+  .trip > .wx-line.rain{color:var(--info-text);}
+  .trip > .wx-line.storm{color:var(--storm-text);}
   .wx-lg{display:none;}
   .wx-lg-bar{display:inline-block; width:4px; height:11px; border-radius:2px; margin-right:4px; vertical-align:-1px;}
 
-  .wx-chip.rain{color:#9ccdf3; border-color:rgba(95,165,230,0.5); background:rgba(95,165,230,0.1);}
-  .wx-chip.heat{color:#f4b877; border-color:rgba(var(--heat-rgb),0.5); background:rgba(var(--heat-rgb),0.1);}
-  .wx-chip.storm{color:#f19a9a; border-color:rgba(var(--storm-rgb),0.55); background:rgba(var(--storm-rgb),0.1);}
+  .wx-chip.rain{color:var(--info-text); border-color:rgba(95,165,230,0.5); background:rgba(95,165,230,0.1);}
+  .wx-chip.heat{color:var(--warn-text); border-color:rgba(var(--heat-rgb),0.5); background:rgba(var(--heat-rgb),0.1);}
+  .wx-chip.storm{color:var(--storm-text); border-color:rgba(var(--storm-rgb),0.55); background:rgba(var(--storm-rgb),0.1);}
   .time-pair > .wx-chip{margin-left:4px;}
   @media (prefers-reduced-motion: reduce){ .wx-bar .wx-caret{transition:none;} }
 
@@ -2497,32 +2505,62 @@
     background:rgba(var(--accent-rgb),0.10);
     box-shadow:0 0 0 1px rgba(var(--accent-rgb),0.85) inset;
   }
-  .rn-stop.rn-next .rn-stop-num{background:var(--accent); color:#12160e;}
+  .rn-stop.rn-next .rn-stop-num{background:var(--accent); color:var(--on-accent);}
   .rn-now-tag{
     display:inline-block; margin-left:6px; padding:2px 8px; border-radius:999px;
-    background:var(--accent); color:#12160e;
+    background:var(--accent); color:var(--on-accent);
     font-size:calc(13px * var(--rn-scale)); font-weight:800; white-space:nowrap; vertical-align:1px;
   }
   /* 每站時間:原本用了「備註」的紫色,改成中性色,紫色只留給個人備註 */
   .stop-time-tag{color:#dfe7d2; background:rgba(255,255,255,0.08);}
   /* ===== v6.00 主畫面:正在收運的那一車顯示「進行中」(不是一出車就「已過站」) ===== */
-  .trip.tp-running .trip-label::after{content:'進行中'; display:block; font-size:11.5px; font-weight:700; line-height:1.35; color:var(--accent); white-space:pre; margin-top:2px;}
+  .trip.tp-running .trip-label::after{content:'進行中'; display:block; font-size:12px; font-weight:700; line-height:1.35; color:var(--accent); white-space:pre; margin-top:2px;}
   .trip.tp-running .trip-label::before{top:10px;}
   .trip.tp-running .trip-label[data-end]::after{content:'進行中\A至 ' attr(data-end);}
-  /* ===== v6.00 選好區之後,區號收成一行,結果往上移 ===== */
-  .picker.collapsed .route-btn:not(.active):not(.partner){display:none;}
-  .picker.collapsed .picker-group-label{display:none;}
+  /* v6.01 不是今天收的區/停收日:卡片上方一行提示 */
+  .offday-note{
+    margin:4px 0 10px; padding:9px 12px; border-radius:10px;
+    background:rgba(255,255,255,0.05); border:1px solid var(--line);
+    color:var(--text); font-size:15px; font-weight:600; line-height:1.5;
+  }
+  .offday-note[hidden]{display:none;}
+  /* v6.01 轉彎說明:不再用橘色(橘色留給警告),左右轉都用中性色,靠大箭頭分辨 */
+  .rn-turn.rn-turn-right, .rn-turn.rn-turn-left{
+    color:#e6eadf; background:rgba(255,255,255,0.06); border-left-color:#8d9884;
+  }
+  .rn-turn-arrow{font-size:1.35em; line-height:1; font-weight:800;}
+  /* v6.01 已過站變淡:0.42 太淡,太陽下看不清楚 */
+  .rn-stop.rn-past{opacity:0.6;}
+  /* v6.01 選好區之後,隱藏「選擇底部車輛類型…」說明,讓結果往上 */
+  body:has(#card.show) .sub{display:none;}
+  /* ===== v6.03 按鈕觸控範圍:至少 44px(外觀盡量不變,用最小高度或看不見的感應區) ===== */
+  .line-banner button{width:36px; height:36px; position:relative;}
+  .line-banner button::after{content:''; position:absolute; inset:-5px;}
+  .line-banner a{padding:11px 12px;}
+  .wx-bar{min-height:44px;}
+  .kitchen-toggle, .ol-toggle, .backup-entry, .rn-toggle-btn{min-height:44px;}
+  .route-nav-close{position:relative;}
+  .route-nav-close::after{content:''; position:absolute; inset:-3px; border-radius:50%;}
+  .rn-font-btn{position:relative;}
+  .rn-font-btn::after{content:''; position:absolute; left:0; right:0; top:-4px; bottom:-4px;}
+  /* v6.03 320px 小手機:全螢幕頁標題不會折成三行(縮小／放大中間的百分比先藏起來) */
+  @media (max-width:340px){
+    .route-nav-head .rn-title{font-size:14.5px; line-height:1.3;}
+    .rn-font-pct, .rn-img-pct{display:none;}
+    .rn-font-btn{padding:0 8px;}
+  }
+  /* v6.03 「+備註」字放大後,375px 手機會被擠到下一行;按鈕縮窄,370px 以下拿掉「+」,360px 也排得下 */
+  @media (max-width:370px){
+    .pn-icon-btn{padding:3px 5px;}
+    .pn-icon-btn .pn-plus{display:none;}
+    .trip-toprow{column-gap:6px;}
+  }
   /* 三配套/日配套 圖示:像日曆上的星期幾,取代原本看不出意思的色塊 */
   .day-ico{
     display:inline-flex; align-items:center; justify-content:center;
     width:1.3em; height:1.3em; border:1.5px solid currentColor; border-radius:5px;
     font-size:0.78em; font-weight:800; line-height:1; vertical-align:middle;
   }
-  .picker-toggle{
-    background:transparent; border:1px dashed var(--line); color:var(--text-dim);
-    border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; min-height:51px;
-  }
-  .picker:not(.collapsed) .picker-toggle{grid-column:1 / -1; min-height:44px;}
 
 </style>
 </head>
@@ -2551,6 +2589,7 @@
     </div>
     <div class="day-switch-note" id="daySwitchNote" style="display:none;"></div>
     <div class="wx-card-alert" id="wxCardAlert" style="display:none;"></div>
+    <div class="offday-note" id="offDayNote" hidden></div>
     <div id="trips"></div>
     <div class="legend" id="legendBox">
       <span><span class="dot" style="background:transparent;box-shadow:inset 0 0 0 2px var(--text)"></span>出車</span>
@@ -2561,7 +2600,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v6.00 ｜ 更新日期：2026.11.17</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v6.05 ｜ 更新日期：2026.11.18</div>
   <div class="site-footer" style="margin-top:4px;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <button type="button" class="backup-entry" id="backupEntry">💾 備份與還原</button>
@@ -5958,34 +5997,10 @@ function updateSearchVisibility(){
   searchEl.style.display = (cfg && cfg.type === 'address') ? '' : 'none';
 }
 
-// v6.00:選好區之後區號收成一行(只留選到的區＋同組),點「換區」再展開,讓結果往上移
-function setPickerCollapsed(on){
-  const picker = document.getElementById('picker');
-  if(!picker) return;
-  let tg = picker.querySelector('.picker-toggle');
-  const hasSel = !!picker.querySelector('.route-btn.active');
-  if(!hasSel || categories[currentCategory].type === 'address'){
-    picker.classList.remove('collapsed');
-    if(tg) tg.remove();
-    return;
-  }
-  if(!tg){
-    tg = document.createElement('button');
-    tg.type = 'button';
-    tg.className = 'picker-toggle';
-    tg.onclick = () => setPickerCollapsed(!picker.classList.contains('collapsed'));
-    picker.appendChild(tg);
-  }
-  picker.classList.toggle('collapsed', on);
-  tg.textContent = on ? '換區 ▾' : '收起 ▴';
-  tg.setAttribute('aria-expanded', on ? 'false' : 'true');
-}
-
 function renderPicker(){
   const cfg = categories[currentCategory];
   const picker = document.getElementById('picker');
   picker.innerHTML = '';
-  picker.classList.remove('collapsed');
   const searchEl = document.getElementById('searchBox');
   const q = (searchEl && searchEl.value || '').trim();
   const fullOrder = cfg.order;
@@ -6005,7 +6020,16 @@ function renderPicker(){
     btn.className = 'route-btn';
     btn.textContent = label || key;
     btn.dataset.key = key;
-    btn.onclick = ()=> selectItem(key, btn);
+    btn.onclick = ()=>{
+      selectItem(key, btn);
+      // v6.01:結果在畫面下半部才捲上來(區號照樣全部顯示,往上滑就回得去)
+      setTimeout(()=>{
+        const ct = document.getElementById('cardTitle');
+        if(ct && ct.getBoundingClientRect().top > window.innerHeight * 0.45){
+          ct.scrollIntoView({ behavior:'smooth', block:'start' });
+        }
+      }, 60);
+    };
     picker.appendChild(btn);
   };
 
@@ -6774,7 +6798,6 @@ function selectItem(key, btn){
 
   const card = document.getElementById('card');
   card.classList.add('show');
-  setPickerCollapsed(categories[currentCategory].type !== 'address');
 
   const cfg = categories[currentCategory];
   const isRoute = cfg.order === truckOrder;
@@ -6918,7 +6941,7 @@ function selectItem(key, btn){
         <div class="trip-toprow">
           <div class="trip-label">${labels[i] || '第' + (i + 1) + '車'}</div>
           <div class="time-pair">${timeHTML}</div>
-          ${(currentCategory === '回收車' || currentCategory === '垃圾車') ? `<button class="pn-icon-btn" type="button" data-pn-key="personalNote:${currentCategory}:${key}:${i}">+備註</button>` : ''}
+          ${(currentCategory === '回收車' || currentCategory === '垃圾車') ? `<button class="pn-icon-btn" type="button" data-pn-key="personalNote:${currentCategory}:${key}:${i}" aria-label="新增備註"><span class="pn-plus">+</span>備註</button>` : ''}
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
           ${(!Array.isArray(note) && note) ? `<div class="note ${img ? 'note-link' : ''}">${note}</div>` : ''}
@@ -7493,10 +7516,32 @@ function getTripEndTimes(key){
   if(currentCategory === '回收車' && recycleTripEndTimes[key]) return recycleTripEndTimes[key];
   return null;
 }
-// 星期三、星期日停收:這兩天不顯示「進行中」「下一站」
+// 星期三、星期日停收:這兩天不顯示「進行中」「下一站」(沿線時刻是垃圾車路線,用這個判斷)
 function isServiceDayToday(){
   const d = new Date().getDay();
   return d !== 0 && d !== 3;
+}
+// v6.01:這個車種、這一區今天有沒有收。有收回傳 null;沒收回傳提示文字
+// 垃圾車:星期三、日停收。回收車:一四區星期一、四收,二五區星期二、五收(星期三、六、日不收)。其他車種不判斷
+const WEEK_NAMES = '日一二三四五六';
+function offDayInfo(key){
+  if(!key) return null;
+  let days = null, who = '';
+  if(currentCategory === '垃圾車'){ days = [1,2,4,5,6]; }
+  else if(currentCategory === '回收車'){
+    const g = zoneDayGroup(key);
+    if(g === 'monThu') days = [1,4];
+    else if(g === 'tueFri') days = [2,5];
+    who = '這區';
+  }
+  if(!days) return null;
+  const d = new Date().getDay();
+  if(days.includes(d)) return null;
+  let k = 1; while(k < 8 && !days.includes((d + k) % 7)) k++;
+  const nd = (d + k) % 7;
+  const nextTxt = k === 1 ? `明天（星期${WEEK_NAMES[nd]}）` : `星期${WEEK_NAMES[nd]}`;
+  const lead = who ? `這區星期${days.map(x => WEEK_NAMES[x]).join('、')}收，今天沒收` : `今天星期${WEEK_NAMES[d]}停收`;
+  return { text: `${lead}，下面是${nextTxt}的時間`, short: `今天沒收｜下次 ${k === 1 ? '明天' : '星期' + WEEK_NAMES[nd]}` };
 }
 
 function parseTimeToday(hhmm, baseDate){
@@ -7557,13 +7602,21 @@ function updateCountdown(){
   // v6.00:出車後到最後一站收完之前算「進行中」,不再一出車就顯示已過站
   const endTimes = getTripEndTimes(currentSelectedKey);
   let runningIdx = -1;
-  if(endTimes && isServiceDayToday()){
+  const offInfo = offDayInfo(currentSelectedKey);
+  const offNote = document.getElementById('offDayNote');
+  if(offNote){
+    const t = offInfo ? '📅 ' + offInfo.text : '';
+    if(offNote.textContent !== t){ offNote.textContent = t; offNote.hidden = !offInfo; }
+  }
+  if(endTimes && isServiceDayToday() && !offInfo){
     for(let i = 0; i < times.length; i++){
       const d0 = parseTimeToday(times[i], now), d1 = parseTimeToday(endTimes[i], now);
       if(d0 && d1 && d0 <= now && now < d1){ runningIdx = i; break; }
     }
   }
-  const stateKey = nextIdx + ':' + runningIdx;
+  // 今天這區沒收:下面顯示的是下次收運日的時間,三車都不算已過,第一車當作下一班
+  const shownNextIdx = offInfo ? 0 : nextIdx;
+  const stateKey = shownNextIdx + ':' + runningIdx + ':' + (offInfo ? 'off' : '');
   if(lastNextIdx !== stateKey || lastWokenSize !== wokenTrips.size){
     lastNextIdx = stateKey;
     lastWokenSize = wokenTrips.size;
@@ -7578,11 +7631,11 @@ function updateCountdown(){
         return;
       }
       if(wokenTrips.has(idx)) return; // 這一趟已被點擊喚醒過,維持正常亮度,不重新變暗
-      if(nextIdx === -1){
+      if(shownNextIdx === -1){
         row.classList.add('tp-past');
-      } else if(idx < nextIdx){
+      } else if(idx < shownNextIdx){
         row.classList.add('tp-past');
-      } else if(idx === nextIdx && runningIdx === -1){
+      } else if(idx === shownNextIdx && runningIdx === -1){
         row.classList.add('tp-active');
       }
     });
@@ -7595,7 +7648,11 @@ function updateCountdown(){
   const mins = Math.max(0, Math.round(diffMs / 60000));
   const remain = isNaN(mins) ? '' :
     (mins >= 60 ? `${Math.floor(mins/60)}時${String(mins%60).padStart(2,'0')}分` : `${mins}分`);
-  const newBarContent = runningIdx > -1
+  const newBarContent = offInfo
+    ? `<span class="ti-key">${icon} ${keyName}</span>` +
+      `<span class="ti-next">${offInfo.short}</span>` +
+      `<span class="ti-remain">第一車 ${times[0]}</span>`
+    : runningIdx > -1
     ? `<span class="ti-key">${icon} ${keyName}</span>` +
       `<span class="ti-next">進行中｜${tripLabels[runningIdx] || ''}</span>` +
       `<span class="ti-remain">約 ${endTimes[runningIdx]} 收完</span>`
@@ -7771,7 +7828,7 @@ document.getElementById('doImportBtn').onclick = ()=>{
 
 // ===== 清除所有本機資料:雙重確認,清除前引導先備份 =====
 const CLEAR_PREFIXES = ['timeOverride:', 'addrOrder:', 'addrDone:', 'lastItem:', 'scrollPos:', 'personalNote:', 'addrHidden:', 'addrCustom:', 'lastSubView:', 'subViewScroll:', 'lastTask:', 'wxDismiss:', 'recycleRotation', 'toastSeen:'];
-const CLEAR_EXACT_KEYS = ['lastCategory', 'wxCache'];
+const CLEAR_EXACT_KEYS = ['lastCategory', 'wxCache', 'lineBannerOff'];
 
 document.getElementById('clearDataEntry').onclick = ()=>{
   document.getElementById('clearDataOverlay').classList.add('show');
@@ -8293,7 +8350,7 @@ function openRouteNav(zoneKey){
     const isUturn = text.includes('大迴轉');
     const cls = isUturn ? ' rn-turn-uturn' : (isRight ? ' rn-turn-right' : (isLeft ? ' rn-turn-left' : ''));
     const icon = isUturn ? '↩' : (isRight ? '↱' : (isLeft ? '↰' : '🔄'));
-    return `<div class="rn-turn${cls}">${icon} ${text}</div>`;
+    return `<div class="rn-turn${cls}"><span class="rn-turn-arrow" aria-hidden="true">${icon}</span> ${text}</div>`;
   };
 
   // 車次地圖(routeTripMapData)只有部分區有拍/繪製,沒有的話不顯示地圖開關,避免按了沒反應
@@ -9251,7 +9308,7 @@ function showUpdateBanner(){
 // 頂端提示「用瀏覽器開啟」;按下去 LINE 會改用手機的 Safari / Chrome 開(openExternalBrowser=1 是 LINE 官方參數)
 (function(){
   if(!/\bLine\//i.test(navigator.userAgent)) return;
-  try{ if(sessionStorage.getItem('lineBannerOff')) return; }catch(e){}
+  try{ if(sessionStorage.getItem('lineBannerOff') || localStorage.getItem('lineBannerOff')) return; }catch(e){}
   const url = new URL(location.href);
   url.searchParams.set('openExternalBrowser', '1');
   const box = document.createElement('div');
@@ -9261,7 +9318,7 @@ function showUpdateBanner(){
     + '<button type="button" aria-label="關閉提示">✕</button>';
   box.querySelector('button').onclick = () => {
     box.remove();
-    try{ sessionStorage.setItem('lineBannerOff', '1'); }catch(e){}
+    try{ sessionStorage.setItem('lineBannerOff', '1'); localStorage.setItem('lineBannerOff', '1'); }catch(e){}
   };
   const h1 = document.querySelector('h1');
   if(h1) h1.insertAdjacentElement('afterend', box);
