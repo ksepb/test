@@ -2517,16 +2517,10 @@
   .trip.tp-running .trip-label::after{content:'進行中'; display:block; font-size:12px; font-weight:700; line-height:1.35; color:var(--accent); white-space:pre; margin-top:2px;}
   .trip.tp-running .trip-label::before{top:10px;}
   .trip.tp-running .trip-label[data-end]::after{content:'進行中\A至 ' attr(data-end);}
-  /* v6.01 不是今天收的區/停收日:卡片上方一行提示 */
-  .offday-note{
-    margin:4px 0 10px; padding:9px 12px; border-radius:10px;
-    background:rgba(255,255,255,0.05); border:1px solid var(--line);
-    color:var(--text); font-size:15px; font-weight:600; line-height:1.5;
-  }
-  .offday-note[hidden]{display:none;}
   /* v6.01 轉彎說明:不再用橘色(橘色留給警告),左右轉都用中性色,靠大箭頭分辨 */
+  /* v6.06 轉彎說明用淡卡其色,跟白色的站點地址分得開(不用橘色,橘色留給警告) */
   .rn-turn.rn-turn-right, .rn-turn.rn-turn-left{
-    color:#e6eadf; background:rgba(255,255,255,0.06); border-left-color:#8d9884;
+    color:var(--turn-text); background:rgba(201,184,150,0.10); border-left-color:var(--turn-line);
   }
   .rn-turn-arrow{font-size:1.35em; line-height:1; font-weight:800;}
   /* v6.01 已過站變淡:0.42 太淡,太陽下看不清楚 */
@@ -2555,6 +2549,21 @@
     .pn-icon-btn .pn-plus{display:none;}
     .trip-toprow{column-gap:6px;}
   }
+  /* v6.08 天氣:右邊降雨上面一行小字「出車／明天」;提醒框每一行用自己的顏色;高溫那一車也有一行字 */
+  .wx-bar .wx-rain-col{display:inline-flex; flex-direction:column; align-items:flex-start; line-height:1.05;}
+  .wx-bar .wx-rain-lbl{font-size:12px; font-weight:700; color:var(--text-dim); letter-spacing:1px;}
+  .wx-al-line.storm{color:var(--storm-text);}
+  .wx-al-line.rain{color:var(--info-text);}
+  .wx-al-line.heat{color:var(--warn-text);}
+  .trip > .wx-line.heat{color:var(--warn-text);}
+  /* v6.09 天氣:頂部有雷雨的紅色 ⚡、舊資料橘色、✕ 感應範圍 44px、逐時預報分色＋雷雨時段紅色上框 */
+  .wx-bar .wx-bolt{color:var(--storm); margin-left:2px; font-size:13px;}
+  .wx-bar .wx-upd.wx-old{color:var(--warn-text);}
+  .wx-alert-x{position:relative;}
+  .wx-alert-x::after{content:''; position:absolute; inset:-6px; border-radius:50%;}
+  .wx-h .wx-h-r.mid{color:#9dbad3;}
+  .wx-h .wx-h-r.hi{color:#4fb3ff; font-weight:800;}
+  .wx-h.storm{box-shadow:inset 0 3px 0 var(--storm);}
   /* 三配套/日配套 圖示:像日曆上的星期幾,取代原本看不出意思的色塊 */
   .day-ico{
     display:inline-flex; align-items:center; justify-content:center;
@@ -2589,7 +2598,6 @@
     </div>
     <div class="day-switch-note" id="daySwitchNote" style="display:none;"></div>
     <div class="wx-card-alert" id="wxCardAlert" style="display:none;"></div>
-    <div class="offday-note" id="offDayNote" hidden></div>
     <div id="trips"></div>
     <div class="legend" id="legendBox">
       <span><span class="dot" style="background:transparent;box-shadow:inset 0 0 0 2px var(--text)"></span>出車</span>
@@ -2600,7 +2608,7 @@
     </div>
   </div>
 
-  <div class="site-footer">製作維護：清運班-振瑋 ｜ v6.05 ｜ 更新日期：2026.11.18</div>
+  <div class="site-footer">製作維護：清運班-振瑋 ｜ v6.09 ｜ 更新日期：2026.11.19</div>
   <div class="site-footer" style="margin-top:4px;">特別感謝：昀宣、雨軒、昱宏 協助資料蒐集；百九、周老師 協助提供路圖資訊</div>
   <div class="footer-actions">
     <button type="button" class="backup-entry" id="backupEntry">💾 備份與還原</button>
@@ -7521,27 +7529,21 @@ function isServiceDayToday(){
   const d = new Date().getDay();
   return d !== 0 && d !== 3;
 }
-// v6.01:這個車種、這一區今天有沒有收。有收回傳 null;沒收回傳提示文字
+// v6.01:這個車種、這一區今天有沒有收。有收回傳 false;沒收回傳 true(只用來決定要不要顯示「進行中」)
 // 垃圾車:星期三、日停收。回收車:一四區星期一、四收,二五區星期二、五收(星期三、六、日不收)。其他車種不判斷
-const WEEK_NAMES = '日一二三四五六';
+// v6.07:拿掉原本的 const WEEK_NAMES——App 一打開就還原上次的路線時,這裡比那行 const 先被呼叫,
+//       在星期三、日(或回收車沒收的日子)會當掉,卡片變成空的
 function offDayInfo(key){
-  if(!key) return null;
-  let days = null, who = '';
+  if(!key) return false;
+  let days = null;
   if(currentCategory === '垃圾車'){ days = [1,2,4,5,6]; }
   else if(currentCategory === '回收車'){
     const g = zoneDayGroup(key);
     if(g === 'monThu') days = [1,4];
     else if(g === 'tueFri') days = [2,5];
-    who = '這區';
   }
-  if(!days) return null;
-  const d = new Date().getDay();
-  if(days.includes(d)) return null;
-  let k = 1; while(k < 8 && !days.includes((d + k) % 7)) k++;
-  const nd = (d + k) % 7;
-  const nextTxt = k === 1 ? `明天（星期${WEEK_NAMES[nd]}）` : `星期${WEEK_NAMES[nd]}`;
-  const lead = who ? `這區星期${days.map(x => WEEK_NAMES[x]).join('、')}收，今天沒收` : `今天星期${WEEK_NAMES[d]}停收`;
-  return { text: `${lead}，下面是${nextTxt}的時間`, short: `今天沒收｜下次 ${k === 1 ? '明天' : '星期' + WEEK_NAMES[nd]}` };
+  if(!days) return false;
+  return !days.includes(new Date().getDay());
 }
 
 function parseTimeToday(hhmm, baseDate){
@@ -7603,11 +7605,6 @@ function updateCountdown(){
   const endTimes = getTripEndTimes(currentSelectedKey);
   let runningIdx = -1;
   const offInfo = offDayInfo(currentSelectedKey);
-  const offNote = document.getElementById('offDayNote');
-  if(offNote){
-    const t = offInfo ? '📅 ' + offInfo.text : '';
-    if(offNote.textContent !== t){ offNote.textContent = t; offNote.hidden = !offInfo; }
-  }
   if(endTimes && isServiceDayToday() && !offInfo){
     for(let i = 0; i < times.length; i++){
       const d0 = parseTimeToday(times[i], now), d1 = parseTimeToday(endTimes[i], now);
@@ -7615,8 +7612,8 @@ function updateCountdown(){
     }
   }
   // 今天這區沒收:下面顯示的是下次收運日的時間,三車都不算已過,第一車當作下一班
-  const shownNextIdx = offInfo ? 0 : nextIdx;
-  const stateKey = shownNextIdx + ':' + runningIdx + ':' + (offInfo ? 'off' : '');
+  const shownNextIdx = nextIdx;   // v6.06 取消「今天沒收」提示,三車照時間顯示
+  const stateKey = shownNextIdx + ':' + runningIdx;
   if(lastNextIdx !== stateKey || lastWokenSize !== wokenTrips.size){
     lastNextIdx = stateKey;
     lastWokenSize = wokenTrips.size;
@@ -7648,11 +7645,7 @@ function updateCountdown(){
   const mins = Math.max(0, Math.round(diffMs / 60000));
   const remain = isNaN(mins) ? '' :
     (mins >= 60 ? `${Math.floor(mins/60)}時${String(mins%60).padStart(2,'0')}分` : `${mins}分`);
-  const newBarContent = offInfo
-    ? `<span class="ti-key">${icon} ${keyName}</span>` +
-      `<span class="ti-next">${offInfo.short}</span>` +
-      `<span class="ti-remain">第一車 ${times[0]}</span>`
-    : runningIdx > -1
+  const newBarContent = runningIdx > -1
     ? `<span class="ti-key">${icon} ${keyName}</span>` +
       `<span class="ti-next">進行中｜${tripLabels[runningIdx] || ''}</span>` +
       `<span class="ti-remain">約 ${endTimes[runningIdx]} 收完</span>`
@@ -8617,7 +8610,7 @@ function showUpdateBanner(){
     + '&current=temperature_2m,apparent_temperature,weather_code'
     + '&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code'
     + '&timezone=Asia%2FTaipei&forecast_days=2';
-  const RAIN_WARN = 60;   // 降雨機率 ≥ 60% 提醒
+  const RAIN_WARN = 50;   // v6.08 降雨門檻統一:≥30% 淡藍、≥50% 亮藍＋色條＋文字＋提醒、≥80% 最深(雨傘晃)
   const HEAT_WARN = 36;   // 體感 ≥ 36° 提醒
   const CHIP_RAIN = 50;   // 卡片標籤轉藍色的門檻
 
@@ -8704,7 +8697,8 @@ function showUpdateBanner(){
     if(code >= 95) return ['⛈️', '雷雨'];
     return ['🌡️', ''];
   }
-  const isStorm = code => code >= 95 || code === 65 || code === 82;
+  // v6.08 只有打雷(95 以上)才算雷雨;大雨(65)、強陣雨(82)算下雨,不再標成紅色雷雨
+  const isStorm = code => code >= 95;
 
   const pad = n => String(n).padStart(2, '0');
   const dayKey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
@@ -8798,6 +8792,38 @@ function showUpdateBanner(){
     return set;
   }
 
+  // v6.08 出車時段:有選垃圾車／回收車路線 → 第一車出車到第三車最後一站;沒選 → 15:30–22:00
+  // 今天的時段還沒結束 → 從現在算到收班;已經收班 → 看明天的時段(標「明天」)
+  function shiftWindow(){
+    let s = 15 * 60 + 30, e = 22 * 60;
+    const deps = [...document.querySelectorAll('#trips .trip .depart')]
+      .map(el => el.textContent.trim().match(/^(\d{1,2}):(\d{2})$/)).filter(Boolean);
+    const cat = (typeof currentCategory !== 'undefined') ? currentCategory : '';
+    if(deps.length && WX_TRIP_CATS.includes(cat)){
+      s = (+deps[0][1]) * 60 + (+deps[0][2]);
+      const rows = document.querySelectorAll('#trips .trip[data-trip-idx]');
+      const last = rows[rows.length - 1];
+      const lm = deps[deps.length - 1];
+      e = last ? tripEndMin(last, (+lm[1]) * 60 + (+lm[2])) : (+lm[1]) * 60 + (+lm[2]) + 60;
+    }
+    return [s, e];
+  }
+  function shiftRain(now){
+    const [s, e] = shiftWindow();
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    let day = new Date(now), from = s, label = '出車';
+    if(nowMin >= e){ day.setDate(day.getDate() + 1); label = '明天'; }
+    else if(nowMin > s) from = nowMin;
+    let max = -1, storm = false;
+    for(let hr = Math.floor(from / 60); hr <= Math.floor(e / 60); hr++){
+      const d = new Date(day); d.setHours(hr, 0, 0, 0);
+      const h = hourAt(hourKey(d));
+      if(h && h.rain > max) max = h.rain;
+      if(h && isStorm(h.code)) storm = true;
+    }
+    return max < 0 ? null : { rain: max, label, storm };
+  }
+
   // ---- 1. 標題下方的天氣列 ----
   function renderBar(){
     const wrap = document.getElementById('wxWrap');
@@ -8806,36 +8832,53 @@ function showUpdateBanner(){
     const hoursEl = wrap.querySelector('.wx-hours');
 
     if(!wx){
+      bar.dataset.sig = '';
       bar.className = 'wx-bar wx-muted' + (wxLoading ? '' : ' wx-fail');
       bar.innerHTML = wxLoading ? '⏳ 天氣讀取中…' : '☁️ 天氣暫時讀不到 · 點這裡重試';
       hoursEl.innerHTML = '';
       return;
     }
-    const cur = wx.data.current;
     const now = new Date();
     const nowH = hourAt(hourKey(now));
+    const ageMin = Math.round((Date.now() - wx.t) / 60000);
+    // v6.09 資料超過 3 小時:「現在天氣」改用預報裡現在這個整點(不要把舊的當成現在)
+    const cur = (ageMin > 180 && nowH)
+      ? { temperature_2m: nowH.temp, apparent_temperature: nowH.feel, weather_code: nowH.code }
+      : wx.data.current;
     const [ico, txt] = wxDesc(cur.weather_code, now.getHours());
-    const rain = nowH ? nowH.rain : null;
+    // v6.08 右邊的降雨改成「出車時段」最高降雨(原本只是現在這個小時,早上看會誤以為今天不下雨)
+    const shift = shiftRain(now);
+    const stormTag = shift && shift.storm ? `<span class="wx-bolt" aria-hidden="true">⚡</span>` : '';
+    const rain = shift ? shift.rain : (nowH ? nowH.rain : null);
     const stale = Date.now() - wx.t > WX_TTL;
     const fetchedDay = new Date(wx.t);
     const when = dayKey(fetchedDay) === dayKey(now) ? hhmm(wx.t) : `${fetchedDay.getMonth()+1}/${fetchedDay.getDate()} ${hhmm(wx.t)}`;
-    const updTxt = (wxFailed || stale) ? `離線 · ${when}` : `${when} 更新`;
+    // v6.09 真的沒網路才寫「離線」;只是資料舊了寫「N分鐘前／N小時前」,超過 2 小時用橘色提醒
+    const offline = navigator.onLine === false;
+    const agoTxt = ageMin < 60 ? `${Math.max(ageMin, 1)}分鐘前` : ageMin < 1440 ? `${Math.floor(ageMin / 60)}小時前` : `${when}`;
+    const updTxt = offline ? `離線 · ${when}` : (wxFailed || stale) ? `${agoTxt}的資料` : `${when} 更新`;
+    const oldCls = (offline || wxFailed || stale) ? (ageMin > 120 ? ' wx-off wx-old' : ' wx-off') : '';
 
+    const kind0 = wxKind(cur.weather_code, now.getHours(), cur.apparent_temperature);
+    const rainCls0 = rain == null ? '' : rain >= 80 ? 'hi vhi' : rain >= CHIP_RAIN ? 'hi' : rain >= 30 ? 'mid' : 'low';
+    const sig = [kind0, ico, txt, Math.round(cur.temperature_2m), Math.round(cur.apparent_temperature), updTxt, oldCls, rain, rainCls0, shift && shift.label, shift && shift.storm, now.getHours(), tripHours().size && [...tripHours()].join(',')].join('|');
+    if(bar.dataset.sig === sig && bar.className === 'wx-bar') return;   // v6.09 內容沒變不重畫(動畫不會一直重來)
+    bar.dataset.sig = sig;
     bar.className = 'wx-bar';
     const kind = wxKind(cur.weather_code, now.getHours(), cur.apparent_temperature);
     const rainCls = rain == null ? '' : rain >= 80 ? 'hi vhi' : rain >= CHIP_RAIN ? 'hi' : rain >= 30 ? 'mid' : 'low';
     // 左(圖示＋溫度)｜中(天氣＋更新時間,固定在正中間)｜右(雨傘＋降雨＋▼)
     bar.innerHTML = `
       <span class="wx-L">
-        <span class="wx-ico${kind ? ' wx-ico-svg' : ''}" aria-hidden="true">${kind ? wxSvg(kind) : ico}</span>
+        <span class="wx-ico${kind ? ' wx-ico-svg' : ''}" aria-hidden="true">${kind ? wxSvg(kind, 'wxa-once') : ico}</span>
         <span class="wx-tcol"><span class="wx-temp">${Math.round(cur.temperature_2m)}°</span><span class="wx-tfeel${cur.apparent_temperature >= HEAT_WARN ? ' hot' : ''}">體感 ${Math.round(cur.apparent_temperature)}°</span></span>
       </span>
       <span class="wx-mid">
         <span class="wx-feel">${txt || '　'}</span>
-        <span class="wx-upd${(wxFailed || stale) ? ' wx-off' : ''}">${updTxt}</span>
+        <span class="wx-upd${oldCls}">${updTxt}</span>
       </span>
       <span class="wx-R">
-        ${rain != null ? `<span class="wx-rain ${rainCls}" aria-label="降雨機率 ${rain}%">${umbrellaSvg()}${rain}%</span>` : ''}
+        ${rain != null ? `<span class="wx-rain ${rainCls}" aria-label="${shift ? shift.label + '時段最高降雨機率' : '降雨機率'} ${rain}%${shift && shift.storm ? '，有雷雨' : ''}">${umbrellaSvg()}<span class="wx-rain-col"><span class="wx-rain-lbl" aria-hidden="true">${shift ? shift.label : '現在'}${stormTag}</span><span>${rain}%</span></span></span>` : ''}
         <span class="wx-caret" aria-hidden="true">▼</span>
       </span>`;
 
@@ -8850,11 +8893,12 @@ function showUpdateBanner(){
       if(!h) continue;
       const [hi] = wxDesc(h.code, h.hour);
       const isTrip = dayKey(d) === dayKey(now) && tripSet.has(h.hour);
-      cells += `<div class="wx-h${k === 0 ? ' is-now' : ''}${isTrip ? ' is-trip' : ''}">
+      const rc = h.rain >= 80 ? ' hi vhi' : h.rain >= CHIP_RAIN ? ' hi' : h.rain >= 30 ? ' mid' : ' low';
+      cells += `<div class="wx-h${k === 0 ? ' is-now' : ''}${isTrip ? ' is-trip' : ''}${isStorm(h.code) ? ' storm' : ''}">
         <span class="wx-h-t">${k === 0 ? '現在' : h.hour + '時'}</span>
         <span class="wx-h-i" aria-hidden="true">${hi}</span>
         <span class="wx-h-c">${Math.round(h.temp)}°</span>
-        <span class="wx-h-r${h.rain < 30 ? ' low' : ''}">${h.rain}%</span>
+        <span class="wx-h-r${rc}">${h.rain}%</span>
       </div>`;
     }
     hoursEl.innerHTML = cells;
@@ -8872,14 +8916,18 @@ function showUpdateBanner(){
     const hide = () => { topEl.style.display = 'none'; if(cardEl) cardEl.style.display = 'none'; };
     const now = new Date();
     const today = dayKey(now);
-    if(!wx || localStorage.getItem('wxDismiss:' + today)){ hide(); return; }
+    if(!wx){ hide(); return; }
     const h = wx.data.hourly;
+    // v6.09 只看「出車時段」還沒過的整點(跟頂部「出車 %」同一段),收班後不提醒
+    const [ws, we] = shiftWindow();
+    const fromHr = Math.max(Math.floor(ws / 60), now.getHours()), toHr = Math.floor(we / 60);
+    if(now.getHours() * 60 + now.getMinutes() >= we){ hide(); return; }
     const rainHours = [], heatHours = [], stormHours = [];
     let maxRain = 0, maxFeel = -99;
     for(let i = 0; i < h.time.length; i++){
       if(h.time[i].slice(0, 10) !== today) continue;
       const hr = parseInt(h.time[i].slice(11, 13), 10);
-      if(hr < now.getHours()) continue;
+      if(hr < fromHr || hr > toHr) continue;
       const pr = h.precipitation_probability[i] ?? 0;
       if(pr >= RAIN_WARN){ rainHours.push(hr); maxRain = Math.max(maxRain, pr); }
       if(h.apparent_temperature[i] >= HEAT_WARN){ heatHours.push(hr); maxFeel = Math.max(maxFeel, h.apparent_temperature[i]); }
@@ -8897,19 +8945,25 @@ function showUpdateBanner(){
     const items = [];   // { full: 頂部完整版, short: 卡片精簡版 }
     let level = '';
     if(stormHours.length){
-      items.push({ full:`⛈️ ${ranges(stormHours)} 可能有雷雨或大雨，注意行車安全`, short:`⛈️ ${ranges(stormHours)} 雷雨` });
+      items.push({ type:'storm', full:`⛈️ ${ranges(stormHours)} 可能有雷雨，注意行車安全`, short:`⛈️ ${ranges(stormHours)} 雷雨` });
       level = 'storm';
     }
     if(rainHours.length){
-      items.push({ full:`🌧️ ${ranges(rainHours)} 降雨機率最高 ${maxRain}%，出車記得帶雨具`, short:`🌧️ ${ranges(rainHours)} 降雨最高 ${maxRain}%` });
+      items.push({ type:'rain', full:`🌧️ ${ranges(rainHours)} 降雨機率最高 ${maxRain}%，出車記得帶雨具`, short:`🌧️ ${ranges(rainHours)} 降雨最高 ${maxRain}%` });
       level = level || 'rain';
     }
     if(heatHours.length){
       const f = Math.round(maxFeel);
-      items.push({ full:`🥵 ${ranges(heatHours)} 體感最高 ${f}°，多補充水分`, short:`🥵 ${ranges(heatHours)} 體感最高 ${f}°` });
+      items.push({ type:'heat', full:`🥵 ${ranges(heatHours)} 體感最高 ${f}°，多補充水分`, short:`🥵 ${ranges(heatHours)} 體感最高 ${f}°` });
       level = level || 'heat';
     }
     if(!items.length){ hide(); return; }
+    // v6.09 按 ✕ 只關掉「當時有的種類」;之後出現新的種類(例如下午才有雷雨)會再跳出來
+    let dismissed = '';
+    try{ dismissed = localStorage.getItem('wxDismiss:' + today) || ''; }catch(e){}
+    const types = items.map(it => it.type);
+    if(dismissed && (dismissed === '1' ? false : true) && types.every(t => dismissed.split(',').includes(t))){ hide(); return; }
+    if(dismissed === '1' && !types.includes('storm')){ hide(); return; }   // 舊版存的「1」:雷雨以外照舊不提醒
 
     const card = document.getElementById('card');
     const cat = (typeof currentCategory !== 'undefined') ? currentCategory : '';
@@ -8919,8 +8973,8 @@ function showUpdateBanner(){
     if(other) other.style.display = 'none';
 
     const hl = t => t.replace(/(\d+–\d+時|\d+%|\d+°)/g, '<span class="wx-num">$1</span>');
-    const html = `<div class="wx-alert-txt">${items.map(it => `<div>${inCard ? hl(it.short) : it.full}</div>`).join('')}</div>
-      <button type="button" class="wx-alert-x" aria-label="今天不再提醒">✕</button>`;
+    const html = `<div class="wx-alert-txt">${items.map(it => `<div class="wx-al-line ${it.type}">${inCard ? hl(it.short) : it.full}</div>`).join('')}</div>
+      <button type="button" class="wx-alert-x" aria-label="關閉這則提醒(有新的天氣狀況會再提醒)">✕</button>`;
     const cls = (inCard ? 'wx-card-alert ' : 'wx-alert ') + level;
     // 內容沒變就不動 DOM
     if(el.className !== cls) el.className = cls;
@@ -8928,7 +8982,10 @@ function showUpdateBanner(){
       el.dataset.html = html;
       el.innerHTML = html;
       el.querySelector('.wx-alert-x').onclick = () => {
-        try{ localStorage.setItem('wxDismiss:' + today, '1'); }catch(e){}
+        try{
+          const prev = (localStorage.getItem('wxDismiss:' + today) || '').split(',').filter(x => x && x !== '1');
+          localStorage.setItem('wxDismiss:' + today, [...new Set([...prev, ...types])].join(','));
+        }catch(e){}
         hide();
       };
     }
@@ -8937,7 +8994,7 @@ function showUpdateBanner(){
 
   // ---- 2. 每趟卡片:左側天氣色條 + 很嚴重時多一行字(只有垃圾車、回收車)----
   const WX_TRIP_CATS = ['垃圾車', '回收車'];
-  const LINE_RAIN = 70;   // 降雨 ≥ 70% 或雷雨才加一行字
+  const LINE_RAIN = CHIP_RAIN;   // v6.08 有藍色條就一定有一行字(原本 70%)
 
   // 只在內容真的不一樣時才改 DOM,避免 MutationObserver 一直觸發
   // 這一趟沿線最後一站的時間(分鐘);沒有沿線資料就當作出車後 60 分鐘
@@ -8989,7 +9046,8 @@ function showUpdateBanner(){
       let lv = '', line = '', tip = '';
       const dep = row.querySelector('.time-pair .depart'); // 編輯時間模式下沒有 .depart → 不顯示
       const m = dep && dep.textContent.trim().match(/^(\d{1,2}):(\d{2})$/);
-      if(enabled && m){
+      const isPast = !!(m && (today.getHours() * 60 + today.getMinutes()) > tripEndMin(row, (+m[1]) * 60 + (+m[2])));
+      if(enabled && m && !isPast){   // v6.09 已經收完的車次不再顯示天氣色條(收班後不會看起來像「我的車會下雨」)
         // 這一趟「在外面」的時段:出車時間 → 沿線時刻表這一趟最後一站的時間
         const depMin = (+m[1]) * 60 + (+m[2]);
         const endMin = tripEndMin(row, depMin);
@@ -8998,14 +9056,14 @@ function showUpdateBanner(){
           lv = w.lv;
           const range = `${String(m[1]).padStart(2, '0')}:${m[2]}–${fmtMin(endMin)}`;
           if(w.lv === 'storm') line = `storm|⛈️ ${w.hour}時起可能雷雨，注意安全`;
-          else if(w.maxRain >= LINE_RAIN) line = `rain|🌧 ${w.rainHour}時起降雨 ${w.maxRain}%，記得帶雨具`;
+          else if(w.maxRain >= LINE_RAIN) line = `rain|🌧️ ${w.rainHour}時起降雨 ${w.maxRain}%，記得帶雨具`;
+          else if(w.lv === 'heat') line = `heat|🥵 體感最高 ${Math.round(w.maxFeel)}°，多補充水分`;
           tip = `外出 ${range}：最高降雨 ${w.maxRain}%，體感最高 ${Math.round(w.maxFeel)}°`;
         }
       }
       if(lv) used.add(lv);
       // 這一趟最後一站時間已經過了 → 標記 wx-past(圖示不動)
-      const past = !!(m && (today.getHours() * 60 + today.getMinutes()) > tripEndMin(row, (+m[1]) * 60 + (+m[2])));
-      row.classList.toggle('wx-past', past);
+      row.classList.toggle('wx-past', isPast);
       const sig = lv + '#' + line;
       const intact = (!lv || row.querySelector(':scope > .wx-ico')) && (!line || row.querySelector(':scope > .wx-line'));
       if(row.dataset.wx === sig && intact) return;
@@ -9106,7 +9164,7 @@ function showUpdateBanner(){
           pending = false;
           decorateTrips();
           renderAlert();
-          if(wrap.classList.contains('open')) renderBar();
+          renderBar();   // v6.09 選區／換區後「出車／明天」馬上重算(原本只有展開時才重畫)
         });
       }).observe(trips, { childList: true, subtree: true });
     }
