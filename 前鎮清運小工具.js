@@ -585,6 +585,26 @@ function inlineWindow(next, now){
   return { show: false, nextShow: new Date(now.getTime() + 30 * 60 * 1000) };
 }
 
+// 時鐘上方那一行「有狀況才提醒」:看下一個收運日還沒出發的幾趟(出車 → 沿線最後一站)
+//   打雷「⛈18時雷雨」> 降雨 ≥50%「☔出車 80%」> 體感 ≥36°「🥵體感37°」;明天的前面加「明」;都沒有就回傳空字串
+function inlineWxAlert(wx, next){
+  if(!wx || !next) return "";
+  const trips = next.trips.slice(next.add === 0 ? next.idx : 0);
+  let storm = null, rain = -1, feel = -99;
+  trips.forEach(t => {
+    const h = wxTrip(wx, t);
+    if(!h) return;
+    if(h.stormHour !== null && storm === null) storm = h.stormHour;
+    if(h.rain > rain) rain = h.rain;
+    if(typeof h.feel === "number" && h.feel > feel) feel = h.feel;
+  });
+  const pre = next.add === 0 ? "" : next.add === 1 ? "明" : `星期${WEEK[next.day.getDay()]}`;
+  if(storm !== null) return `⛈${pre}${storm}時雷雨`;
+  if(rain >= 50) return `☔${pre}出車 ${rain}%`;
+  if(feel >= 36) return `🥵${pre}體感${Math.round(feel)}°`;
+  return "";
+}
+
 // 鎖定畫面(小圓形):上面第幾趟、下面出發時間
 function drawCircular(ctx){
   const { next } = ctx;
@@ -764,8 +784,12 @@ async function main(paramOverride){
   if(fam === "accessoryInline"){
     const win = inlineWindow(next, now);
     if(!win.show){
-      const w = new ListWidget(); w.url = SITE_URL;   // 留空:iPhone 會把日期完整顯示出來
-      w.refreshAfterDate = win.nextShow;
+      // 不在出車前 1 小時:平常留空;出車時段會下雨／打雷／很熱才顯示一行提醒
+      const w = new ListWidget(); w.url = SITE_URL;
+      const alertTxt = inlineWxAlert(wx, next);
+      if(alertTxt) txt(w, alertTxt, 12, Color.white());
+      const soon = new Date(now.getTime() + 30 * 60 * 1000);   // 天氣會變,最多 30 分鐘再看一次
+      w.refreshAfterDate = win.nextShow < soon ? win.nextShow : soon;
       return w;
     }
   }
