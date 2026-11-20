@@ -566,12 +566,23 @@ function drawInline(ctx){
   const w = new ListWidget();
   const t = next.trips[next.idx];
   const icon = ctx.cat === "回收車" ? "♻️" : ctx.cat === "廚餘車" ? "🍃" : "🚛";
-  // 鎖定畫面時間上方那一行很短,字太多會把日期擠掉 → 縮短:
-  //   今天「♻️ 一趟 15:48」、明天「♻️ 明 15:48」、其他天用星期「♻️ 一 15:48」
-  const when = next.add === 0 ? t.label.replace("第", "") : next.add === 1 ? "明" : WEEK[next.day.getDay()];
-  txt(w, `${icon} ${when} ${t.depText}`, 12, Color.white());
+  // 鎖定畫面時間上方那一行跟日期共用,字越少日期越完整:
+  //   今天「♻️① 15:35」(①②③=第幾車)、明天「♻️明 15:35」、其他天用星期「♻️一 15:35」
+  const when = next.add === 0 ? (["①", "②", "③", "④"][next.idx] || "") : next.add === 1 ? "明" : WEEK[next.day.getDay()];
+  txt(w, `${icon}${when} ${t.depText}`, 12, Color.white());
   w.refreshAfterDate = refreshAt(next, ctx.now);
   return w;
+}
+
+// ---- 鎖定畫面時間上方那一行:只在「出車前 1 小時 ～ 出車」顯示,其他時間留空(日期就會完整顯示)----
+const INLINE_BEFORE_MIN = 60;                         // 出車前幾分鐘開始顯示(要改改這裡)
+function inlineWindow(next, now){
+  const t = next.trips[next.idx];
+  const from = new Date(t.dep.getTime() - INLINE_BEFORE_MIN * 60 * 1000);
+  if(t.dep > now && from <= now) return { show: true };
+  // 這一車還沒到顯示時間 → 到時候再出現;這一車已經出發(配套模式第三車還在外面)→ 30 分鐘後再看
+  if(t.dep > now) return { show: false, nextShow: from };
+  return { show: false, nextShow: new Date(now.getTime() + 30 * 60 * 1000) };
 }
 
 // 鎖定畫面(小圓形):上面第幾趟、下面出發時間
@@ -750,6 +761,14 @@ async function main(paramOverride){
   }
   if(!next) return drawError(`找不到「${cat} ${zone}」的時刻表,請確認區域名稱`);
 
+  if(fam === "accessoryInline"){
+    const win = inlineWindow(next, now);
+    if(!win.show){
+      const w = new ListWidget(); w.url = SITE_URL;   // 留空:iPhone 會把日期完整顯示出來
+      w.refreshAfterDate = win.nextShow;
+      return w;
+    }
+  }
   const ctx = { cat, zone, next, wx, now, offline: sched.offline };
   if(fam === "small") return drawSmall(ctx);
   if(fam === "accessoryRectangular") return drawRect(ctx);
