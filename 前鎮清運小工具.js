@@ -566,7 +566,10 @@ function drawInline(ctx){
   const w = new ListWidget();
   const t = next.trips[next.idx];
   const icon = ctx.cat === "回收車" ? "♻️" : ctx.cat === "廚餘車" ? "🍃" : "🚛";
-  txt(w, `${icon} ${whenLabel(next)}${t.label} ${t.depText}`, 12, Color.white());
+  // 鎖定畫面時間上方那一行很短,字太多會把日期擠掉 → 縮短:
+  //   今天「♻️ 一趟 15:48」、明天「♻️ 明 15:48」、其他天用星期「♻️ 一 15:48」
+  const when = next.add === 0 ? t.label.replace("第", "") : next.add === 1 ? "明" : WEEK[next.day.getDay()];
+  txt(w, `${icon} ${when} ${t.depText}`, 12, Color.white());
   w.refreshAfterDate = refreshAt(next, ctx.now);
   return w;
 }
@@ -652,7 +655,9 @@ function drawRemind(ctx){
   }
   if(fam === "accessoryInline"){
     const w = new ListWidget();
-    txt(w, R.time ? `🗓 ${R.head} ${R.time}` : `🗓 ${R.head}`, 12, Color.white());
+    // 一樣縮短:「🗓 明 06:45」「🗓 今 06:45」;休假「🗓 明天休假」
+    const short = R.head.startsWith("明") ? "明" : R.head.startsWith("今") ? "今" : R.head.slice(0, 2);
+    txt(w, R.time ? `🗓 ${short} ${R.time}` : `🗓 ${R.head}`, 12, Color.white());
     w.refreshAfterDate = remindRefresh(rem, now);
     return w;
   }
