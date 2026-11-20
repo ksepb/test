@@ -576,6 +576,7 @@ function drawInline(ctx){
 
 // ---- 鎖定畫面時間上方那一行:只在「出車前 1 小時 ～ 出車」顯示,其他時間留空(日期就會完整顯示)----
 const INLINE_BEFORE_MIN = 60;                         // 出車前幾分鐘開始顯示(要改改這裡)
+const INLINE_IDLE_WEATHER = true;                     // 沒出車的時段:true=一直顯示天氣(現在溫度＋出車降雨);false=有狀況才提醒
 function inlineWindow(next, now){
   const t = next.trips[next.idx];
   const from = new Date(t.dep.getTime() - INLINE_BEFORE_MIN * 60 * 1000);
@@ -603,6 +604,20 @@ function inlineWxAlert(wx, next){
   if(rain >= 50) return `☔${pre}出車 ${rain}%`;
   if(feel >= 36) return `🥵${pre}體感${Math.round(feel)}°`;
   return "";
+}
+
+// 時鐘上方那一行「一直顯示天氣」:現在天氣＋溫度,後面接提醒(有雷雨／大雨／高溫)或出車時段最高降雨
+//   例:「⛅27° 出車 10%」「⛅27° ⛈20時雷雨」「🌙24° ☔明出車 80%」
+function inlineWxIdle(wx, next, now, alertTxt){
+  if(!wx) return alertTxt || "";
+  const cur = `${wxIcon(wx.current.weather_code, now.getHours())}${Math.round(wx.current.temperature_2m)}°`;
+  if(alertTxt) return `${cur} ${alertTxt}`;
+  const trips = next ? next.trips.slice(next.add === 0 ? next.idx : 0) : [];
+  let rain = -1;
+  trips.forEach(t => { const h = wxTrip(wx, t); if(h && h.rain > rain) rain = h.rain; });
+  if(rain < 0) return cur;
+  const pre = next.add === 0 ? "" : next.add === 1 ? "明" : `星期${WEEK[next.day.getDay()]}`;
+  return `${cur} ${pre}出車 ${rain}%`;
 }
 
 // 鎖定畫面(小圓形):上面第幾趟、下面出發時間
@@ -787,7 +802,8 @@ async function main(paramOverride){
       // 不在出車前 1 小時:平常留空;出車時段會下雨／打雷／很熱才顯示一行提醒
       const w = new ListWidget(); w.url = SITE_URL;
       const alertTxt = inlineWxAlert(wx, next);
-      if(alertTxt) txt(w, alertTxt, 12, Color.white());
+      const idleTxt = INLINE_IDLE_WEATHER ? inlineWxIdle(wx, next, now, alertTxt) : alertTxt;
+      if(idleTxt) txt(w, idleTxt, 12, Color.white());
       const soon = new Date(now.getTime() + 30 * 60 * 1000);   // 天氣會變,最多 30 分鐘再看一次
       w.refreshAfterDate = win.nextShow < soon ? win.nextShow : soon;
       return w;
